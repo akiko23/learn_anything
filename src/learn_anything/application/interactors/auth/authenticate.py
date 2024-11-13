@@ -12,8 +12,9 @@ from learn_anything.entities.user.rules import create_user
 @dataclass
 class AuthInputData:
     user_id: UserID
-    fullname: str
+    fullname: str | None
     username: str | None
+    token: str | None  # payload for defining role
 
 
 @dataclass
@@ -28,13 +29,7 @@ class Authenticate:
         self._committer = committer
 
     async def execute(self, data: AuthInputData) -> AuthOutputData:
-        actor = await self._id_provider.get_user()
-        if actor:
-           return AuthOutputData(role=actor.role)
-
-        role = await self._id_provider.get_role()
-        role = UserRole.STUDENT if not role else role
-
+        role = await self._id_provider.get_role(token=data.token)
         user = create_user(
             user_id=data.user_id,
             fullname=data.fullname,
@@ -45,6 +40,6 @@ class Authenticate:
         await self._user_gateway.save(user)
         await self._committer.commit()
 
-        logging.info("New user registered %s", data.user_id)
+        logging.info("User %s was authenticated with role '%s'", data.user_id, role)
 
         return AuthOutputData(role=role)

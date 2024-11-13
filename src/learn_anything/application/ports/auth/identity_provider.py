@@ -5,10 +5,8 @@ from learn_anything.entities.user.models import User, UserRole
 
 
 class IdentityProvider(Protocol):
-    @abstractmethod
-    async def get_user(self) -> User | None:
+    async def get_user(self) -> User:
         raise NotImplementedError
 
-    @abstractmethod
-    async def get_role(self) -> UserRole | None:
+    async def get_role(self, token: str | None = None) -> UserRole:
         raise NotImplementedError

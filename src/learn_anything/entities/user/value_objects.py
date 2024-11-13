@@ -1,12 +1,32 @@
 from dataclasses import dataclass
+from datetime import datetime
 
-from learn_anything.entities.user.errors import UsernameToShortError
+from learn_anything.entities.user.errors import UsernameToShortError, RoleUnavailableForAuthError, InvalidExpiresAtError
+from learn_anything.entities.user.models import UserRole
 
 
 @dataclass
 class Username:
-    username: str
+    value: str
 
     def __post_init__(self) -> None:
-        if len(self.username) <= 5:
-            raise UsernameToShortError(self.username)
+        if len(self.value) <= 5:
+            raise UsernameToShortError(self.value)
+
+
+@dataclass
+class AvailableForAuthRole:
+    value: UserRole
+
+    def __post_init__(self):
+        if self.value not in (UserRole.MODERATOR, UserRole.MENTOR):
+            raise RoleUnavailableForAuthError(self.value)
+
+
+@dataclass
+class ExpiresAt:
+    value: datetime
+
+    def __post_init__(self):
+        if self.value < datetime.now():
+            raise InvalidExpiresAtError(self.value)

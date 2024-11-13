@@ -1,41 +1,67 @@
 from dataclasses import dataclass
+from enum import StrEnum, auto
 from typing import Protocol, Sequence
 
 from learn_anything.application.input_data import Pagination
-from learn_anything.entities.course.models import Course, CourseID, RegistrationForCourse
-from learn_anything.entities.user.models import UserID, User
+from learn_anything.entities.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
+from learn_anything.entities.user.models import UserID
 
 
-@dataclass(frozen=True)
-class AllCoursesCommonFilters:
-    actor_id: UserID
-    author_id: UserID | None = None
-    only_enrolled: bool | None = None
-    only_not_enrolled: bool | None = None
+class SortBy(StrEnum):
+    POPULARITY = auto()
+    DATE = auto()
+    LAST_UPDATE = auto()
+    LAST_SUBMISSION = auto()
 
 
 @dataclass
-class AllCoursesForTeacherFilters:
-    only_created: bool | None = None
-    only_not_created: bool | None = None
+class GetManyCoursesFilters:
+    sort_by: SortBy
+    author_name: str | None = None
+    title: str | None = None
+
+    # if you want to get only courses where actor registered in
+    with_registered_actor_id: UserID | None = None
+
+    # if you want to get only courses which actor has created
+    with_creator_id: UserID | None = None
+
+
+@dataclass
+class GetCoursesActorCreatedFilters:
+    title: str | None = None
+    sort_by: SortBy = SortBy.DATE
 
 
 class CourseGateway(Protocol):
     async def with_id(self, course_id: CourseID) -> Course:
         raise NotImplementedError
 
-    async def all_for_student(self, pagination: Pagination, filters: AllCoursesCommonFilters) -> Sequence[Course]:
+    async def with_creator(
+            self,
+            user_id: UserID,
+            pagination: Pagination,
+            filters: GetCoursesActorCreatedFilters,
+    ) -> (Sequence[Course], int):
         raise NotImplementedError
 
-    async def all_for_teacher(
+    async def all(
             self,
             pagination: Pagination,
-            filters: AllCoursesCommonFilters,
-            teacher_filters: AllCoursesForTeacherFilters,
-    ) -> Sequence[Course]:
+            filters: GetManyCoursesFilters,
+    ) -> (Sequence[Course], int):
         raise NotImplementedError
 
     async def save(self, course: Course) -> CourseID:
+        raise NotImplementedError
+
+    async def get_share_rules(self, course_id: CourseID) -> Sequence[CourseShareRule]:
+        raise NotImplementedError
+
+    async def add_share_rule(self, share_rule: CourseShareRule) -> None:
+        raise NotImplementedError
+
+    async def delete_share_rule(self, course_id: CourseID, user_id: UserID) -> None:
         raise NotImplementedError
 
 

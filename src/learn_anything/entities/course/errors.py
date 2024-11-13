@@ -28,3 +28,24 @@ class CourseDoesNotExistError(ApplicationError):
 class UserAlreadyRegisteredForCourseError(ApplicationError):
     user_id: UserID
     course_id: CourseID
+
+    @property
+    def message(self) -> str:
+        return f'User {self.user_id} already registered for course {self.course_id}'
+
+
+class NoAccessToCourseError(ApplicationError):
+    message: str = 'Only course creator has access to his course'
+
+
+@dataclass
+class RegistrationsLimitExceededError(ApplicationError):
+    course_id: CourseID
+
+    @property
+    def message(self) -> str:
+        return f'Registrations limit for course {self.course_id} already reached.'
+
+
+class CoursePermissionError:
+    message: str = "You don't have write access to this course"

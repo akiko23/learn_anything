@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from learn_anything.entities.user.models import User, UserID
+from learn_anything.entities.user.models import User, UserID, AuthLink
 
 
 class UserGateway(Protocol):
@@ -8,4 +8,7 @@ class UserGateway(Protocol):
         raise NotImplementedError
 
     async def save(self, user: User) -> None:
+        raise NotImplementedError
+
+    async def save_auth_link(self, auth_link: AuthLink) -> None:
         raise NotImplementedError
