@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[project]
+name = "learn_anything"
+version = "0.1.0"
+description = "A bot for learning anything"
+authors = [ { name = "akiko23", email = "dmvasilenko43@gmail.com" } ]
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    "aiogram>=3.13.0",
+    "SQLAlchemy>=2.0.34",
+    "alembic>=1.13.2",
+    "psycopg>=3.2.1",
+    "redis>=5.0.8"
+]
+
+[project.optional-dependencies]
+lint = [
+    "mypy>=1.11.2",
+    "ruff>=0.6.5",
+    "isort>=5.13.2"
+]
+
+[project.scripts]
+learn-anything = "learn_anything.main.cli:main"
