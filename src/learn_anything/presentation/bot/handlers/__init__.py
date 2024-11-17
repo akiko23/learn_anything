@@ -9,6 +9,9 @@ from .course.get_courses_actor_registered_in import router as get_courses_actor_
 from .course.get_course import router as get_course_router
 from .course.edit_course import router as edit_course_router
 
+from .task.get_course_tasks import router as get_course_tasks_router
+from .task.create_task import router as create_course_task_router
+
 
 def register_handlers(dp: Dispatcher) -> None:
     dp.include_router(start_router)
@@ -19,3 +22,6 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.include_router(get_courses_actor_registered_router)
     dp.include_router(get_course_router)
     dp.include_router(edit_course_router)
+
+    dp.include_router(get_course_tasks_router)
+    dp.include_router(create_course_task_router)

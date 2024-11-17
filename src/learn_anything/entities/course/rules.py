@@ -57,3 +57,11 @@ def ensure_actor_has_write_access(actor_id: UserID, course: Course, share_rules:
             return
 
     raise CoursePermissionError
+
+
+def actor_has_write_access(actor_id: UserID, course: Course, share_rules: Sequence[CourseShareRule]):
+    try:
+        ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
+    except CoursePermissionError:
+        return False
+    return True

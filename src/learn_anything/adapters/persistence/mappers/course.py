@@ -58,9 +58,6 @@ class CourseMapper(CourseGateway):
             pagination: Pagination,
             filters: GetManyCoursesFilters,
     ) -> (Sequence[Course], int):
-
-        print(filters)
-
         course_total_registrations = (
             select(
                 courses_table.c.id,
@@ -166,6 +163,7 @@ class CourseMapper(CourseGateway):
                     description=course.description,
                     photo_id=course.photo_id,
                     registrations_limit=course.registrations_limit,
+                    updated_at=course.updated_at,
                 ),
                 where=(courses_table.c.id == course.id)
             )

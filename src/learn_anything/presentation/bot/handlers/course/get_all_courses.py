@@ -11,9 +11,9 @@ from dishka import FromDishka
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor, \
     GetManyCoursesInputData, CoursePartialData
-from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
-from learn_anything.presentation.bot.keyboards.many_courses import get_all_courses_keyboard, get_all_courses_filters, \
+from learn_anything.entities.user.models import UserRole
+from learn_anything.presentation.bot.keyboards.course.many_courses import get_all_courses_keyboard, get_all_courses_filters, \
     cancel_text_filter_input_kb
 from learn_anything.presentation.bot.keyboards.main_menu import get_main_menu_keyboard
 from learn_anything.presentation.bot.states.course import SearchAllBy
@@ -34,12 +34,14 @@ async def get_all_courses(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
+    filters = data.get('all_courses_filters', DEFAULT_FILTERS())
+
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     output_data = await interactor.execute(
         GetManyCoursesInputData(
             pagination=Pagination(offset=0, limit=DEFAULT_LIMIT),
-            filters=data.get('all_courses_filters', DEFAULT_FILTERS()),
+            filters=filters,
         )
     )
 
@@ -48,16 +50,20 @@ async def get_all_courses(
         all_courses_pointer=0,
         all_courses_offset=0,
         all_courses_total=output_data.total,
-        all_courses_filters=data.get('all_courses_filters', DEFAULT_FILTERS()),
+        all_courses_filters=filters,
     )
 
     courses = output_data.courses
     total = output_data.total
 
     if total == 0:
+        msg_text = 'Еще ни один курс не был опубликован :('
+        if filters != DEFAULT_FILTERS():
+            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+
         await bot.send_message(
             chat_id=user_id,
-            text=f"No courses were found. Try to reset filters",
+            text=msg_text,
             reply_markup=get_all_courses_keyboard(
                 pointer=0,
                 total=total,
@@ -279,16 +285,22 @@ async def apply_filters(
     total = output_data.total
 
     data = await state.update_data(
-        all_courses_=courses,
+        all_courses=courses,
         all_courses_total=total,
         all_courses_pointer=0,
         all_courses_offset=0,
     )
 
+    filters = data['all_courses_filters']
+
     if total == 0:
+        msg_text = 'Еще ни один курс не был опубликован :('
+        if filters != DEFAULT_FILTERS():
+            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+
         await bot.send_message(
             chat_id=user_id,
-            text=f"No courses were found. Try to reset filters",
+            text=msg_text,
             reply_markup=get_all_courses_keyboard(
                 pointer=0,
                 total=0,
@@ -330,6 +342,8 @@ async def filters_back(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
+    filters = data['all_courses_filters']
+
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     courses = data['all_courses']
@@ -337,9 +351,13 @@ async def filters_back(
     pointer = data['all_courses_pointer']
 
     if total == 0:
+        msg_text = 'Eще ни один курс не был опубликован :('
+        if filters != DEFAULT_FILTERS():
+            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+
         await bot.send_message(
             chat_id=user_id,
-            text=f"No courses were found. Try to reset filters",
+            text=msg_text,
             reply_markup=get_all_courses_keyboard(
                 pointer=0,
                 total=0,
@@ -373,21 +391,15 @@ async def to_main_menu(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        id_provider: FromDishka[IdentityProvider],
+        user_role: UserRole,
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
-
-    role = data.get('role')
-    if not role:
-        role = await id_provider.get_role()
-        data['role'] = role
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
     await bot.send_message(
         chat_id=user_id,
         text='Вы вернулись в главное меню',
-        reply_markup=get_main_menu_keyboard(user_role=role),
+        reply_markup=get_main_menu_keyboard(user_role=user_role),
     )
 
 

@@ -16,9 +16,12 @@ from learn_anything.application.interactors.course.create_course import CreateCo
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor
 from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor
 from learn_anything.application.interactors.course.register_for_course import RegisterForCourseInteractor
+from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor
 from learn_anything.application.interactors.task.create_submission import CreateCodeTaskSubmissionInteractor, \
     CreatePollTaskSubmissionInteractor
-from learn_anything.application.interactors.task.create_task import CreateCodeTaskInteractor, CreatePollTaskInteractor
+from learn_anything.application.interactors.task.create_task import CreateCodeTaskInteractor, CreatePollTaskInteractor, \
+    CreateTaskInteractor
+from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
 from learn_anything.application.ports.committer import Commiter
@@ -80,10 +83,13 @@ def interactors_provider() -> Provider:
     provider.provide(InvalidateAuthLinkInteractor, scope=Scope.REQUEST)
 
     provider.provide(CreateCourseInteractor, scope=Scope.REQUEST)
+    provider.provide(UpdateCourseInteractor, scope=Scope.REQUEST)
     provider.provide(GetCourseInteractor, scope=Scope.REQUEST)
+    provider.provide(GetCourseTasksInteractor, scope=Scope.REQUEST)
     provider.provide(GetManyCoursesInteractor, scope=Scope.REQUEST)
     provider.provide(RegisterForCourseInteractor, scope=Scope.REQUEST)
 
+    provider.provide(CreateTaskInteractor, scope=Scope.REQUEST)
     provider.provide(CreateCodeTaskInteractor, scope=Scope.REQUEST)
     provider.provide(CreatePollTaskInteractor, scope=Scope.REQUEST)
 

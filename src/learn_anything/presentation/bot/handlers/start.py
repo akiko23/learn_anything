@@ -35,6 +35,12 @@ async def cmd_start(
 
     await state.update_data(role=output_data.role)
 
+    if output_data.is_newbie:
+        return await bot.send_message(
+            chat_id=user_id,
+            text=f"Добро пожаловать, {fullname}. Твоя роль: {output_data.role}",
+            reply_markup=get_main_menu_keyboard(user_role=output_data.role),
+        )
     await bot.send_message(
         chat_id=user_id,
         text=f"Привет, {fullname}. Твоя роль: {output_data.role}",

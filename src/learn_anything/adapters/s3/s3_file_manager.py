@@ -47,7 +47,6 @@ class S3FileManager(FileManager):
 
     def get_by_file_path(self, file_path: str) -> BaseHTTPResponse | None:
         bucket_name, file_id = self._parse_path(path=file_path)
-        print(bucket_name)
         obj = self._client.get_object(bucket_name=bucket_name, object_name=file_id)
 
         if not obj:

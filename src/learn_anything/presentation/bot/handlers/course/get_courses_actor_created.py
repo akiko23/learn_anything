@@ -12,7 +12,7 @@ from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor, \
     GetManyCoursesInputData, CoursePartialData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
-from learn_anything.presentation.bot.keyboards.many_courses import cancel_text_filter_input_kb, \
+from learn_anything.presentation.bot.keyboards.course.many_courses import cancel_text_filter_input_kb, \
     get_actor_created_courses_keyboard, get_actor_created_courses_filters_kb
 from learn_anything.presentation.bot.states.course import SearchCreatedBy
 
@@ -32,12 +32,14 @@ async def get_actor_created_courses(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
+    filters = data.get('created_courses_filters', DEFAULT_FILTERS(actor_id=user_id))
+
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     output_data = await interactor.execute(
         GetManyCoursesInputData(
             pagination=Pagination(offset=0, limit=DEFAULT_LIMIT),
-            filters=data.get('created_courses_filters', DEFAULT_FILTERS(actor_id=user_id)),
+            filters=filters,
         )
     )
 
@@ -46,19 +48,23 @@ async def get_actor_created_courses(
         created_courses_pointer=0,
         created_courses_offset=0,
         created_courses_total=output_data.total,
-        created_courses_filters=data.get('created_courses_filters', DEFAULT_FILTERS(actor_id=user_id)),
+        created_courses_filters=filters,
     )
 
     courses = output_data.courses
     total = output_data.total
 
     if total == 0:
+        msg_text = 'Вы еще не создали ни одного курса'
+        if filters != DEFAULT_FILTERS(actor_id=user_id):
+            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+
         await bot.send_message(
             chat_id=user_id,
-            text=f"No courses were found. Try to reset filters",
+            text=msg_text,
             reply_markup=get_actor_created_courses_keyboard(
                 pointer=0,
-                total=total,
+                total=0,
             )
         )
         return
@@ -225,10 +231,16 @@ async def apply_courses_actor_created_filters(
         created_courses_offset=0,
     )
 
+    filters = data['created_courses_filters']
+
     if total == 0:
+        msg_text = 'Вы еще не создали ни одного курса'
+        if filters != DEFAULT_FILTERS(actor_id=user_id):
+            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+
         await bot.send_message(
             chat_id=user_id,
-            text=f"No courses were found. Try to reset filters",
+            text=msg_text,
             reply_markup=get_actor_created_courses_keyboard(
                 pointer=0,
                 total=0,
@@ -268,6 +280,8 @@ async def actor_created_courses_filters_back(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
+    filters = data['created_courses_filters']
+
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     courses = data['created_courses']
@@ -275,9 +289,13 @@ async def actor_created_courses_filters_back(
     pointer = data['created_courses_pointer']
 
     if total == 0:
+        msg_text = 'Вы еще не создали ни одного курса'
+        if filters != DEFAULT_FILTERS(actor_id=user_id):
+            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+
         await bot.send_message(
             chat_id=user_id,
-            text=f"No courses were found. Try to reset filters",
+            text=msg_text,
             reply_markup=get_actor_created_courses_keyboard(
                 pointer=0,
                 total=0,

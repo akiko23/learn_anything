@@ -1,7 +1,20 @@
+from dataclasses import dataclass
+from enum import StrEnum, auto
 from typing import Protocol, Sequence
 
+from learn_anything.application.input_data import Pagination
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.models import TaskID, Task, CodeTask, PollTask, TextInputTask
+
+
+class SortBy(StrEnum):
+    POPULARITY = auto()
+    DATE = auto()
+
+
+@dataclass
+class GetTasksFilters:
+    sort_by: SortBy
 
 
 class TaskGateway(Protocol):
@@ -17,10 +30,10 @@ class TaskGateway(Protocol):
     async def get_text_input_task_with_id(self, task_id: TaskID) -> TextInputTask:
         raise NotImplementedError
 
-    async def with_course(self, course_id: CourseID) -> Sequence[Task]:
+    async def with_course(self, course_id: CourseID, pagination: Pagination, filters: GetTasksFilters | None) -> (Sequence[Task], int):
         raise NotImplementedError
 
-    # saves theory task
+    # save theory task
     async def save(self, task: Task) -> TaskID:
         raise NotImplementedError
 

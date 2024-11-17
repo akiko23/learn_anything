@@ -12,6 +12,7 @@ tasks_table = sa.Table(
         sa.BigInteger,
         primary_key=True,
         unique=True,
+        autoincrement=True,
     ),
     sa.Column("title", sa.String(256), nullable=False),
     sa.Column(
@@ -62,6 +63,7 @@ code_task_tests_table = sa.Table(
         sa.BigInteger,
         primary_key=True,
         unique=True,
+        autoincrement=True,
     ),
     sa.Column(
         "code",
@@ -81,6 +83,7 @@ poll_task_options_table = sa.Table(
         sa.BigInteger,
         primary_key=True,
         unique=True,
+        autoincrement=True,
     ),
     sa.Column(
         "content",
@@ -104,6 +107,7 @@ text_input_task_correct_answers_table = sa.Table(
         sa.BigInteger,
         primary_key=True,
         unique=True,
+        autoincrement=True,
     ),
     sa.Column(
         "value",
@@ -113,7 +117,6 @@ text_input_task_correct_answers_table = sa.Table(
         "task_id",
         sa.ForeignKey("tasks.id", ondelete="CASCADE"),
     ),
-
 )
 
 

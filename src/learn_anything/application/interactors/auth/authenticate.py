@@ -20,6 +20,7 @@ class AuthInputData:
 @dataclass
 class AuthOutputData:
     role: UserRole
+    is_newbie: bool
 
 
 class Authenticate:
@@ -29,6 +30,10 @@ class Authenticate:
         self._committer = committer
 
     async def execute(self, data: AuthInputData) -> AuthOutputData:
+        actor = await self._user_gateway.with_id(user_id=data.user_id)
+        if actor:
+            return AuthOutputData(role=actor.role, is_newbie=False)
+
         role = await self._id_provider.get_role(token=data.token)
         user = create_user(
             user_id=data.user_id,
@@ -42,4 +47,8 @@ class Authenticate:
 
         logging.info("User %s was authenticated with role '%s'", data.user_id, role)
 
-        return AuthOutputData(role=role)
+        is_newbie = True
+        if actor:
+            is_newbie = False
+
+        return AuthOutputData(role=role, is_newbie=is_newbie)

@@ -3,7 +3,6 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from learn_anything.application.interactors.course.get_course import GetFullCourseOutputData
-from learn_anything.entities.user.models import User, UserRole
 
 
 def get_course_kb(

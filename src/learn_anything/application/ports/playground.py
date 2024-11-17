@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Sequence, Iterable
 from typing import Protocol, Self
 
 from learn_anything.entities.task.models import CodeTask, CodeTaskTest
@@ -12,16 +12,15 @@ class Playground(Protocol):
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         raise NotImplementedError
 
-    def check_submission(self) -> tuple[str, int]:
+    async def execute_code(self, code: str) -> (str, str):
         raise NotImplementedError
 
 
 class PlaygroundFactory(Protocol):
     def create(
             self,
-            task: CodeTask,
-            user_id: UserID,
-            submission_content: str
+            identifier: str | None,
+            code_duration_timeout: int
     ) -> Playground:
         raise NotImplementedError
 

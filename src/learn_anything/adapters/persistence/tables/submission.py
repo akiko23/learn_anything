@@ -11,6 +11,7 @@ submissions_table = sa.Table(
         sa.BigInteger,
         primary_key=True,
         unique=True,
+        autoincrement=True,
     ),
     sa.Column(
         "user_id",

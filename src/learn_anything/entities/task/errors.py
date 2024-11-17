@@ -42,3 +42,59 @@ class AttemptsLimitExceededForTaskError(ApplicationError):
     @property
     def message(self):
         return f"Attempts limit for task {self.task_id} was already reached"
+
+
+@dataclass
+class TaskCodeIsInvalidError(ApplicationError):
+    user_id: UserID
+    code: str
+    err: str
+
+    @property
+    def message(self):
+        return f"""User {self.user_id} sent invalid task prepared code: 
+'''
+{self.code} 
+'''
+and got 
+'''
+{self.err}
+'''"""
+
+@dataclass
+class TestCodeIsInvalidError(ApplicationError):
+    user_id: UserID
+    code: str
+    err: str
+
+    @property
+    def message(self):
+        return f"""User {self.user_id} sent invalid code for the test: 
+'''
+{self.code} 
+'''
+and got:
+'''
+{self.err}
+'''"""
+
+
+
+# @dataclass
+# class TaskCodeIsMaliciousError(ApplicationError):
+#     user_id: UserID
+#     code: str
+#     err: str
+#
+#     @property
+#     def message(self):
+#         return f"""User {self.user_id} thinks he is cool. With this stupid task prepared code:
+# '''
+# {self.code}
+# '''
+#
+# he tried to harm my server and got:
+# '''
+# {self.err}
+# '''
+# """

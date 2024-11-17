@@ -12,3 +12,7 @@ class UserGateway(Protocol):
 
     async def save_auth_link(self, auth_link: AuthLink) -> None:
         raise NotImplementedError
+
+    async def exists(self, user_id: UserID) -> bool:
+        raise NotImplementedError
+

@@ -9,7 +9,7 @@ from learn_anything.application.ports.data.file_manager import FileManager
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.errors import CoursePermissionError
 from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.course.rules import ensure_actor_has_write_access
+from learn_anything.entities.course.rules import ensure_actor_has_write_access, actor_has_write_access
 from learn_anything.entities.user.models import UserID
 
 
@@ -63,12 +63,6 @@ class GetCourseInteractor:
 
         share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
 
-        user_has_write_access = True
-        try:
-            ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
-        except CoursePermissionError:
-            user_has_write_access = False
-
         output_data = GetFullCourseOutputData(
             id=course.id,
             title=course.title,
@@ -82,7 +76,11 @@ class GetCourseInteractor:
             creator_id=creator.id,
             creator=creator.fullname.title(),
             user_is_registered=actor_is_registered,
-            user_has_write_access=user_has_write_access,
+            user_has_write_access=actor_has_write_access(
+                actor_id=actor.id,
+                course=course,
+                share_rules=share_rules
+            ),
         )
 
         if course.photo_id:
@@ -92,3 +90,4 @@ class GetCourseInteractor:
             output_data.photo_reader = photo_reader
 
         return output_data
+

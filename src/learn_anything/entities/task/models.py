@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum, auto
 
 from typing import NewType, Sequence
@@ -22,21 +23,25 @@ class Task:
     title: str
     body: str
     course_id: CourseID
+    # creator_id: UserID
     index_in_course: int
+    created_at: datetime
+
+@dataclass
+class PracticeTask(Task):
     attempts_limit: int | None
 
 
 @dataclass
 class CodeTaskTest:
-    task_id: TaskID
     code: str
 
 
 @dataclass
-class CodeTask(Task):
-    prepared_code: str
+class CodeTask(PracticeTask):
+    prepared_code: str | None
     code_duration_timeout: int
-    tests: Sequence[CodeTaskTest] | None
+    tests: Sequence[CodeTaskTest]
 
 
 PollTaskOptionID = NewType('PollTaskOptionID', int)
@@ -55,7 +60,7 @@ class PollTaskOption:
 
 
 @dataclass
-class PollTask(Task):
+class PollTask(PracticeTask):
     options: Sequence[PollTaskOption]
 
 
@@ -70,5 +75,5 @@ class TextInputTaskAnswer:
 
 
 @dataclass
-class TextInputTask(Task):
+class TextInputTask(PracticeTask):
     correct_answers: Sequence[TextInputTaskAnswer]

@@ -78,26 +78,23 @@ registrations_for_courses_table = sa.Table(
     "registrations_for_courses",
     mapper_registry.metadata,
     sa.Column(
-        "id",
-        sa.BigInteger,
-        primary_key=True,
-        unique=True,
-    ),
-    sa.Column(
         "user_id",
         sa.BigInteger,
         sa.ForeignKey("users.id", ondelete='CASCADE'),
+        primary_key=True,
     ),
     sa.Column(
         "course_id",
         sa.BigInteger,
-        sa.ForeignKey("courses.id", ondelete='CASCADE')
+        sa.ForeignKey("courses.id", ondelete='CASCADE'),
+        primary_key=True,
     ),
     sa.Column(
         "registered_at",
         sa.DateTime,
         default=sa.func.now(),
         server_default=sa.func.now(),
+        primary_key=True,
     ),
 )
 

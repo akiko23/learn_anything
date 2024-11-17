@@ -9,7 +9,7 @@ from aiogram.utils.deep_linking import create_start_link
 
 from learn_anything.application.interactors.auth.create_auth_link import CreateAuthLinkInteractor, \
     CreateAuthLinkInputData
-from learn_anything.application.ports.auth.identity_provider import IdentityProvider
+from learn_anything.entities.user.models import UserRole
 from learn_anything.presentation.bot.keyboards.create_auth_link import CANCEL_AUTH_LINK_CREATION_KB
 
 from learn_anything.presentation.bot.keyboards.main_menu import get_main_menu_keyboard
@@ -27,14 +27,14 @@ async def start_auth_link_creation(
     user_id: int = callback_query.from_user.id
 
     await state.set_state(CreateAuthLink.get_role)
-    await state.update_data(
-        msg_on_delete=callback_query.message.message_id
-    )
 
-    await bot.send_message(
+    msg = await bot.send_message(
         chat_id=user_id,
         text=f"Введите роль, которую получит пользователь после перехода по ссылке",
         reply_markup=CANCEL_AUTH_LINK_CREATION_KB,
+    )
+    await state.update_data(
+        msg_on_delete=msg.message_id
     )
 
 
@@ -54,14 +54,13 @@ async def get_auth_link_role(
     await state.set_state(CreateAuthLink.get_usages)
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
-    await state.update_data(
-        msg_on_delete=msg.message_id
-    )
-
-    await bot.send_message(
+    msg = await bot.send_message(
         chat_id=user_id,
         text='Введите количество возможных использований',
         reply_markup=CANCEL_AUTH_LINK_CREATION_KB,
+    )
+    await state.update_data(
+        msg_on_delete=msg.message_id
     )
 
 
@@ -81,14 +80,13 @@ async def get_auth_link_usages(
     await state.set_state(CreateAuthLink.get_expires_at)
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
-    await state.update_data(
-        msg_on_delete=msg.message_id
-    )
-
-    await bot.send_message(
+    msg = await bot.send_message(
         chat_id=user_id,
         text='Введите дату, до которой ссылка будет валидна',
         reply_markup=CANCEL_AUTH_LINK_CREATION_KB,
+    )
+    await state.update_data(
+        msg_on_delete=msg.message_id
     )
 
 
@@ -133,20 +131,14 @@ async def cancel_auth_link_creation(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        id_provider: FromDishka[IdentityProvider],
+        user_role: UserRole,
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     await state.set_state(state=None)
-
-    role = data.get('role')
-    if not role:
-        role = await id_provider.get_role()
-        data['role'] = role
 
     await bot.send_message(
         chat_id=user_id,
         text=f"Процесс создания ссылки для входа отменен",
-        reply_markup=get_main_menu_keyboard(user_role=role),
+        reply_markup=get_main_menu_keyboard(user_role=user_role),
     )

@@ -1,13 +1,17 @@
 import asyncio
+from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, func
+from sqlalchemy.orm import Bundle
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
-from learn_anything.application.ports.data.task_gateway import TaskGateway
+from learn_anything.application.input_data import Pagination
+from learn_anything.application.ports.data.task_gateway import TaskGateway, GetTasksFilters
 from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.task.models import Task, TaskID, CodeTask, PollTask, PollTaskOption, CodeTaskTest
-from learn_anything.adapters.persistence.tables.task import tasks_table, poll_task_options_table
+from learn_anything.entities.task.models import Task, TaskID, CodeTask, PollTask, PollTaskOption, CodeTaskTest, TaskType
+from learn_anything.adapters.persistence.tables.task import tasks_table, poll_task_options_table, code_task_tests_table, \
+    text_input_task_correct_answers_table
 
 
 class TaskMapper(TaskGateway):
@@ -44,20 +48,34 @@ class TaskMapper(TaskGateway):
 
         return poll_task
 
-    async def with_course(self, course_id: CourseID):
-        stmt = select(Task).where(tasks_table.c.course_id == course_id)
+    async def with_course(self, course_id: CourseID, pagination: Pagination, filters: GetTasksFilters | None) -> (Sequence[Task], int):
+        stmt = (
+            select(
+                Task
+            ).
+            where(tasks_table.c.course_id == course_id).
+            # outerjoin(poll_task_options_table).
+            # outerjoin(text_input_task_correct_answers_table).
+            order_by(tasks_table.c.index_in_course).
+            offset(pagination.offset).
+            limit(pagination.limit)
+        )
+
+        total_res = await self._session.execute(
+            select(func.count()).select_from(stmt)
+        )
+
         result = await self._session.scalars(stmt)
 
-        return result.all()
+        return result.all(), total_res.scalar_one()
 
     async def save(self, task: Task) -> TaskID:
         stmt = (
             insert(tasks_table).
             values(
-                id=task.id,
-                type=task.type,
                 title=task.title,
                 body=task.body,
+                type=task.type,
                 course_id=task.course_id,
                 index_in_course=task.index_in_course,
             )
