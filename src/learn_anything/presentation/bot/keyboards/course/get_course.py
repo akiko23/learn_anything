@@ -14,7 +14,10 @@ def get_course_kb(
     builder = InlineKeyboardBuilder()
 
     if output_data.user_is_registered:
-        builder.row(InlineKeyboardButton(text='Покинуть', callback_data=f'leave_course-{course_id}'))
+        builder.row(
+            InlineKeyboardButton(text='Продолжить прохождение', callback_data=f'continue_course-{course_id}'),
+            InlineKeyboardButton(text='Покинуть', callback_data=f'leave_course-{course_id}'),
+        )
     else:
         if (
                 (not output_data.registrations_limit)
@@ -24,12 +27,9 @@ def get_course_kb(
 
     if output_data.user_has_write_access:
         builder.row(
-            InlineKeyboardButton(text='Редактировать', callback_data=f'edit_course-{back_to}-{course_id}'),
-            InlineKeyboardButton(text='Удалить (Not Implemented)', callback_data=f'delete_course-{back_to}-{course_id}'),
+            InlineKeyboardButton(text='Панель управления', callback_data=f'edit_course-{back_to}-{course_id}'),
         )
 
-        builder.button(text='Опубликовать', callback_data=f'publish_course-{back_to}-{course_id}') if output_data.is_published else None
-
-    builder.button(text='Назад', callback_data=f'get_course-back_to_{back_to}')
+    builder.row(InlineKeyboardButton(text='Назад', callback_data=f'get_course-back_to_{back_to}'))
 
     return builder.as_markup()
