@@ -28,7 +28,7 @@ class AuthLink:
     id: uuid.UUID | None
     usages: int
     for_role: UserRole
-    expires_at: datetime | None
+    expires_at: datetime
 
     @property
     def is_invalid(self):

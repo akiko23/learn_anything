@@ -148,7 +148,7 @@ class CreateCodeTaskInteractor:
             for index, code in enumerate(codes_of_tests):
                 _, err = await pl.execute_code(code=code)
                 if err:
-                    print(f'Test #{index}: err')
+                    print(f'Test #{index}: {err}')
 
 
 @dataclass

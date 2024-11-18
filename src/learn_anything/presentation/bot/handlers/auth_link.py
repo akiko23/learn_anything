@@ -90,7 +90,7 @@ async def get_auth_link_usages(
     )
 
 
-@router.message(StateFilter(CreateAuthLink.get_expires_at))
+@router.message(StateFilter(CreateAuthLink.get_expires_at), F.text)
 async def get_auth_link_expires_at(
         msg: Message,
         state: FSMContext,
@@ -106,7 +106,7 @@ async def get_auth_link_expires_at(
         data=CreateAuthLinkInputData(
             for_role=data['for_role'],
             usages=data['usages'],
-            expires_at=data['expires_at'],
+            expires_at=msg.text,
         )
     )
 
@@ -115,13 +115,12 @@ async def get_auth_link_expires_at(
     del data['msg_on_delete']
     del data['for_role']
     del data['usages']
-    del data['expires_at']
 
     await state.set_data(data)
 
     await bot.send_message(
         chat_id=user_id,
-        text=f'Ссылка успешно создана: {create_start_link(bot=bot, payload=output_data.token)}',
+        text=f'Ссылка успешно создана: {await create_start_link(bot=bot, payload=output_data.token)}',
         reply_markup=CANCEL_AUTH_LINK_CREATION_KB,
     )
 

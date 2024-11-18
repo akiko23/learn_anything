@@ -25,8 +25,9 @@ class AvailableForAuthRole:
 
 @dataclass
 class ExpiresAt:
-    value: datetime
+    value: str
 
     def __post_init__(self):
+        self.value: datetime = datetime.strptime(self.value, '%d-%m-%Y')
         if self.value < datetime.now():
             raise InvalidExpiresAtError(self.value)

@@ -8,5 +8,5 @@ class IdentityProvider(Protocol):
     async def get_user(self) -> User:
         raise NotImplementedError
 
-    async def get_role(self, token: str | None = None) -> UserRole:
+    async def get_role(self) -> UserRole:
         raise NotImplementedError

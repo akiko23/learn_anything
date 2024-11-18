@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGateway
@@ -43,6 +43,15 @@ class UserMapper(UserGateway):
 
         return result.scalar_one_or_none()
 
+    async def exists(self, user_id: UserID) -> User | None:
+        stmt = select(exists(
+            select(User).where(users_table.c.id == user_id)
+        ))
+        result = await self._session.execute(stmt)
+
+        return result.scalar_one_or_none()
+
+
 
 class AuthLinkMapper(AuthLinkGateway):
     def __init__(self, session: AsyncSession) -> None:
@@ -58,7 +67,6 @@ class AuthLinkMapper(AuthLinkGateway):
         upsert_stmt = (
             insert(auth_links_table).
             values(
-                id=auth_link.id,
                 for_role=auth_link.for_role,
                 usages=auth_link.usages,
                 expires_at=auth_link.expires_at,

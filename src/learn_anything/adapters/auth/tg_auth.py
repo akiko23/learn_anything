@@ -37,29 +37,12 @@ class TgIdentityProvider(IdentityProvider):
 
         return user
 
-    async def get_role(self, token: str | None = None) -> UserRole:
+    async def get_role(self) -> UserRole:
         if self._user_id == 818525681:
             return UserRole.BOT_OWNER
-
-        if token:
-            auth_link_id = self._token_processor.decode(token)
-            return await self._get_role_by_auth_link_id(auth_link_id)
 
         user = await self._user_gateway.with_id(UserID(self._user_id))
         if user:
             return user.role
 
         return UserRole.STUDENT
-
-    async def _get_role_by_auth_link_id(self, auth_link_id: str):
-        auth_link_id = UUID(auth_link_id)
-
-        auth_link = await self._auth_link_gateway.with_id(auth_link_id)
-        if auth_link.is_invalid:
-            await self._auth_link_gateway.delete(auth_link_id)
-            raise InvalidAuthLinkError
-
-        auth_link.usages -= 1
-        await self._auth_link_gateway.save(auth_link)
-
-        return auth_link.for_role

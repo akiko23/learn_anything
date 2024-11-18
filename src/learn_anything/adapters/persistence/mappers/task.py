@@ -101,7 +101,6 @@ class TaskMapper(TaskGateway):
         upsert_code_task_stmt = (
             insert(tasks_table).
             values(
-                id=task.id,
                 type=task.type,
                 title=task.title,
                 body=task.body,
@@ -145,7 +144,6 @@ class TaskMapper(TaskGateway):
         task_upsert_stmt = (
             insert(tasks_table).
             values(
-                id=task.id,
                 type=task.type,
                 title=task.title,
                 body=task.body,

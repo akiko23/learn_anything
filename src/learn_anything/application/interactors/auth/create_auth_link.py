@@ -1,6 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional
 
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
@@ -15,7 +13,7 @@ from learn_anything.entities.user.rules import create_auth_link
 class CreateAuthLinkInputData:
     for_role: UserRole
     usages: int
-    expires_at: Optional[datetime] = None
+    expires_at: str
 
 
 @dataclass
@@ -44,7 +42,7 @@ class CreateAuthLinkInteractor:
         auth_link = create_auth_link(
             link_id=None,
             for_role=data.for_role,
-            usages=data.usages,
+            usages=int(data.usages),
             expires_at=data.expires_at,
         )
         new_auth_link_id = await self._auth_link_gateway.save(auth_link)

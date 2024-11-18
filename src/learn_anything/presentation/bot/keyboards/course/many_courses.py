@@ -126,7 +126,7 @@ def get_actor_created_courses_keyboard(pointer: int, total: int, current_course_
         ])
 
     if total == 0:
-        kb.inline_keyboard.pop(1)
+        kb.inline_keyboard.pop(0)
 
 
     return kb
@@ -186,6 +186,9 @@ def get_actor_registered_courses_keyboard(pointer: int, total: int, current_cour
             InlineKeyboardButton(text='Перейти к курсу',
                                  callback_data=f'course-registered_courses-{current_course_id}'),
         ])
+
+    if total == 0:
+        kb.inline_keyboard.pop(0)
 
     return kb
 

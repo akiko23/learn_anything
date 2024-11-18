@@ -10,7 +10,7 @@ def create_user(user_id: int, fullname: str, username: str | None, role: UserRol
     return User(id=UserID(user_id), fullname=fullname, username=username, role=role)
 
 
-def create_auth_link(link_id: uuid.UUID | None, for_role: UserRole, usages: int, expires_at: Optional[datetime] = None):
+def create_auth_link(link_id: uuid.UUID | None, for_role: UserRole, usages: int, expires_at: str):
     return AuthLink(
         id=link_id,
         for_role=AvailableForAuthRole(for_role).value,
