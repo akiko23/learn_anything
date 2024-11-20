@@ -74,3 +74,6 @@ class RegistrationForCourseGateway(Protocol):
 
     async def save(self, registration: RegistrationForCourse) -> None:
         raise NotImplementedError
+
+    async def delete(self, user_id: UserID, course_id: CourseID) -> None:
+        raise NotImplementedError

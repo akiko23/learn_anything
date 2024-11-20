@@ -56,6 +56,7 @@ def get_code_duration_timeout_kb():
         ]
     )
 
+
 def get_code_task_tests_kb(current_tests: Sequence[str]):
     kb = InlineKeyboardMarkup(
         inline_keyboard=[

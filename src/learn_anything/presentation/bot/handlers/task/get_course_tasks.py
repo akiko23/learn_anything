@@ -64,17 +64,20 @@ async def get_course_tasks(
             reply_markup=get_course_tasks_keyboard(
                 pointer=pointer,
                 total=total,
+                actor_is_registered=data[f'course_{course_id}_registered'],
                 back_to=back_to,
                 course_id=course_id,
             )
         )
         return
 
-    pointer = data['created_courses_pointer']
+    pointer = data[f'course_{course_id}_tasks_pointer']
     current_task = tasks[pointer]
     await bot.send_message(
         chat_id=user_id,
         text=f"""Заголовок: {current_task.title}
+
+Тип: {current_task.type}
 
 Тело: {current_task.body}
 
@@ -85,7 +88,9 @@ async def get_course_tasks(
             total=total,
             back_to=back_to,
             course_id=course_id,
-            task_id=current_task.id
+            task_id=current_task.id,
+            user_has_write_access=current_task.user_has_write_access,
+            actor_is_registered=data[f'course_{course_id}_registered'],
         ),
     )
 
@@ -142,6 +147,8 @@ async def watch_course_tasks_prev_or_next(
         message_id=callback_query.message.message_id,
         text=f"""Заголовок: {current_task.title}
 
+Тип: {current_task.type}
+
 Тело: {current_task.body}
 
 Создано: {current_task.created_at}
@@ -152,6 +159,8 @@ async def watch_course_tasks_prev_or_next(
             back_to=back_to,
             course_id=course_id,
             task_id=current_task.id,
+            actor_is_registered=data[f'course_{course_id}_registered'],
+            user_has_write_access=current_task.user_has_write_access
         ),
     )
 

@@ -15,6 +15,8 @@ from learn_anything.application.interactors.auth.invalidate_auth_link import Inv
 from learn_anything.application.interactors.course.create_course import CreateCourseInteractor
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor
 from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor
+from learn_anything.application.interactors.course.leave_course import LeaveCourseInteractor
+from learn_anything.application.interactors.course.publish_course import PublishCourseInteractor
 from learn_anything.application.interactors.course.register_for_course import RegisterForCourseInteractor
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor
 from learn_anything.application.interactors.task.create_submission import CreateCodeTaskSubmissionInteractor, \
@@ -22,6 +24,7 @@ from learn_anything.application.interactors.task.create_submission import Create
 from learn_anything.application.interactors.task.create_task import CreateCodeTaskInteractor, CreatePollTaskInteractor, \
     CreateTaskInteractor
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor
+from learn_anything.application.interactors.task.get_task import GetTaskInteractor
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
 from learn_anything.application.ports.committer import Commiter
@@ -88,10 +91,13 @@ def interactors_provider() -> Provider:
     provider.provide(GetCourseTasksInteractor, scope=Scope.REQUEST)
     provider.provide(GetManyCoursesInteractor, scope=Scope.REQUEST)
     provider.provide(RegisterForCourseInteractor, scope=Scope.REQUEST)
+    provider.provide(LeaveCourseInteractor, scope=Scope.REQUEST)
+    provider.provide(PublishCourseInteractor, scope=Scope.REQUEST)
 
     provider.provide(CreateTaskInteractor, scope=Scope.REQUEST)
     provider.provide(CreateCodeTaskInteractor, scope=Scope.REQUEST)
     provider.provide(CreatePollTaskInteractor, scope=Scope.REQUEST)
+    provider.provide(GetTaskInteractor, scope=Scope.REQUEST)
 
     provider.provide(CreateCodeTaskSubmissionInteractor, scope=Scope.REQUEST)
     provider.provide(CreatePollTaskSubmissionInteractor, scope=Scope.REQUEST)

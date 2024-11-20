@@ -9,6 +9,9 @@ class SubmissionGateway(Protocol):
     async def with_user_id(self, user_id: UserID) -> Submission:
         raise NotImplementedError
 
+    async def total_with_task_id(self, task_id: TaskID) -> int:
+        raise NotImplementedError
+
     async def save_for_code_task(self, submission: CodeSubmission) -> None:
         raise NotImplementedError
 

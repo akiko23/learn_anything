@@ -47,5 +47,17 @@ class RegistrationsLimitExceededError(ApplicationError):
         return f'Registrations limit for course {self.course_id} already reached.'
 
 
-class CoursePermissionError:
-    message: str = "You don't have write access to this course"
+class CoursePermissionError(ApplicationError):
+    message: str = "You don't have read or write access to this course"
+
+
+class CourseIsNotPublishedError(ApplicationError):
+    message: str = "Course is not published"
+
+
+class CourseAlreadyPublishedError(ApplicationError):
+    message: str = "Course is already published"
+
+
+class NeedAtLeastOneTaskToPublishCourseError(ApplicationError):
+    message: str = "You need to create at least one task to publish a course"

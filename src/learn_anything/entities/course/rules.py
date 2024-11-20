@@ -41,12 +41,32 @@ def increment_course_registrations_number(course: Course) -> Course:
     return course
 
 
+def decrement_course_registrations_number(course: Course) -> Course:
+    course.total_registered -= 1
+    return course
+
+
 def create_registration_for_course(user_id: UserID, course_id: CourseID):
     return RegistrationForCourse(
         user_id=user_id,
         course_id=course_id,
         created_at=datetime.now(),
     )
+
+
+def ensure_actor_has_read_access(actor_id: UserID, course: Course, share_rules: Sequence[CourseShareRule]):
+    if course.is_published:
+        return
+
+    if actor_id == course.creator_id:
+        return
+
+    for share_rule in share_rules:
+        if actor_id == share_rule.user_id:
+            return
+
+    raise CoursePermissionError
+
 
 def ensure_actor_has_write_access(actor_id: UserID, course: Course, share_rules: Sequence[CourseShareRule]):
     if actor_id == course.creator_id:

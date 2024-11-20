@@ -3,46 +3,53 @@ from dataclasses import dataclass
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
-from learn_anything.entities.course.errors import CourseDoesNotExistError, UserAlreadyRegisteredForCourseError
+from learn_anything.application.ports.data.task_gateway import TaskGateway
+from learn_anything.entities.course.errors import CourseDoesNotExistError, UserAlreadyRegisteredForCourseError, \
+    CourseAlreadyPublishedError, NeedAtLeastOneTaskToPublishCourseError
 from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.course.rules import increment_course_registrations_number, create_registration_for_course
+from learn_anything.entities.course.rules import increment_course_registrations_number, create_registration_for_course, \
+    ensure_actor_has_write_access
 
 
 @dataclass
-class RegisterForCourseInputData:
+class PublishCourseInputData:
     course_id: CourseID
 
 
-class RegisterForCourseInteractor:
+class PublishCourseInteractor:
     def __init__(
             self,
             course_gateway: CourseGateway,
+            task_gateway: TaskGateway,
             registration_for_course_gateway: RegistrationForCourseGateway,
             commiter: Commiter,
             id_provider: IdentityProvider
     ) -> None:
         self._id_provider = id_provider
         self._course_gateway = course_gateway
+        self._task_gateway = task_gateway
         self._commiter = commiter
         self._registration_for_course_gateway = registration_for_course_gateway
 
-    async def execute(self, data: RegisterForCourseInputData) -> None:
+    async def execute(self, data: PublishCourseInputData) -> None:
         actor = await self._id_provider.get_user()
         course = await self._course_gateway.with_id(course_id=data.course_id)
         if not course:
             raise CourseDoesNotExistError(data.course_id)
 
-        if not course.is_published:
-            raise CourseDoesNotExistError(data.course_id)
+        share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
+        ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
 
-        registration_exists = await self._registration_for_course_gateway.exists(user_id=actor.id, course_id=course.id)
-        if registration_exists:
-            raise UserAlreadyRegisteredForCourseError(actor.id, course.id)
+        if course.is_published:
+            raise CourseAlreadyPublishedError
 
-        course = increment_course_registrations_number(course=course)
-        new_registration = create_registration_for_course(user_id=actor.id, course_id=course.id)
+        total_tasks = await self._task_gateway.total_with_course(
+            course_id=data.course_id,
+        )
+        if total_tasks == 0:
+            raise NeedAtLeastOneTaskToPublishCourseError
 
+        course.is_published = True
         await self._course_gateway.save(course)
-        await self._registration_for_course_gateway.save(new_registration)
 
         await self._commiter.commit()

@@ -12,17 +12,18 @@ def get_course_kb(
 ):
     builder = InlineKeyboardBuilder()
 
-    if output_data.user_is_registered:
-        builder.row(
-            InlineKeyboardButton(text='Продолжить прохождение', callback_data=f'continue_course-{course_id}'),
-            InlineKeyboardButton(text='Покинуть', callback_data=f'leave_course-{course_id}'),
-        )
-    else:
-        if (
-                (not output_data.registrations_limit)
-                or (output_data.total_registered + 1 <= output_data.registrations_limit)
-        ):
-            builder.row(InlineKeyboardButton(text='Записаться', callback_data=f'register_for_course-{course_id}'))
+    if output_data.is_published:
+        if output_data.user_is_registered:
+            builder.row(
+                InlineKeyboardButton(text='Проходить', callback_data=f'do_course-{back_to}-{course_id}'),
+                InlineKeyboardButton(text='Покинуть', callback_data=f'leave_course-{back_to}-{course_id}'),
+            )
+        else:
+            if (
+                    (not output_data.registrations_limit)
+                    or (output_data.total_registered + 1 <= output_data.registrations_limit)
+            ):
+                builder.row(InlineKeyboardButton(text='Записаться', callback_data=f'register_for_course-{back_to}-{course_id}'))
 
     if output_data.user_has_write_access:
         builder.row(

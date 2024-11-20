@@ -9,11 +9,10 @@ from learn_anything.entities.user.models import UserID
 @dataclass
 class TaskDoesNotExistError(ApplicationError):
     task_id: TaskID
-    type: TaskType
 
     @property
     def message(self) -> str:
-        return f"{self.type.title()} task with id={self.task_id} and does not exist"
+        return f"Task with id={self.task_id} and does not exist"
 
 
 @dataclass

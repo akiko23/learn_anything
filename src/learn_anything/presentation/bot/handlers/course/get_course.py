@@ -38,11 +38,11 @@ async def get_single_course(
         )
     )
 
-    courses = data[back_to]
-    courses[data[f'{back_to}_pointer']] = target_course
-
     await state.update_data(
-        **{back_to: courses}
+        **{
+            f'course_{course_id}_registered': target_course.user_is_registered,
+            'target_course': target_course,
+        },
     )
 
     text = f"""Название: {target_course.title}
@@ -110,9 +110,9 @@ async def back_to_all_courses(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    courses = data['courses']
-    pointer = data['pointer']
-    total = data['total']
+    courses = data['all_courses']
+    pointer = data['all_courses_pointer']
+    total = data['all_courses_total']
 
     current_course = courses[pointer]
     await bot.send_message(

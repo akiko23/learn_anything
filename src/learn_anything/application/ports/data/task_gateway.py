@@ -33,6 +33,9 @@ class TaskGateway(Protocol):
     async def with_course(self, course_id: CourseID, pagination: Pagination, filters: GetTasksFilters | None) -> (Sequence[Task], int):
         raise NotImplementedError
 
+    async def total_with_course(self, course_id: CourseID) -> int:
+        raise NotImplementedError
+
     # save theory task
     async def save(self, task: Task) -> TaskID:
         raise NotImplementedError
