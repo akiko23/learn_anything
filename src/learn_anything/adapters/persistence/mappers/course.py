@@ -1,21 +1,19 @@
-import asyncio
 from typing import Sequence
 
-from sqlalchemy import select, exists, func, desc
+from sqlalchemy import and_
+from sqlalchemy import select, exists, func, desc, delete
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Bundle
 
-from learn_anything.application.input_data import Pagination
-from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway, \
-    GetManyCoursesFilters, SortBy
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import and_, not_
-
-from learn_anything.entities.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
-from learn_anything.entities.user.models import UserID
 from learn_anything.adapters.persistence.tables.course import courses_table, registrations_for_courses_table, \
     course_share_rules_table
 from learn_anything.adapters.persistence.tables.user import users_table
+from learn_anything.application.input_data import Pagination
+from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway, \
+    GetManyCoursesFilters, SortBy
+from learn_anything.entities.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
+from learn_anything.entities.user.models import UserID
 
 
 class CourseMapper(CourseGateway):
@@ -51,7 +49,6 @@ class CourseMapper(CourseGateway):
             **row.course._mapping,  # noqa
             total_registered=row.course_total_registrations.total_registered,
         )
-
 
     async def all(
             self,
@@ -154,18 +151,31 @@ class CourseMapper(CourseGateway):
         )
 
         if course.id:
-            stmt = stmt.on_conflict_do_update(
-                index_elements=['id'],
-                constraint='courses_pkey',
-                set_=dict(
+            stmt = (
+                insert(courses_table).
+                values(
+                    id=course.id,
                     title=course.title,
+                    creator_id=course.creator_id,
                     is_published=course.is_published,
                     description=course.description,
                     photo_id=course.photo_id,
-                    registrations_limit=course.registrations_limit,
+                    created_at=course.created_at,
                     updated_at=course.updated_at,
-                ),
-                where=(courses_table.c.id == course.id)
+                    registrations_limit=course.registrations_limit,
+                )
+                .on_conflict_do_update(
+                    index_elements=['id'],
+                    set_=dict(
+                        title=course.title,
+                        is_published=course.is_published,
+                        description=course.description,
+                        photo_id=course.photo_id,
+                        registrations_limit=course.registrations_limit,
+                        updated_at=course.updated_at,
+                    ),
+                    where=(courses_table.c.id == course.id)
+                )
             )
 
         stmt = stmt.returning(courses_table.c.id)
@@ -178,7 +188,6 @@ class CourseMapper(CourseGateway):
 
         res = await self._session.scalars(stmt)
         return res.all()
-
 
     async def add_share_rule(self, share_rule: CourseShareRule) -> None:
         raise NotImplementedError
@@ -214,4 +223,21 @@ class RegistrationForCourseMapper(RegistrationForCourseGateway):
         return res.scalar()
 
     async def save(self, registration: RegistrationForCourse) -> None:
-        pass
+        stmt = (
+            insert(registrations_for_courses_table).
+            values(
+                course_id=registration.course_id,
+                user_id=registration.user_id,
+            )
+        )
+        await self._session.execute(stmt)
+
+    async def delete(self, user_id: UserID, course_id: CourseID) -> None:
+        stmt = (
+            delete(registrations_for_courses_table).
+            where(
+                registrations_for_courses_table.c.course_id == course_id,
+                registrations_for_courses_table.c.user_id == user_id,
+            )
+        )
+        await self._session.execute(stmt)

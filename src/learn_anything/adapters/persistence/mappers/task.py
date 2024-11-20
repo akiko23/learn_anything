@@ -2,16 +2,14 @@ import asyncio
 from collections.abc import Sequence
 
 from sqlalchemy import select, func
-from sqlalchemy.orm import Bundle
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from learn_anything.adapters.persistence.tables.task import tasks_table, poll_task_options_table
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.ports.data.task_gateway import TaskGateway, GetTasksFilters
 from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.task.models import Task, TaskID, CodeTask, PollTask, PollTaskOption, CodeTaskTest, TaskType
-from learn_anything.adapters.persistence.tables.task import tasks_table, poll_task_options_table, code_task_tests_table, \
-    text_input_task_correct_answers_table
+from learn_anything.entities.task.models import Task, TaskID, CodeTask, PollTask, PollTaskOption, CodeTaskTest
 
 
 class TaskMapper(TaskGateway):
@@ -48,14 +46,13 @@ class TaskMapper(TaskGateway):
 
         return poll_task
 
-    async def with_course(self, course_id: CourseID, pagination: Pagination, filters: GetTasksFilters | None) -> (Sequence[Task], int):
+    async def with_course(self, course_id: CourseID, pagination: Pagination, filters: GetTasksFilters | None) -> (
+    Sequence[Task], int):
         stmt = (
             select(
                 Task
             ).
             where(tasks_table.c.course_id == course_id).
-            # outerjoin(poll_task_options_table).
-            # outerjoin(text_input_task_correct_answers_table).
             order_by(tasks_table.c.index_in_course).
             offset(pagination.offset).
             limit(pagination.limit)
@@ -68,6 +65,19 @@ class TaskMapper(TaskGateway):
         result = await self._session.scalars(stmt)
 
         return result.all(), total_res.scalar_one()
+
+    async def total_with_course(self, course_id: CourseID) -> int:
+        stmt = (
+            select(
+                Task
+            ).
+            where(tasks_table.c.course_id == course_id)
+        )
+
+        res = await self._session.execute(
+            select(func.count()).select_from(stmt)
+        )
+        return res.scalar_one()
 
     async def save(self, task: Task) -> TaskID:
         stmt = (
@@ -82,14 +92,25 @@ class TaskMapper(TaskGateway):
         )
 
         if task.id:
-            stmt = stmt.on_conflict_do_update(
-                index_elements=['id'],
-                set_=dict(
+            stmt = (
+                insert(tasks_table).
+                values(
+                    id=task.id,
                     title=task.title,
                     body=task.body,
+                    type=task.type,
+                    course_id=task.course_id,
                     index_in_course=task.index_in_course,
-                ),
-                where=(tasks_table.c.id == task.id)
+                )
+                .on_conflict_do_update(
+                    index_elements=['id'],
+                    set_=dict(
+                        title=task.title,
+                        body=task.body,
+                        index_in_course=task.index_in_course,
+                    ),
+                    where=(tasks_table.c.id == task.id)
+                )
             )
 
         stmt = stmt.returning(tasks_table.c.id)
