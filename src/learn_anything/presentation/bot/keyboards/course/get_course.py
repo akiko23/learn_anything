@@ -15,7 +15,7 @@ def get_course_kb(
     if output_data.is_published:
         if output_data.user_is_registered:
             builder.row(
-                InlineKeyboardButton(text='Проходить', callback_data=f'do_course-{back_to}-{course_id}'),
+                InlineKeyboardButton(text='Проходить', callback_data=f'get_course_tasks-{back_to}-{course_id}'),
                 InlineKeyboardButton(text='Покинуть', callback_data=f'leave_course-{back_to}-{course_id}'),
             )
         else:

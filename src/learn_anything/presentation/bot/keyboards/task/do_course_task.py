@@ -20,19 +20,14 @@ def get_course_task_kb(
             InlineKeyboardButton(text='Пройти задание', callback_data=f'start_doing_task-{task_id}'),
         )
         builder.row(
-            InlineKeyboardButton(text='Мои решения', callback_data=f'submissions-{task_id}'),
-        )
-
-    if output_data.user_has_write_access:
-        builder.row(
-            InlineKeyboardButton(text='Изменить задание', callback_data=f'edit_task-{task_id}'),
+            InlineKeyboardButton(text='Мои решения', callback_data=f'task_submissions-{task_id}'),
         )
 
     kb = builder.as_markup()
     if 0 < pointer < (total - 1):
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Назад', callback_data=f'course_tasks-prev-{back_to}-{course_id}'),
-            InlineKeyboardButton(text='Далее', callback_data=f'course_tasks-next-{back_to}-{course_id}'),
+            InlineKeyboardButton(text='Предыдущее', callback_data=f'course_tasks-prev-{back_to}-{course_id}'),
+            InlineKeyboardButton(text='Следующее', callback_data=f'course_tasks-next-{back_to}-{course_id}'),
         ])
 
     if pointer == 0 and total > 1:

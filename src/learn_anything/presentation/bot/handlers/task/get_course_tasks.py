@@ -1,17 +1,15 @@
 from typing import Any
 
-from aiogram.fsm.context import FSMContext
-
 from aiogram import Bot, Router, F
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from dishka import FromDishka
 
 from learn_anything.application.input_data import Pagination
-
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
-    GetCourseTasksInputData, TaskData
+    GetCourseTasksInputData, TheoryTaskData, CodeTaskData
 from learn_anything.entities.course.models import CourseID
-
+from learn_anything.entities.task.models import TaskType
 from learn_anything.presentation.bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
 
 router = Router()
@@ -64,7 +62,6 @@ async def get_course_tasks(
             reply_markup=get_course_tasks_keyboard(
                 pointer=pointer,
                 total=total,
-                actor_is_registered=data[f'course_{course_id}_registered'],
                 back_to=back_to,
                 course_id=course_id,
             )
@@ -90,7 +87,7 @@ async def get_course_tasks(
             course_id=course_id,
             task_id=current_task.id,
             user_has_write_access=current_task.user_has_write_access,
-            actor_is_registered=data[f'course_{course_id}_registered'],
+            task_is_practice=current_task.type != TaskType.THEORY
         ),
     )
 
@@ -108,7 +105,7 @@ async def watch_course_tasks_prev_or_next(
     command, back_to, course_id = callback_query.data.split('-')[1:]
 
     pointer = data[f'course_{course_id}_tasks_pointer']
-    tasks: list[TaskData] = data[f'course_{course_id}_tasks']
+    tasks: list[TheoryTaskData | CodeTaskData] = data[f'course_{course_id}_tasks']
     offset: int = data[f'course_{course_id}_tasks_offset']
     total = data[f'course_{course_id}_tasks_total']
 
@@ -142,25 +139,42 @@ async def watch_course_tasks_prev_or_next(
     )
 
     current_task = tasks[pointer]
+
+    match current_task.type:
+        case TaskType.THEORY:
+            text = (
+                f'Заголовок: {current_task.title}\n'
+                f'Тип: {current_task.type}\n'
+                f'Тело: {current_task.body}\n'
+                f'Создано: {current_task.created_at}\n'
+            )
+
+        case TaskType.CODE:
+            text = (
+                f'Заголовок: {current_task.title}\n'
+                f'Тип: {current_task.type}\n'
+                f'Тело: {current_task.body}\n'
+                f'Создано: {current_task.created_at}\n'
+            )
+        case _:
+            text = (
+                f'Заголовок: {current_task.title}\n'
+                f'Тип: {current_task.type}\n'
+                f'Тело: {current_task.body}\n'
+                f'Создано: {current_task.created_at}\n'
+            )
+
     await bot.edit_message_text(
         chat_id=user_id,
         message_id=callback_query.message.message_id,
-        text=f"""Заголовок: {current_task.title}
-
-Тип: {current_task.type}
-
-Тело: {current_task.body}
-
-Создано: {current_task.created_at}
-""",
+        text=text,
         reply_markup=get_course_tasks_keyboard(
             pointer=pointer,
             total=total,
             back_to=back_to,
             course_id=course_id,
             task_id=current_task.id,
-            actor_is_registered=data[f'course_{course_id}_registered'],
-            user_has_write_access=current_task.user_has_write_access
+            user_has_write_access=current_task.user_has_write_access,
+            task_is_practice=current_task.type != TaskType.THEORY
         ),
     )
-
