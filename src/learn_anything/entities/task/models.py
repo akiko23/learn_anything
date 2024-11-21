@@ -16,10 +16,17 @@ class TaskType(StrEnum):
     TEXT_INPUT = auto()
 
 
+class TaskDifficultyLevel(StrEnum):
+    EASY = auto()
+    MIDDLE = auto()
+    HARD = auto()
+
+
 @dataclass
 class Task:
     id: TaskID | None
     type: TaskType
+    topic: str | None
     title: str
     body: str
     course_id: CourseID
@@ -30,6 +37,7 @@ class Task:
 @dataclass
 class PracticeTask(Task):
     attempts_limit: int | None
+    difficulty_level: TaskDifficultyLevel
 
 
 @dataclass

@@ -26,16 +26,27 @@ class TaskData:
     id: TaskID
     title: str
     body: str
+    topic: str | None
     type: TaskType
-    total_submissions: int
     user_has_write_access: bool
     # creator: str
     created_at: datetime
 
 
 @dataclass
+class TheoryTaskData(TaskData):
+    pass
+
+
+@dataclass
+class CodeTaskData(TaskData):
+    user_has_write_access: bool
+    total_submissions: int
+
+
+@dataclass
 class GetCourseTasksOutputData:
-    tasks: Sequence[TaskData]
+    tasks: Sequence[TheoryTaskData | CodeTaskData]
     pagination: Pagination
     total: int
 
@@ -82,19 +93,33 @@ class GetCourseTasksInteractor:
         for task in tasks:
             # creator = await self._user_gateway.with_id(task.creator_id)
 
-            total_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
-            tasks_output_data.append(
-                TaskData(
+            if task.type == TaskType.THEORY:
+                task_data = TheoryTaskData(
                     id=task.id,
                     title=task.title,
                     body=task.body,
+                    topic=task.topic,
+                    type=task.type,
+                    created_at=task.created_at,
+                    # creator=creator.fullname,
+                    user_has_write_access=user_has_write_access,
+                )
+
+            else:
+                total_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
+                task_data = CodeTaskData(
+                    id=task.id,
+                    title=task.title,
+                    body=task.body,
+                    topic=task.topic,
                     type=task.type,
                     created_at=task.created_at,
                     # creator=creator.fullname,
                     total_submissions=total_submissions,
                     user_has_write_access=user_has_write_access,
                 )
-            )
+
+            tasks_output_data.append(task_data)
 
         return GetCourseTasksOutputData(
             tasks=tasks_output_data,

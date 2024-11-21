@@ -16,7 +16,6 @@ from .start import router as start_router
 
 from .task.create_task import router as create_course_task_router
 from .task.get_course_tasks import router as get_course_tasks_router
-from .task.get_task import router as get_task_router
 
 
 def register_handlers(dp: Dispatcher) -> None:
@@ -35,4 +34,3 @@ def register_handlers(dp: Dispatcher) -> None:
 
     dp.include_router(get_course_tasks_router)
     dp.include_router(create_course_task_router)
-    dp.include_router(get_task_router)
