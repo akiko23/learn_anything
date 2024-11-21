@@ -13,10 +13,10 @@ from learn_anything.application.interactors.course.get_many_courses import GetMa
     GetManyCoursesInputData, CoursePartialData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
 from learn_anything.entities.user.models import UserRole
-from learn_anything.presentation.bot.keyboards.course.many_courses import get_all_courses_keyboard, get_all_courses_filters, \
+from learn_anything.presentation.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, get_all_courses_filters, \
     cancel_text_filter_input_kb
-from learn_anything.presentation.bot.keyboards.main_menu import get_main_menu_keyboard
-from learn_anything.presentation.bot.states.course import SearchAllBy
+from learn_anything.presentation.tg_bot.keyboards.main_menu import get_main_menu_keyboard
+from learn_anything.presentation.tg_bot.states.course import SearchAllBy
 
 router = Router()
 

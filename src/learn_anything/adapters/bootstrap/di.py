@@ -47,7 +47,7 @@ from learn_anything.adapters.persistence.providers import get_async_sessionmaker
 from learn_anything.adapters.playground.unix_playground import UnixPlaygroundFactory
 from learn_anything.adapters.s3.config import load_s3_config, S3Config
 from learn_anything.adapters.s3.s3_file_manager import S3FileManager
-from learn_anything.presentation.bot.config import load_bot_config, BotConfig
+from learn_anything.presentation.tg_bot.config import load_bot_config, BotConfig
 
 
 def gateways_provider() -> Provider:

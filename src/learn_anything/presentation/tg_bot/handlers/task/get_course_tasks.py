@@ -10,7 +10,7 @@ from learn_anything.application.interactors.task.get_course_tasks import GetCour
     GetCourseTasksInputData, TheoryTaskData, CodeTaskData
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.models import TaskType
-from learn_anything.presentation.bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
+from learn_anything.presentation.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
 
 router = Router()
 

@@ -12,11 +12,11 @@ from dishka.integrations.aiogram import setup_dishka
 from learn_anything.adapters.auth.tg_auth import TgIdentityProvider
 from learn_anything.adapters.persistence.tables.map import map_tables
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
-from learn_anything.presentation.bot.config import load_bot_config
-from learn_anything.presentation.bot.handlers import register_handlers
+from learn_anything.presentation.tg_bot.config import load_bot_config
+from learn_anything.presentation.tg_bot.handlers import register_handlers
 from learn_anything.adapters.bootstrap.di import setup_di, TgProvider
-from learn_anything.presentation.bot.middlewares.__logging import LoggingMiddleware
-from learn_anything.presentation.bot.middlewares.auth import AuthMiddleware
+from learn_anything.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
+from learn_anything.presentation.tg_bot.middlewares.auth import AuthMiddleware
 
 
 async def main():

@@ -11,9 +11,9 @@ from learn_anything.application.interactors.course.create_course import CreateCo
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.entities.course.models import CourseID
-from learn_anything.presentation.bot.keyboards.course.many_courses import get_all_courses_keyboard, \
+from learn_anything.presentation.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \
     get_actor_registered_courses_keyboard, get_actor_created_courses_keyboard
-from learn_anything.presentation.bot.keyboards.course.get_course import get_course_kb
+from learn_anything.presentation.tg_bot.keyboards.course.get_course import get_course_kb
 
 router = Router()
 

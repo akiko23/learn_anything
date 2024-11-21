@@ -8,11 +8,11 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.course.create_course import CreateCourseInteractor, CreateCourseInputData
 from learn_anything.entities.user.models import UserRole
-from learn_anything.presentation.bot.keyboards.course.create_course import CANCEL_COURSE_CREATION_KB, \
+from learn_anything.presentation.tg_bot.keyboards.course.create_course import CANCEL_COURSE_CREATION_KB, \
     GET_COURSE_PHOTO_KB, \
     after_course_creation_menu, GET_COURSE_REGISTRATIONS_LIMIT_KB
-from learn_anything.presentation.bot.keyboards.main_menu import get_main_menu_keyboard
-from learn_anything.presentation.bot.states.course import CreateCourse
+from learn_anything.presentation.tg_bot.keyboards.main_menu import get_main_menu_keyboard
+from learn_anything.presentation.tg_bot.states.course import CreateCourse
 
 router = Router()
 

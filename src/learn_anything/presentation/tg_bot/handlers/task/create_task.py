@@ -12,11 +12,11 @@ from learn_anything.application.interactors.task.create_task import CreateTaskIn
     CreateCodeTaskInteractor, CreateCodeTaskInputData
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.models import TaskType
-from learn_anything.presentation.bot.keyboards.course.edit_course import get_course_edit_menu_kb
-from learn_anything.presentation.bot.keyboards.task.create_task import get_course_task_type_kb, \
+from learn_anything.presentation.tg_bot.keyboards.course.edit_course import get_course_edit_menu_kb
+from learn_anything.presentation.tg_bot.keyboards.task.create_task import get_course_task_type_kb, \
     cancel_course_task_creation_kb, after_course_task_creation_menu, get_course_task_attempts_limit_kb, \
     get_code_task_tests_kb, get_code_duration_timeout_kb, get_code_task_prepared_code_kb
-from learn_anything.presentation.bot.states.task import CreateTask, CreateCodeTask, CreateTextInputTask
+from learn_anything.presentation.tg_bot.states.task import CreateTask, CreateCodeTask, CreateTextInputTask
 
 router = Router()
 

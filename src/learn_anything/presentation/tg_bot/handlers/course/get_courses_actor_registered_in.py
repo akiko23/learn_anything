@@ -12,9 +12,9 @@ from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor, \
     GetManyCoursesInputData, CoursePartialData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
-from learn_anything.presentation.bot.keyboards.course.many_courses import cancel_text_filter_input_kb, \
+from learn_anything.presentation.tg_bot.keyboards.course.many_courses import cancel_text_filter_input_kb, \
     get_actor_registered_courses_keyboard, get_actor_registered_courses_filters_kb
-from learn_anything.presentation.bot.states.course import SearchRegisteredBy
+from learn_anything.presentation.tg_bot.states.course import SearchRegisteredBy
 
 router = Router()
 
