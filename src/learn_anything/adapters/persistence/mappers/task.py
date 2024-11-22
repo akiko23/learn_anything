@@ -129,23 +129,43 @@ class TaskMapper(TaskGateway):
                 index_in_course=task.index_in_course,
                 prepared_code=task.prepared_code,
                 code_duration_timeout=task.code_duration_timeout,
+            ).
+            returning(tasks_table.c.id)
+        )
+
+        if task.id:
+            upsert_code_task_stmt = (
+                insert(tasks_table).
+                values(
+                    id=task.id,
+                    type=task.type,
+                    title=task.title,
+                    body=task.body,
+                    course_id=task.course_id,
+                    index_in_course=task.index_in_course,
+                    prepared_code=task.prepared_code,
+                    code_duration_timeout=task.code_duration_timeout,
+                ).
+                on_conflict_do_update(
+                    constraint='tasks_pkey',
+                    set_=dict(
+                        title=task.title,
+                        body=task.body,
+                        index_in_course=task.index_in_course,
+                        prepared_code=task.prepared_code,
+                        code_duration_timeout=task.code_duration_timeout,
+                    )
+                )
             )
-        ).on_conflict_do_update(
-            constraint='tasks_pkey',
-            set_=dict(
-                title=task.title,
-                body=task.body,
-                index_in_course=task.index_in_course,
-                prepared_code=task.prepared_code,
-                code_duration_timeout=task.code_duration_timeout,
-            )
-        ).returning(tasks_table.c.id)
+
+        res = await self._session.execute(upsert_code_task_stmt)
+        new_task_id = res.scalar_one()
 
         insert_code_task_tests_stmt = (
             insert(CodeTaskTest).
             values(
                 [
-                    {"code": test.code, "task_id": task.id}
+                    {"code": test.code, "task_id": new_task_id}
                     for test in task.tests
                 ]
             )
@@ -155,11 +175,9 @@ class TaskMapper(TaskGateway):
             set_=dict(code=insert_code_task_tests_stmt.excluded.code),
         )
 
-        res, _ = await asyncio.gather(
-            self._session.execute(upsert_code_task_stmt),
-            self._session.execute(insert_code_task_tests_stmt),
-        )
-        return res.scalar_one()
+        await self._session.execute(insert_code_task_tests_stmt)
+        return new_task_id
+
 
     async def save_poll_task(self, task: PollTask) -> TaskID:
         task_upsert_stmt = (

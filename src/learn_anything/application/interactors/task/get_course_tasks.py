@@ -28,7 +28,6 @@ class TaskData:
     body: str
     topic: str | None
     type: TaskType
-    user_has_write_access: bool
     # creator: str
     created_at: datetime
 
@@ -40,7 +39,6 @@ class TheoryTaskData(TaskData):
 
 @dataclass
 class CodeTaskData(TaskData):
-    user_has_write_access: bool
     total_submissions: int
 
 
@@ -81,12 +79,6 @@ class GetCourseTasksInteractor:
             pagination=data.pagination,
             filters=data.filters,
         )
-
-        user_has_write_access = actor_has_write_access(
-            actor_id=actor.id,
-            course=course,
-            share_rules=share_rules
-        )
         print('Loaded course tasks:', tasks)
 
         tasks_output_data = []
@@ -102,7 +94,6 @@ class GetCourseTasksInteractor:
                     type=task.type,
                     created_at=task.created_at,
                     # creator=creator.fullname,
-                    user_has_write_access=user_has_write_access,
                 )
 
             else:
@@ -116,7 +107,6 @@ class GetCourseTasksInteractor:
                     created_at=task.created_at,
                     # creator=creator.fullname,
                     total_submissions=total_submissions,
-                    user_has_write_access=user_has_write_access,
                 )
 
             tasks_output_data.append(task_data)

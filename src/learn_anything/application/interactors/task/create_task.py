@@ -71,6 +71,7 @@ class CreateCodeTaskInputData:
     task_type: TaskType
     title: str
     body: str
+    topic: str | None
     index_in_course: int
     prepared_code: str | None
     code_duration_timeout: int
@@ -118,6 +119,7 @@ class CreateCodeTaskInteractor:
         task = create_code_task(
             title=data.title,
             body=data.body,
+            topic=data.topic,
             course_id=data.course_id,
             index_in_course=data.index_in_course,
             prepared_code=data.prepared_code,

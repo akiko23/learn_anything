@@ -54,6 +54,7 @@ async def get_course_tasks(
     tasks = output_data.tasks
     total = output_data.total
 
+    current_course = data['target_course']
     if total == 0:
         msg_text = 'Вы еще не создали ни одного задания'
         await bot.send_message(
@@ -64,6 +65,7 @@ async def get_course_tasks(
                 total=total,
                 back_to=back_to,
                 course_id=course_id,
+                user_has_write_access=current_course.user_has_write_access
             )
         )
         return
@@ -86,8 +88,10 @@ async def get_course_tasks(
             back_to=back_to,
             course_id=course_id,
             task_id=current_task.id,
-            user_has_write_access=current_task.user_has_write_access,
-            task_is_practice=current_task.type != TaskType.THEORY
+            user_has_write_access=current_course.user_has_write_access,
+            task_is_practice=current_task.type != TaskType.THEORY,
+            course_is_published=current_course.is_published,
+            user_is_registered=current_course.user_is_registered,
         ),
     )
 
@@ -164,6 +168,7 @@ async def watch_course_tasks_prev_or_next(
                 f'Создано: {current_task.created_at}\n'
             )
 
+    current_course = data['target_course']
     await bot.edit_message_text(
         chat_id=user_id,
         message_id=callback_query.message.message_id,
@@ -174,7 +179,9 @@ async def watch_course_tasks_prev_or_next(
             back_to=back_to,
             course_id=course_id,
             task_id=current_task.id,
-            user_has_write_access=current_task.user_has_write_access,
+            user_has_write_access=current_course.user_has_write_access,
+            user_is_registered=current_course.user_is_registered,
+            course_is_published=current_course.is_published,
             task_is_practice=current_task.type != TaskType.THEORY
         ),
     )

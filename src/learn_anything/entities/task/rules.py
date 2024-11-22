@@ -23,6 +23,7 @@ def answer_is_correct(task: TextInputTask, answer: TextInputTaskAnswer) -> bool:
 def create_code_task(
         title: str,
         body: str,
+        topic: str | None,
         course_id: CourseID,
         index_in_course: int,
         prepared_code: str | None,
@@ -35,6 +36,7 @@ def create_code_task(
         title=title,
         type=TaskType.CODE,
         body=body,
+        topic=topic,
         course_id=course_id,
         index_in_course=index_in_course,
         prepared_code=prepared_code,

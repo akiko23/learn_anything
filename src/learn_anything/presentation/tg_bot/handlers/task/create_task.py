@@ -1,4 +1,5 @@
 from contextlib import suppress
+from pydoc_data.topics import topics
 from typing import Any
 
 from aiogram import Bot, Router, F
@@ -373,6 +374,7 @@ async def finish_task_creation(
     back_to = data['back_to']
     title = data['title']
     body = data['body']
+    topic = data['topic']
     prepared_code = data['prepared_code']
     index_in_course = int(data[f'course_{course_id}_tasks_total'])
 
@@ -382,6 +384,7 @@ async def finish_task_creation(
             task_type=TaskType.CODE,
             title=title,
             body=body,
+            topic=topic,
             index_in_course=index_in_course,
             prepared_code=prepared_code,
             code_duration_timeout=data['code_duration_timeout'],

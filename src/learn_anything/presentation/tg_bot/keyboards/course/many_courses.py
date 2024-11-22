@@ -15,18 +15,18 @@ def get_all_courses_keyboard(pointer: int, total: int, current_course_id: Course
 
     if 0 < pointer < (total - 1):
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Назад', callback_data=f'all_courses-prev'),
-            InlineKeyboardButton(text='Далее', callback_data=f'all_courses-next'),
+            InlineKeyboardButton(text='⬅️', callback_data=f'all_courses-prev'),
+            InlineKeyboardButton(text='➡️', callback_data=f'all_courses-next'),
         ])
 
     if pointer == 0 and total > 1:
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Далее', callback_data=f'all_courses-next'),
+            InlineKeyboardButton(text='➡️', callback_data=f'all_courses-next'),
         ])
 
     if (pointer + 1) == total and (total > 1):
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Назад', callback_data=f'all_courses-prev'),
+            InlineKeyboardButton(text='⬅️', callback_data=f'all_courses-prev'),
         ])
 
     if current_course_id:
@@ -106,18 +106,18 @@ def get_actor_created_courses_keyboard(pointer: int, total: int, current_course_
 
     if 0 < pointer < (total - 1):
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Назад', callback_data=f'actor_created_courses-prev'),
-            InlineKeyboardButton(text='Далее', callback_data=f'actor_created_courses-next'),
+            InlineKeyboardButton(text='⬅️', callback_data=f'actor_created_courses-prev'),
+            InlineKeyboardButton(text='➡️', callback_data=f'actor_created_courses-next'),
         ])
 
     if pointer == 0 and total > 1:
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Далее', callback_data=f'actor_created_courses-next'),
+            InlineKeyboardButton(text='➡️', callback_data=f'actor_created_courses-next'),
         ])
 
     if (pointer + 1 == total) and (total > 1):
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Назад', callback_data=f'actor_created_courses-prev'),
+            InlineKeyboardButton(text='⬅️', callback_data=f'actor_created_courses-prev'),
         ])
 
     if current_course_id:
@@ -167,18 +167,18 @@ def get_actor_registered_courses_keyboard(pointer: int, total: int, current_cour
 
     if 0 < pointer < (total - 1):
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Назад', callback_data=f'actor_registered_courses-prev'),
-            InlineKeyboardButton(text='Далее', callback_data=f'actor_registered_courses-next'),
+            InlineKeyboardButton(text='⬅️', callback_data=f'actor_registered_courses-prev'),
+            InlineKeyboardButton(text='➡️', callback_data=f'actor_registered_courses-next'),
         ])
 
     if pointer == 0 and total > 1:
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Далее', callback_data=f'actor_registered_courses-next'),
+            InlineKeyboardButton(text='➡️', callback_data=f'actor_registered_courses-next'),
         ])
 
     if (pointer + 1 == total) and (total > 1):
         kb.inline_keyboard.insert(0, [
-            InlineKeyboardButton(text='Назад', callback_data=f'actor_registered_courses-prev'),
+            InlineKeyboardButton(text='⬅️', callback_data=f'actor_registered_courses-prev'),
         ])
 
     if current_course_id:
