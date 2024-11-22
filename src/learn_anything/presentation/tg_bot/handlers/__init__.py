@@ -1,8 +1,8 @@
 from aiogram import Dispatcher
 
 from .auth_link import router as auth_link_router
-
 from .course.create_course import router as create_course_router
+from .course.delete_course import router as delete_course_router
 from .course.edit_course import router as edit_course_router
 from .course.get_all_courses import router as get_all_courses_router
 from .course.get_course import router as get_course_router
@@ -11,9 +11,7 @@ from .course.get_courses_actor_registered_in import router as get_courses_actor_
 from .course.leave_course import router as leave_course_router
 from .course.publish_course import router as publish_course_router
 from .course.register_for_course import router as register_for_course_router
-
 from .start import router as start_router
-
 from .task.create_task import router as create_course_task_router
 from .task.get_course_tasks import router as get_course_tasks_router
 
@@ -31,6 +29,7 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.include_router(leave_course_router)
     dp.include_router(edit_course_router)
     dp.include_router(publish_course_router)
+    dp.include_router(delete_course_router)
 
     dp.include_router(get_course_tasks_router)
     dp.include_router(create_course_task_router)

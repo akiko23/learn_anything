@@ -24,19 +24,30 @@ async def get_course_edit_menu(
 
     back_to, course_id = callback_query.data.split('-')[1:]
 
-    course = await interactor.execute(
+    target_course = await interactor.execute(
         data=GetCourseInputData(
             course_id=CourseID(int(course_id))
         )
     )
 
+    text = f"""Название: {target_course.title}
+
+Описание: {target_course.description}
+
+Автор: {target_course.creator.title()}
+
+Создан: {target_course.created_at}
+
+Выберите, что хотите изменить
+"""
+
     if callback_query.message.text:
         await bot.edit_message_text(
             chat_id=user_id,
             message_id=callback_query.message.message_id,
-            text=callback_query.message.text + '\nВыберите, что хотите изменить',
+            text=text,
             reply_markup=get_course_edit_menu_kb(
-                course=course,
+                course=target_course,
                 back_to=back_to
             ),
         )
@@ -44,9 +55,9 @@ async def get_course_edit_menu(
         await bot.edit_message_caption(
             chat_id=user_id,
             message_id=callback_query.message.message_id,
-            caption=callback_query.message.caption + '\nВыберите, что хотите изменить',
+            caption=text,
             reply_markup=get_course_edit_menu_kb(
-                course=course,
+                course=target_course,
                 back_to=back_to,
             ),
         )

@@ -13,6 +13,7 @@ from dishka import (
 from learn_anything.application.interactors.auth.create_auth_link import CreateAuthLinkInteractor
 from learn_anything.application.interactors.auth.invalidate_auth_link import InvalidateAuthLinkInteractor
 from learn_anything.application.interactors.course.create_course import CreateCourseInteractor
+from learn_anything.application.interactors.course.delete_course import DeleteCourseInteractor
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor
 from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor
 from learn_anything.application.interactors.course.leave_course import LeaveCourseInteractor
@@ -93,6 +94,7 @@ def interactors_provider() -> Provider:
     provider.provide(RegisterForCourseInteractor, scope=Scope.REQUEST)
     provider.provide(LeaveCourseInteractor, scope=Scope.REQUEST)
     provider.provide(PublishCourseInteractor, scope=Scope.REQUEST)
+    provider.provide(DeleteCourseInteractor, scope=Scope.REQUEST)
 
     provider.provide(CreateTaskInteractor, scope=Scope.REQUEST)
     provider.provide(CreateCodeTaskInteractor, scope=Scope.REQUEST)
