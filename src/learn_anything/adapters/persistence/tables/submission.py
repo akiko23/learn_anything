@@ -7,21 +7,16 @@ submissions_table = sa.Table(
     "submissions",
     mapper_registry.metadata,
     sa.Column(
-        "id",
-        sa.BigInteger,
-        primary_key=True,
-        unique=True,
-        autoincrement=True,
-    ),
-    sa.Column(
         "user_id",
         sa.BigInteger,
-        sa.ForeignKey("users.id", ondelete='CASCADE')
+        sa.ForeignKey("users.id", ondelete='CASCADE'),
+        primary_key=True
     ),
     sa.Column(
         "task_id",
         sa.BigInteger,
-        sa.ForeignKey("tasks.id", ondelete='CASCADE')
+        sa.ForeignKey("tasks.id", ondelete='CASCADE'),
+        primary_key=True,
     ),
     sa.Column(
         'code',
@@ -40,6 +35,7 @@ submissions_table = sa.Table(
         sa.DateTime,
         default=sa.func.now(),
         server_default=sa.func.now(),
+        primary_key=True
     ),
 )
 

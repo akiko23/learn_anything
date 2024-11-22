@@ -28,11 +28,9 @@ class RegisterForCourseInteractor:
 
     async def execute(self, data: RegisterForCourseInputData) -> None:
         actor = await self._id_provider.get_user()
-        course = await self._course_gateway.with_id(course_id=data.course_id)
-        if not course:
-            raise CourseDoesNotExistError(data.course_id)
 
-        if not course.is_published:
+        course = await self._course_gateway.with_id(course_id=data.course_id)
+        if (not course) or (not course.is_published):
             raise CourseDoesNotExistError(data.course_id)
 
         registration_exists = await self._registration_for_course_gateway.exists(user_id=actor.id, course_id=course.id)

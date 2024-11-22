@@ -61,3 +61,7 @@ class CourseAlreadyPublishedError(ApplicationError):
 
 class NeedAtLeastOneTaskToPublishCourseError(ApplicationError):
     message: str = "You need to create at least one task to publish a course"
+
+
+class RegistrationForCourseDoesNotExistError(ApplicationError):
+    message: str = "Registration for course does not exist"

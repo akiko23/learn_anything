@@ -183,6 +183,13 @@ class CourseMapper(CourseGateway):
         res = await self._session.execute(stmt)
         return res.scalar_one()
 
+    async def delete(self, course_id: CourseID) -> None:
+        stmt = (
+            delete(courses_table).
+            where(courses_table.c.id == course_id)
+        )
+        await self._session.execute(stmt)
+
     async def get_share_rules(self, course_id: CourseID) -> Sequence[CourseShareRule]:
         stmt = select(CourseShareRule).where(course_share_rules_table.c.course_id == course_id)
 

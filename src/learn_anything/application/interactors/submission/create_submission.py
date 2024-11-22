@@ -13,7 +13,7 @@ from learn_anything.application.ports.auth.identity_provider import IdentityProv
 from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.data.submission_gateway import SubmissionGateway
-from learn_anything.entities.task.models import TaskID, TaskType, TextInputTaskAnswer, PracticeTask, CodeTask, \
+from learn_anything.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, CodeTask, \
     CodeTaskTest
 from learn_anything.entities.task.rules import option_is_correct, answer_is_correct
 from learn_anything.entities.user.models import User, UserID
@@ -81,7 +81,7 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
         actor = await self._id_provider.get_user()
         task = await self._task_gateway.get_code_task_with_id(data.task_id)
         if not task:
-            raise TaskDoesNotExistError(data.task_id, type=TaskType.CODE)
+            raise TaskDoesNotExistError(data.task_id)
 
         await self._ensure_actor_can_create_submission(actor=actor, task=task)
 
@@ -160,7 +160,7 @@ class CreatePollTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
         actor = await self._id_provider.get_user()
         task = await self._task_gateway.get_poll_task_with_id(data.task_id)
         if not task:
-            raise TaskDoesNotExistError(data.task_id, type=TaskType.POLL)
+            raise TaskDoesNotExistError(data.task_id)
 
         await self._ensure_actor_can_create_submission(actor=actor, task=task)
 
@@ -198,7 +198,7 @@ class CreateTextInputTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor
         actor = await self._id_provider.get_user()
         task = await self._task_gateway.get_text_input_task_with_id(data.task_id)
         if not task:
-            raise TaskDoesNotExistError(data.task_id, type=TaskType.TEXT_INPUT)
+            raise TaskDoesNotExistError(data.task_id)
 
         await self._ensure_actor_can_create_submission(actor=actor, task=task)
 

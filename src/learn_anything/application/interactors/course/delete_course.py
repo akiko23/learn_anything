@@ -2,35 +2,29 @@ from dataclasses import dataclass
 
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.committer import Commiter
-from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
-from learn_anything.application.ports.data.task_gateway import TaskGateway
-from learn_anything.entities.course.errors import CourseDoesNotExistError, CourseAlreadyPublishedError, \
-    NeedAtLeastOneTaskToPublishCourseError
+from learn_anything.application.ports.data.course_gateway import CourseGateway
+from learn_anything.entities.course.errors import CourseDoesNotExistError
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import ensure_actor_has_write_access
 
 
 @dataclass
-class PublishCourseInputData:
+class DeleteCourseInputData:
     course_id: CourseID
 
 
-class PublishCourseInteractor:
+class DeleteCourseInteractor:
     def __init__(
             self,
             course_gateway: CourseGateway,
-            task_gateway: TaskGateway,
-            registration_for_course_gateway: RegistrationForCourseGateway,
             commiter: Commiter,
             id_provider: IdentityProvider
     ) -> None:
         self._id_provider = id_provider
         self._course_gateway = course_gateway
-        self._task_gateway = task_gateway
         self._commiter = commiter
-        self._registration_for_course_gateway = registration_for_course_gateway
 
-    async def execute(self, data: PublishCourseInputData) -> None:
+    async def execute(self, data: DeleteCourseInputData) -> None:
         actor = await self._id_provider.get_user()
         course = await self._course_gateway.with_id(course_id=data.course_id)
         if not course:
@@ -39,16 +33,6 @@ class PublishCourseInteractor:
         share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
         ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
 
-        if course.is_published:
-            raise CourseAlreadyPublishedError
-
-        total_tasks = await self._task_gateway.total_with_course(
-            course_id=data.course_id,
-        )
-        if total_tasks == 0:
-            raise NeedAtLeastOneTaskToPublishCourseError
-
-        course.is_published = True
-        await self._course_gateway.save(course)
+        await self._course_gateway.delete(course_id=course.id)
 
         await self._commiter.commit()

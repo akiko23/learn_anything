@@ -17,9 +17,10 @@ from learn_anything.entities.task.rules import create_code_task
 @dataclass
 class CreateTaskInputData:
     course_id: CourseID
-    task_type: TaskType
     title: str
     body: str
+    topic: str | None
+    task_type: TaskType
     index_in_course: int
 
 
@@ -45,12 +46,12 @@ class CreateTaskInteractor:
             raise CourseDoesNotExistError(data.course_id)
 
         share_rules = await self._course_gateway.get_share_rules(course.id)
-
         ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
 
         task = Task(
             id=None,
             title=data.title,
+            topic=data.topic,
             type=data.task_type,
             body=data.body,
             course_id=data.course_id,
@@ -162,6 +163,7 @@ class CreatePollTaskInputData:
     course_id: CourseID
     task_type: TaskType
     title: str
+    topic: str | None
     body: str
     index_in_course: int
     attempts_limit: int | None
@@ -196,6 +198,7 @@ class CreatePollTaskInteractor:
             title=data.title,
             type=data.task_type,
             body=data.body,
+            topic=data.topic,
             course_id=data.course_id,
             index_in_course=data.index_in_course,
             attempts_limit=data.attempts_limit,

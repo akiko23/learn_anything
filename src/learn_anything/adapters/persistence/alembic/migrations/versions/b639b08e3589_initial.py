@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: bc041ccbe490
+Revision ID: b639b08e3589
 Revises: 
-Create Date: 2024-11-15 17:36:25.893570
+Create Date: 2024-11-22 11:23:22.487568
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'bc041ccbe490'
+revision: str = 'b639b08e3589'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -62,19 +62,18 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('course_id', 'user_id')
     )
     op.create_table('registrations_for_courses',
-    sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('user_id', sa.BigInteger(), nullable=True),
-    sa.Column('course_id', sa.BigInteger(), nullable=True),
-    sa.Column('registered_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('user_id', sa.BigInteger(), nullable=False),
+    sa.Column('course_id', sa.BigInteger(), nullable=False),
+    sa.Column('registered_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['course_id'], ['courses.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('id')
+    sa.PrimaryKeyConstraint('user_id', 'course_id', 'registered_at')
     )
     op.create_table('tasks',
     sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
     sa.Column('title', sa.String(length=256), nullable=False),
     sa.Column('body', sa.Text(), nullable=True),
+    sa.Column('topic', sa.String(length=256), nullable=True),
     sa.Column('type', sa.Enum('THEORY', 'CODE', 'POLL', 'TEXT_INPUT', name='tasktype'), nullable=True),
     sa.Column('course_id', sa.BigInteger(), nullable=True),
     sa.Column('index_in_course', sa.Integer(), nullable=True),
@@ -87,12 +86,10 @@ def upgrade() -> None:
     sa.UniqueConstraint('id')
     )
     op.create_table('code_task_tests',
-    sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
-    sa.Column('code', sa.Text(), nullable=True),
-    sa.Column('task_id', sa.BigInteger(), nullable=True),
+    sa.Column('code', sa.Text(), nullable=False),
+    sa.Column('task_id', sa.BigInteger(), nullable=False),
     sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('id')
+    sa.PrimaryKeyConstraint('code', 'task_id')
     )
     op.create_table('poll_task_options',
     sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
@@ -112,18 +109,16 @@ def upgrade() -> None:
     sa.UniqueConstraint('id')
     )
     op.create_table('submissions',
-    sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
-    sa.Column('user_id', sa.BigInteger(), nullable=True),
-    sa.Column('task_id', sa.BigInteger(), nullable=True),
+    sa.Column('user_id', sa.BigInteger(), nullable=False),
+    sa.Column('task_id', sa.BigInteger(), nullable=False),
     sa.Column('code', sa.Text(), nullable=True),
     sa.Column('selected_option_id', sa.BigInteger(), nullable=True),
     sa.Column('is_correct', sa.Boolean(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['selected_option_id'], ['poll_task_options.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('id')
+    sa.PrimaryKeyConstraint('user_id', 'task_id', 'created_at')
     )
     # ### end Alembic commands ###
 

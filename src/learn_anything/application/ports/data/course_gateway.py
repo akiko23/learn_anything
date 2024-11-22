@@ -55,6 +55,9 @@ class CourseGateway(Protocol):
     async def save(self, course: Course) -> CourseID:
         raise NotImplementedError
 
+    async def delete(self, course_id: CourseID) -> None:
+        raise NotImplementedError
+
     async def get_share_rules(self, course_id: CourseID) -> Sequence[CourseShareRule]:
         raise NotImplementedError
 

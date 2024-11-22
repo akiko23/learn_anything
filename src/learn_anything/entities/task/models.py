@@ -37,7 +37,6 @@ class Task:
 @dataclass
 class PracticeTask(Task):
     attempts_limit: int | None
-    difficulty_level: TaskDifficultyLevel
 
 
 @dataclass

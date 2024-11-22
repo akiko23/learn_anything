@@ -7,9 +7,18 @@ from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.models import TaskType
 
 
-def cancel_course_task_creation_kb(back_to, course_id):
+def cancel_course_task_creation_kb():
     return InlineKeyboardMarkup(
         inline_keyboard=[
+            [InlineKeyboardButton(text='Отмена', callback_data=f'create_course_task_cancel')]
+        ]
+    )
+
+
+def get_course_task_topic_kb():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='Пропустить', callback_data=f'create_course_task_skip_topic')],
             [InlineKeyboardButton(text='Отмена', callback_data=f'create_course_task_cancel')]
         ]
     )

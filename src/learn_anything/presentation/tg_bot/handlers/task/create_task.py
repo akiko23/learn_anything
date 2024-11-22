@@ -1,3 +1,4 @@
+from contextlib import suppress
 from typing import Any
 
 from aiogram import Bot, Router, F
@@ -5,7 +6,6 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
-from contextlib import suppress
 
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
 from learn_anything.application.interactors.task.create_task import CreateTaskInteractor, CreateTaskInputData, \
@@ -15,7 +15,7 @@ from learn_anything.entities.task.models import TaskType
 from learn_anything.presentation.tg_bot.keyboards.course.edit_course import get_course_edit_menu_kb
 from learn_anything.presentation.tg_bot.keyboards.task.create_task import get_course_task_type_kb, \
     cancel_course_task_creation_kb, after_course_task_creation_menu, get_course_task_attempts_limit_kb, \
-    get_code_task_tests_kb, get_code_duration_timeout_kb, get_code_task_prepared_code_kb
+    get_code_task_tests_kb, get_code_duration_timeout_kb, get_code_task_prepared_code_kb, get_course_task_topic_kb
 from learn_anything.presentation.tg_bot.states.task import CreateTask, CreateCodeTask, CreateTextInputTask
 
 router = Router()
@@ -42,7 +42,7 @@ async def start_course_task_creation(
     msg = await bot.send_message(
         chat_id=user_id,
         text='Введите название задания',
-        reply_markup=cancel_course_task_creation_kb(back_to, course_id)
+        reply_markup=cancel_course_task_creation_kb()
     )
     await state.update_data(
         msg_on_delete=msg.message_id
@@ -58,8 +58,6 @@ async def get_course_task_title(
     user_id: int = msg.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    back_to, course_id = data['back_to'], data['course_id']
-
     await state.update_data(
         title=msg.text
     )
@@ -70,7 +68,7 @@ async def get_course_task_title(
     msg = await bot.send_message(
         chat_id=user_id,
         text='Введите описание задания',
-        reply_markup=cancel_course_task_creation_kb(back_to, course_id),
+        reply_markup=cancel_course_task_creation_kb(),
     )
     await state.update_data(
         msg_on_delete=msg.message_id,
@@ -90,6 +88,36 @@ async def get_course_task_description(
         body=msg.text
     )
 
+    await state.set_state(CreateTask.get_topic)
+    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
+
+    msg = await bot.send_message(
+        chat_id=user_id,
+        text='Укажите тему задания',
+        reply_markup=get_course_task_topic_kb(),
+    )
+    await state.update_data(
+        msg_on_delete=msg.message_id
+    )
+
+
+@router.message(StateFilter(CreateTask.get_topic))
+@router.callback_query(
+    StateFilter(CreateTask.get_topic),
+    F.data == 'create_course_task_skip_topic'
+)
+async def get_or_skip_course_task_topic(
+        update: Message | CallbackQuery,
+        state: FSMContext,
+        bot: Bot,
+):
+    user_id: int = update.from_user.id
+    data: dict[str, Any] = await state.get_data()
+
+    await state.update_data(
+        topic=update.text if isinstance(update, Message) else None
+    )
+
     await state.set_state(CreateTask.get_type)
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
@@ -98,7 +126,6 @@ async def get_course_task_description(
         text='Укажите тип задания',
         reply_markup=get_course_task_type_kb(),
     )
-
     await state.update_data(
         msg_on_delete=msg.message_id
     )
@@ -125,17 +152,20 @@ async def get_course_task_type(
             course_id = CourseID(int(data['course_id']))
             title = data['title']
             body = data['body']
+            topic = data['topic']
 
             index_in_course = int(data[f'course_{course_id}_tasks_total'])
             back_to = data['back_to']
 
             await interactor.execute(
                 CreateTaskInputData(
-                    title=data['title'],
-                    body=data['body'],
+                    title=title,
+                    body=body,
+                    topic=topic,
                     task_type=TaskType.THEORY,
                     course_id=course_id,
                     index_in_course=index_in_course,
+
                 )
             )
 

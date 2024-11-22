@@ -1,7 +1,6 @@
-import io
-import os
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+
 
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
@@ -9,13 +8,11 @@ from learn_anything.application.ports.data.file_manager import FileManager
 from learn_anything.application.ports.data.submission_gateway import SubmissionGateway
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.entities.course.errors import CoursePermissionError, CourseDoesNotExistError
-from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.course.rules import ensure_actor_has_write_access, actor_has_write_access, \
+from learn_anything.entities.course.errors import CourseDoesNotExistError
+from learn_anything.entities.course.rules import actor_has_write_access, \
     ensure_actor_has_read_access
 from learn_anything.entities.task.errors import TaskDoesNotExistError
 from learn_anything.entities.task.models import TaskID
-from learn_anything.entities.user.models import UserID
 
 
 @dataclass
@@ -80,4 +77,3 @@ class GetTaskInteractor:
         )
 
         return output_data
-

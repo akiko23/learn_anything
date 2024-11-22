@@ -4,6 +4,7 @@ from aiogram.fsm.state import StatesGroup, State
 class CreateTask(StatesGroup):
     get_title = State()
     get_body = State()
+    get_topic = State()
     get_type = State()
 
 

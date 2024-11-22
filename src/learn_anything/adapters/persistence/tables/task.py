@@ -20,6 +20,11 @@ tasks_table = sa.Table(
         sa.Text,
     ),
     sa.Column(
+        "topic",
+        sa.String(256),
+        nullable=True,
+    ),
+    sa.Column(
         'type',
         sa.Enum(TaskType),
     ),
@@ -59,19 +64,14 @@ code_task_tests_table = sa.Table(
     "code_task_tests",
     mapper_registry.metadata,
     sa.Column(
-        "id",
-        sa.BigInteger,
-        primary_key=True,
-        unique=True,
-        autoincrement=True,
-    ),
-    sa.Column(
         "code",
         sa.Text,
+        primary_key=True,
     ),
     sa.Column(
         "task_id",
         sa.ForeignKey("tasks.id", ondelete="CASCADE"),
+        primary_key=True
     ),
 )
 

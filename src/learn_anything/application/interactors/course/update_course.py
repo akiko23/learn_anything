@@ -44,7 +44,6 @@ class UpdateCourseInteractor:
             raise CourseDoesNotExistError
 
         share_rules = await self._course_gateway.get_share_rules(course_id=data.course_id)
-
         ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
 
         if data.photo:

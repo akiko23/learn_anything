@@ -7,7 +7,6 @@ from aiogram.fsm.context import FSMContext
 from dishka import FromDishka
 from aiogram.types import BufferedInputFile
 
-from learn_anything.application.interactors.course.create_course import CreateCourseInteractor, CreateCourseInputData
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.entities.course.models import CourseID
