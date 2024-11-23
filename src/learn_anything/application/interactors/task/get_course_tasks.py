@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Sequence
+from typing import Sequence, Union
 
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
@@ -10,7 +10,7 @@ from learn_anything.application.ports.data.submission_gateway import SubmissionG
 from learn_anything.application.ports.data.task_gateway import TaskGateway, GetTasksFilters
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.course.rules import ensure_actor_has_read_access, actor_has_write_access
+from learn_anything.entities.course.rules import ensure_actor_has_read_access
 from learn_anything.entities.task.models import TaskID, TaskType
 
 
@@ -40,11 +40,15 @@ class TheoryTaskData(TaskData):
 @dataclass
 class CodeTaskData(TaskData):
     total_submissions: int
+    code_duration_timeout: int
+
+
+AnyTaskData = Union[TheoryTaskData | CodeTaskData]
 
 
 @dataclass
 class GetCourseTasksOutputData:
-    tasks: Sequence[TheoryTaskData | CodeTaskData]
+    tasks: Sequence[AnyTaskData]
     pagination: Pagination
     total: int
 
@@ -96,7 +100,7 @@ class GetCourseTasksInteractor:
                     # creator=creator.fullname,
                 )
 
-            else:
+            elif task.type == TaskType.CODE:
                 total_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
                 task_data = CodeTaskData(
                     id=task.id,
@@ -107,6 +111,7 @@ class GetCourseTasksInteractor:
                     created_at=task.created_at,
                     # creator=creator.fullname,
                     total_submissions=total_submissions,
+                    code_duration_timeout=task.code_duration_timeout
                 )
 
             tasks_output_data.append(task_data)

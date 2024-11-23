@@ -79,9 +79,10 @@ async def get_all_courses(
 
 Описание: {current_course.description}
 
+Автор: {current_course.creator.title()}
+
 Зарегестрировано: {current_course.total_registered}
 
-Автор: {current_course.creator.title()}
 Создан: {current_course.created_at}
 """,
         reply_markup=get_all_courses_keyboard(
@@ -315,9 +316,9 @@ async def apply_filters(
 
 Описание: {current_course.description}
 
-Зарегестрировано: {current_course.total_registered}
-
 Автор: {current_course.creator.title()}
+
+Зарегестрировано: {current_course.total_registered}
 
 Создан: {current_course.created_at}
     """,
@@ -452,6 +453,8 @@ async def watch_all_courses_prev_or_next(
         text=f"""Название: {current_course.title}
 
 Описание: {current_course.description}
+
+Автор: {current_course.creator.title()}
 
 Зарегестрировано: {current_course.total_registered}
 

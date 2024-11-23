@@ -44,7 +44,7 @@ class AttemptsLimitExceededForTaskError(ApplicationError):
 
 
 @dataclass
-class TaskCodeIsInvalidError(ApplicationError):
+class CodeTaskPreparedCodeIsInvalidError(ApplicationError):
     user_id: UserID
     code: str
     err: str
@@ -61,14 +61,15 @@ and got
 '''"""
 
 @dataclass
-class TestCodeIsInvalidError(ApplicationError):
+class CodeTaskTestCodeIsInvalidError(ApplicationError):
     user_id: UserID
+    index: int
     code: str
     err: str
 
     @property
     def message(self):
-        return f"""User {self.user_id} sent invalid code for the test: 
+        return f"""User {self.user_id} sent invalid code for the test #{self.index}: 
 '''
 {self.code} 
 '''

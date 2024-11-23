@@ -84,6 +84,7 @@ class TaskMapper(TaskGateway):
             insert(tasks_table).
             values(
                 title=task.title,
+                topic=task.topic,
                 body=task.body,
                 type=task.type,
                 course_id=task.course_id,
@@ -97,6 +98,7 @@ class TaskMapper(TaskGateway):
                 values(
                     id=task.id,
                     title=task.title,
+                    topic=task.topic,
                     body=task.body,
                     type=task.type,
                     course_id=task.course_id,
@@ -106,6 +108,7 @@ class TaskMapper(TaskGateway):
                     index_elements=['id'],
                     set_=dict(
                         title=task.title,
+                        topic=task.topic,
                         body=task.body,
                         index_in_course=task.index_in_course,
                     ),
@@ -124,6 +127,7 @@ class TaskMapper(TaskGateway):
             values(
                 type=task.type,
                 title=task.title,
+                topic=task.topic,
                 body=task.body,
                 course_id=task.course_id,
                 index_in_course=task.index_in_course,
@@ -140,6 +144,7 @@ class TaskMapper(TaskGateway):
                     id=task.id,
                     type=task.type,
                     title=task.title,
+                    topic=task.topic,
                     body=task.body,
                     course_id=task.course_id,
                     index_in_course=task.index_in_course,
@@ -150,6 +155,7 @@ class TaskMapper(TaskGateway):
                     constraint='tasks_pkey',
                     set_=dict(
                         title=task.title,
+                        topic=task.topic,
                         body=task.body,
                         index_in_course=task.index_in_course,
                         prepared_code=task.prepared_code,
@@ -185,6 +191,7 @@ class TaskMapper(TaskGateway):
             values(
                 type=task.type,
                 title=task.title,
+                topic=task.topic,
                 body=task.body,
                 course_id=task.course_id,
                 index_in_course=task.index_in_course

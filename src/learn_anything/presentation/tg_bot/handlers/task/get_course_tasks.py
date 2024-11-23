@@ -7,7 +7,7 @@ from dishka import FromDishka
 
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
-    GetCourseTasksInputData, TheoryTaskData, CodeTaskData
+    GetCourseTasksInputData, TheoryTaskData, CodeTaskData, AnyTaskData
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.models import TaskType
 from learn_anything.presentation.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
@@ -16,6 +16,56 @@ router = Router()
 
 DEFAULT_LIMIT = 10
 DEFAULT_FILTERS = lambda: None
+
+def _get_task_text(task_data: AnyTaskData):
+    task_topic = 'Без темы'
+    if task_data.topic:
+        task_topic = f'Тема: {task_data.topic}'
+
+    match task_data.type:
+        case TaskType.THEORY:
+            text = (
+                f'{task_data.title}\n'
+                f'\n'
+                f'Тип: Теоретическое задание\n'
+                f'\n'
+                f'{task_topic}\n'
+                f'\n'
+                f'Тело: {task_data.body}\n'
+                f'\n'
+                f'Создано: {task_data.created_at}\n'
+            )
+
+        case TaskType.CODE:
+            text = (
+                f'{task_data.title}\n'
+                f'\n'
+                f'Тип: Задание на код\n'
+                f'\n'
+                f'{task_topic}\n'
+                f'\n'
+                f'Тело: {task_data.body}\n'
+                f'\n'
+                f'Макс. время выполнения: {task_data.code_duration_timeout} с.\n'
+                f'\n'
+                f'Решений отправлено: {task_data.total_submissions}\n'
+                f'\n'
+                f'Создано: {task_data.created_at}\n'
+            )
+        case _:
+            text = (
+                f'{task_data.title}\n'
+                f'\n'
+                f'Тип: {task_data.type}\n'
+                f'\n'
+                f'{task_topic}\n'
+                f'\n'
+                f'Тело: {task_data.body}\n'
+                f'\n'
+                f'Создано: {task_data.created_at}\n'
+            )
+
+    return text
 
 
 @router.callback_query(F.data.startswith('get_course_tasks-'))
@@ -29,6 +79,10 @@ async def get_course_tasks(
     data: dict[str, Any] = await state.get_data()
 
     back_to, course_id = callback_query.data.split('-')[1:]
+    await state.update_data(
+        back_to=back_to,
+        course_id=course_id,
+    )
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
@@ -72,16 +126,10 @@ async def get_course_tasks(
 
     pointer = data[f'course_{course_id}_tasks_pointer']
     current_task = tasks[pointer]
+
     await bot.send_message(
         chat_id=user_id,
-        text=f"""Заголовок: {current_task.title}
-
-Тип: {current_task.type}
-
-Тело: {current_task.body}
-
-Создано: {current_task.created_at}
-""",
+        text=_get_task_text(current_task),
         reply_markup=get_course_tasks_keyboard(
             pointer=pointer,
             total=total,
@@ -144,35 +192,11 @@ async def watch_course_tasks_prev_or_next(
 
     current_task = tasks[pointer]
 
-    match current_task.type:
-        case TaskType.THEORY:
-            text = (
-                f'Заголовок: {current_task.title}\n'
-                f'Тип: {current_task.type}\n'
-                f'Тело: {current_task.body}\n'
-                f'Создано: {current_task.created_at}\n'
-            )
-
-        case TaskType.CODE:
-            text = (
-                f'Заголовок: {current_task.title}\n'
-                f'Тип: {current_task.type}\n'
-                f'Тело: {current_task.body}\n'
-                f'Создано: {current_task.created_at}\n'
-            )
-        case _:
-            text = (
-                f'Заголовок: {current_task.title}\n'
-                f'Тип: {current_task.type}\n'
-                f'Тело: {current_task.body}\n'
-                f'Создано: {current_task.created_at}\n'
-            )
-
     current_course = data['target_course']
     await bot.edit_message_text(
         chat_id=user_id,
         message_id=callback_query.message.message_id,
-        text=text,
+        text=_get_task_text(current_task),
         reply_markup=get_course_tasks_keyboard(
             pointer=pointer,
             total=total,

@@ -1,3 +1,4 @@
+import logging
 import os
 import pwd
 import shutil
@@ -8,6 +9,8 @@ from pathlib import Path
 from typing import Self
 
 from learn_anything.application.ports.playground import PlaygroundFactory, Playground
+
+logger = logging.getLogger(__name__)
 
 
 class UnixPlayground(Playground):
@@ -61,8 +64,8 @@ class UnixPlayground(Playground):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self._pl_path)
-        print(exc_type, exc_val, exc_tb)
-        # raise exc_type
+        if exc_type:
+            logger.error('An error of type %s with val %s occurred: %s', exc_type, exc_val, exc_tb)
 
     def _generate_playground_path(self, additional_identifier) -> Path:
         playground_id = uuid.uuid4()
@@ -89,4 +92,3 @@ class UnixPlaygroundFactory(PlaygroundFactory):
             identifier=identifier,
             code_duration_timeout=code_duration_timeout
         )
-

@@ -1,5 +1,4 @@
 from contextlib import suppress
-from pydoc_data.topics import topics
 from typing import Any
 
 from aiogram import Bot, Router, F
@@ -407,6 +406,13 @@ async def finish_task_creation(
 
     await state.set_data(data)
 
+    prepared_code = (
+        f'Предварительный код: \n'
+        f'```python\n'
+        f'{prepared_code}\n'
+        '```'
+    ) if prepared_code else ''
+
     await bot.send_message(
         chat_id=user_id,
         text=f'''Практическое задание на код успешно создано.
@@ -414,17 +420,15 @@ async def finish_task_creation(
 
 Тело: {body}
 
-Предварительный код: 
-
-```python
 {prepared_code}
-```
+
 Порядковый номер в курсе: {index_in_course}
 ''',
         reply_markup=after_course_task_creation_menu(
             course_id=course_id,
             back_to=back_to
-        )
+        ),
+        parse_mode='markdown'
     )
 
 

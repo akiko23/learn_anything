@@ -63,7 +63,7 @@ def get_course_tasks_keyboard(
                 callback_data=f'do_course_task-{task_id}'),
             InlineKeyboardButton(
                 text='Мои решения',
-                callback_data=f'do_course_task-{task_id}'),
+                callback_data=f'get_my_submissions-{task_id}'),
         ])
 
     return kb

@@ -120,9 +120,10 @@ async def back_to_all_courses(
 
 Описание: {current_course.description}
 
+Автор: {current_course.creator.title()}
+
 Зарегестрировано: {current_course.total_registered}
 
-Автор: {current_course.creator.title()}
 Создан: {current_course.created_at}
 """,
         reply_markup=get_all_courses_keyboard(
@@ -190,9 +191,10 @@ async def back_to_registered_courses(
 
 Описание: {current_course.description}
 
+Автор: {current_course.creator.title()}
+
 Зарегестрировано: {current_course.total_registered}
 
-Автор: {current_course.creator.title()}
 Создан: {current_course.created_at}
 """,
         reply_markup=get_actor_registered_courses_keyboard(

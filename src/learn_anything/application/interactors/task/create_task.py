@@ -10,8 +10,10 @@ from learn_anything.application.ports.playground import PlaygroundFactory
 from learn_anything.entities.course.errors import CourseDoesNotExistError, NoAccessToCourseError
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import ensure_actor_has_write_access
+from learn_anything.entities.task.errors import CodeTaskTestCodeIsInvalidError, CodeTaskPreparedCodeIsInvalidError
 from learn_anything.entities.task.models import TaskType, TaskID, PollTask, PollTaskOption, Task
 from learn_anything.entities.task.rules import create_code_task
+from learn_anything.entities.user.models import UserID
 
 
 @dataclass
@@ -111,6 +113,7 @@ class CreateCodeTaskInteractor:
         ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
 
         await self._ensure_codes_are_safe(
+            actor_id=actor.id,
             task_prepared_code=data.prepared_code,
             code_duration_timeout=data.code_duration_timeout,
             codes_of_tests=data.tests,
@@ -135,6 +138,7 @@ class CreateCodeTaskInteractor:
 
     async def _ensure_codes_are_safe(
             self,
+            actor_id: UserID,
             task_prepared_code: str | None,
             codes_of_tests: Sequence[str],
             code_duration_timeout: int,
@@ -146,12 +150,27 @@ class CreateCodeTaskInteractor:
             if task_prepared_code:
                 _, err = await pl.execute_code(code=task_prepared_code)
                 if err:
-                    print('Task prepared code err:', err)
+                    raise CodeTaskPreparedCodeIsInvalidError(user_id=actor_id, code=task_prepared_code, err=err)
 
             for index, code in enumerate(codes_of_tests):
-                _, err = await pl.execute_code(code=code)
+                # prevent expected errors
+                code = (
+                    f'from contextlib import suppress\n'
+                    '\n'
+                    f'with suppress(AssertionError, NameError):\n'
+                    f'    {code}'
+                )
+
+                _, err = await pl.execute_code(
+                    code=code
+                )
                 if err:
-                    print(f'Test #{index}: {err}')
+                    raise CodeTaskTestCodeIsInvalidError(
+                        user_id=actor_id,
+                        index=index,
+                        code=code,
+                        err=err
+                    )
 
 
 @dataclass
