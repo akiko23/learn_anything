@@ -104,7 +104,9 @@ class CourseMapper(CourseGateway):
                 get_courses_stmt.
                 join(
                     target=registrations_for_courses_table,
-                    onclause=registrations_for_courses_table.c.user_id == filters.with_registered_actor_id
+                ).
+                where(
+                    registrations_for_courses_table.c.user_id == filters.with_registered_actor_id
                 )
             )
 
@@ -123,6 +125,8 @@ class CourseMapper(CourseGateway):
             offset(pagination.offset).
             limit(pagination.limit)
         )
+        print(get_courses_stmt)
+
         res = await self._session.execute(get_courses_stmt)
 
         courses = []

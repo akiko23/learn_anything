@@ -2,17 +2,17 @@ import abc
 from dataclasses import dataclass
 from datetime import datetime
 
+from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.committer import Commiter
+from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
+from learn_anything.application.ports.data.submission_gateway import SubmissionGateway
+from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.playground import PlaygroundFactory
 from learn_anything.entities.course.errors import CourseDoesNotExistError
+from learn_anything.entities.submission.models import PollTaskOptionID, PollSubmission, TextInputSubmission
 from learn_anything.entities.submission.rules import create_code_submission
 from learn_anything.entities.task.errors import TaskDoesNotExistError, ActorIsNotRegisteredOnCourseError, \
-    CanNotSendSubmissionToNonPublishedCourse, AttemptsLimitExceededForTaskError
-from learn_anything.entities.submission.models import PollTaskOptionID, PollSubmission, TextInputSubmission
-from learn_anything.application.ports.auth.identity_provider import IdentityProvider
-from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
-from learn_anything.application.ports.data.task_gateway import TaskGateway
-from learn_anything.application.ports.data.submission_gateway import SubmissionGateway
+    AttemptsLimitExceededForTaskError
 from learn_anything.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, CodeTask, \
     CodeTaskTest
 from learn_anything.entities.task.rules import option_is_correct, answer_is_correct
@@ -43,23 +43,24 @@ class CreateTaskSubmissionBaseInteractor(abc.ABC):
         if not course:
             raise CourseDoesNotExistError(task.course_id)
 
-        if actor.id == course.creator_id:
-            return self._check_attempts_limit(actor_id=actor.id, task=task)
+        if not course.is_published:
+            raise CourseDoesNotExistError(task.course_id)
 
         actor_is_registered_on_course = await self._registration_for_course_gateway.exists(actor.id, course.id)
         if not actor_is_registered_on_course:
             raise ActorIsNotRegisteredOnCourseError(actor.id, task.course_id)
 
-        if not course.is_published:
-            raise CanNotSendSubmissionToNonPublishedCourse(course.id)
-
-        return self._check_attempts_limit(actor_id=actor.id, task=task)
+        return await self._check_attempts_limit(actor_id=actor.id, task=task)
 
     async def _check_attempts_limit(self, actor_id: UserID, task: PracticeTask):
         self._submissions_number = await self._submission_gateway.get_user_submissions_number_for_task(
             user_id=actor_id,
             task_id=task.id,
         )
+
+        if not task.attempts_limit:
+            return
+
         if self._submissions_number + 1 > task.attempts_limit:
             raise AttemptsLimitExceededForTaskError(task_id=task.id)
 
@@ -72,8 +73,8 @@ class CreateCodeTaskSubmissionInputData:
 
 @dataclass
 class CreateCodeTaskSubmissionOutputData:
-    failed_test_output: str | None = None
-    failed_test_number: int | None = None
+    failed_output: str | None = None
+    failed_test_idx: int | None = None
 
 
 class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
@@ -85,7 +86,7 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
 
         await self._ensure_actor_can_create_submission(actor=actor, task=task)
 
-        tests_result_output, failed_test_idx = await self._check_submission(
+        result_output, failed_test_idx = await self._check_submission(
             actor=actor,
             task=task,
             submission=data.submission,
@@ -95,7 +96,7 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
             user_id=actor.id,
             code=data.submission,
             task_id=task.id,
-            tests_result_output=tests_result_output,
+            tests_result_output=result_output,
             attempt_number=self._submissions_number + 1
         )
 
@@ -105,9 +106,10 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
 
         if not submission.is_correct:
             return CreateCodeTaskSubmissionOutputData(
-                failed_test_output=tests_result_output,
-                failed_test_number=failed_test_idx,
+                failed_output=result_output,
+                failed_test_idx=failed_test_idx,
             )
+        return CreateCodeTaskSubmissionOutputData()
 
     async def _check_submission(self, actor: User, task: CodeTask, submission: str):
         async with self._playground_factory.create(
@@ -116,7 +118,11 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
         ) as pl:
             self._pl = pl
 
-            out, err = pl.execute_code(code=submission)
+            out, err = await pl.execute_code(code=submission)
+            user_output = (out + '\n' + err).strip()
+            if err:
+                return f"Your Output:\n{user_output}", -1
+
             for index, test in enumerate(task.tests):
                 output, passed = await self._check_test(
                     test=test,
@@ -124,7 +130,7 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
                     user_submission_stderr=err,
                 )
                 if not passed:
-                    return output, index
+                    return f"Your Output:\n{user_output}" + '\n\n' + output, index
             return 'ok', -1
 
     async def _check_test(
@@ -135,13 +141,17 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
     ) -> (str, bool):
         # you can use 'stdout' variable to retrieve an output from the user's code
         # and 'stderr' variable to retrieve a stderr from the user's code
-        test_code = f'stdout = {user_submission_output}\nstderr = {user_submission_stderr}' + test.code
+        test_code = (
+                f'stdout = \'\'\'{user_submission_output}\'\'\'\n'
+                f'stderr = \'\'\'{user_submission_stderr}\'\'\'\n' + test.code
+        )
 
-        out, err = self._pl.execute_code(code=test_code)
+        out, err = await self._pl.execute_code(code=test_code)
+        test_output = (out + '\n' + err).strip()
         if err:
-            return f"Output:\n{out.decode()}\n{err.decode()}", False
+            return f"Test Output:\n{test_output}", False
 
-        return out.decode(), True
+        return out, True
 
 
 @dataclass

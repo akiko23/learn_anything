@@ -5,6 +5,7 @@ from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from learn_anything.adapters.persistence.tables import code_task_tests_table
 from learn_anything.adapters.persistence.tables.task import tasks_table, poll_task_options_table
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.ports.data.task_gateway import TaskGateway, GetTasksFilters
@@ -22,11 +23,21 @@ class TaskMapper(TaskGateway):
 
         return result.scalar_one_or_none()
 
-    async def get_code_task_with_id(self, task_id: TaskID) -> CodeTask:
+    async def get_code_task_with_id(self, task_id: TaskID) -> CodeTask | None:
         stmt = select(CodeTask).where(tasks_table.c.id == task_id)
         result = await self._session.execute(stmt)
 
-        return result.scalar_one_or_none()
+        task: CodeTask | None = result.scalar_one_or_none()
+        if task is None:
+            return task
+
+        get_tests_stmt = select(CodeTaskTest).where(code_task_tests_table.c.task_id == task_id)
+        get_tests_result = await self._session.execute(get_tests_stmt)
+
+        task.tests = get_tests_result.scalars()
+        return task
+
+
 
     async def get_poll_task_with_id(self, task_id: TaskID) -> PollTask:
         select_poll_task_stmt = (

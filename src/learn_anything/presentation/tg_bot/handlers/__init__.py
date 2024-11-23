@@ -12,9 +12,12 @@ from .course.leave_course import router as leave_course_router
 from .course.publish_course import router as publish_course_router
 from .course.register_for_course import router as register_for_course_router
 from .start import router as start_router
+
 from .task.create_task import router as create_course_task_router
+from .task.do_couse_task import router as do_course_task_router
 from .task.get_course_tasks import router as get_course_tasks_router
 
+from .submission.process_task_submission import router as process_task_submission_router
 
 def register_handlers(dp: Dispatcher) -> None:
     dp.include_router(start_router)
@@ -32,4 +35,7 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.include_router(delete_course_router)
 
     dp.include_router(get_course_tasks_router)
+    dp.include_router(do_course_task_router)
     dp.include_router(create_course_task_router)
+
+    dp.include_router(process_task_submission_router)

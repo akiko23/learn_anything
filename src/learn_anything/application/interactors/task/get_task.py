@@ -12,7 +12,7 @@ from learn_anything.entities.course.errors import CourseDoesNotExistError
 from learn_anything.entities.course.rules import actor_has_write_access, \
     ensure_actor_has_read_access
 from learn_anything.entities.task.errors import TaskDoesNotExistError
-from learn_anything.entities.task.models import TaskID
+from learn_anything.entities.task.models import TaskID, TaskType
 
 
 @dataclass
@@ -23,6 +23,7 @@ class GetTaskInputData:
 @dataclass
 class GetTaskOutputData:
     title: str
+    type: TaskType
     description: str
     total_submissions: int
     created_at: datetime

@@ -17,7 +17,8 @@ router = Router()
 DEFAULT_LIMIT = 10
 DEFAULT_FILTERS = lambda: None
 
-def _get_task_text(task_data: AnyTaskData):
+
+def get_task_text(task_data: AnyTaskData):
     task_topic = 'Без темы'
     if task_data.topic:
         task_topic = f'Тема: {task_data.topic}'
@@ -129,7 +130,7 @@ async def get_course_tasks(
 
     await bot.send_message(
         chat_id=user_id,
-        text=_get_task_text(current_task),
+        text=get_task_text(current_task),
         reply_markup=get_course_tasks_keyboard(
             pointer=pointer,
             total=total,
@@ -191,12 +192,12 @@ async def watch_course_tasks_prev_or_next(
     )
 
     current_task = tasks[pointer]
-
     current_course = data['target_course']
+
     await bot.edit_message_text(
         chat_id=user_id,
         message_id=callback_query.message.message_id,
-        text=_get_task_text(current_task),
+        text=get_task_text(current_task),
         reply_markup=get_course_tasks_keyboard(
             pointer=pointer,
             total=total,
@@ -204,8 +205,8 @@ async def watch_course_tasks_prev_or_next(
             course_id=course_id,
             task_id=current_task.id,
             user_has_write_access=current_course.user_has_write_access,
-            user_is_registered=current_course.user_is_registered,
+            task_is_practice=current_task.type != TaskType.THEORY,
             course_is_published=current_course.is_published,
-            task_is_practice=current_task.type != TaskType.THEORY
+            user_is_registered=current_course.user_is_registered,
         ),
     )

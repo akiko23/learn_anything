@@ -60,7 +60,7 @@ class UnixPlayground(Playground):
         process.wait(timeout=self._code_duration_timeout)
 
         out, err = process.communicate()
-        return out.decode(), err.decode()
+        return out.decode().strip(), err.decode().strip()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self._pl_path)

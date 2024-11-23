@@ -77,6 +77,8 @@ async def get_actor_registered_courses(
 
 Описание: {current_course.description}
 
+Автор: {current_course.creator.title()}
+
 Зарегестрировано: {current_course.total_registered}
 
 Создан: {current_course.created_at}
@@ -255,6 +257,8 @@ async def apply_courses_actor_registered_filters(
 
 Описание: {current_course.description}
 
+Автор: {current_course.creator.title()}
+
 Зарегестрировано: {current_course.total_registered}
 
 Создан: {current_course.created_at}
@@ -303,12 +307,14 @@ async def actor_registered_courses_filters_back(
         )
         return
 
-    current_course = courses[pointer]
+    current_course: CoursePartialData = courses[pointer]
     await bot.send_message(
         chat_id=user_id,
         text=f"""Название: {current_course.title}
 
 Описание: {current_course.description}
+
+Автор: {current_course.creator.title()}
 
 Зарегестрировано: {current_course.total_registered}
 
@@ -343,7 +349,7 @@ async def watch_actor_registered_courses_prev_or_next(
         if pointer >= DEFAULT_LIMIT:
             output_data = await interactor.execute(
                 GetManyCoursesInputData(
-                    pagination=Pagination(offset=offset + 1, limit=DEFAULT_LIMIT),
+                    pagination=Pagination(offset=offset + DEFAULT_LIMIT, limit=DEFAULT_LIMIT),
                     filters=data.get('registered_courses_filters', DEFAULT_FILTERS(actor_id=user_id)),
                 )
             )
@@ -351,7 +357,7 @@ async def watch_actor_registered_courses_prev_or_next(
             courses.extend(output_data.courses)
             await state.update_data(
                 registered_courses=courses,
-                registered_courses_offset=offset + 1,
+                registered_courses_offset=offset + DEFAULT_LIMIT,
                 registered_courses_total=output_data.total
             )
 
@@ -371,6 +377,8 @@ async def watch_actor_registered_courses_prev_or_next(
         text=f"""Название: {current_course.title}
 
 Описание: {current_course.description}
+
+Автор: {current_course.creator.title()}
 
 Зарегестрировано: {current_course.total_registered}
 

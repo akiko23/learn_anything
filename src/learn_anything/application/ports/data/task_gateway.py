@@ -21,10 +21,10 @@ class TaskGateway(Protocol):
     async def with_id(self, task_id: TaskID) -> Task:
         raise NotImplementedError
 
-    async def get_code_task_with_id(self, task_id: TaskID) -> CodeTask:
+    async def get_code_task_with_id(self, task_id: TaskID) -> CodeTask | None:
         raise NotImplementedError
 
-    async def get_poll_task_with_id(self, task_id: TaskID) -> PollTask:
+    async def get_poll_task_with_id(self, task_id: TaskID) -> PollTask | None:
         raise NotImplementedError
 
     async def get_text_input_task_with_id(self, task_id: TaskID) -> TextInputTask:

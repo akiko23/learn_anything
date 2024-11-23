@@ -112,7 +112,7 @@ class CreateCodeTaskInteractor:
 
         ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
 
-        await self._ensure_codes_are_safe(
+        await self._ensure_codes_are_valid(
             actor_id=actor.id,
             task_prepared_code=data.prepared_code,
             code_duration_timeout=data.code_duration_timeout,
@@ -136,7 +136,7 @@ class CreateCodeTaskInteractor:
 
         return CreateCodeTaskOutputData(task_id=new_task_id)
 
-    async def _ensure_codes_are_safe(
+    async def _ensure_codes_are_valid(
             self,
             actor_id: UserID,
             task_prepared_code: str | None,
