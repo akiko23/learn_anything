@@ -15,11 +15,11 @@ from learn_anything.application.interactors.course.get_many_courses import GetMa
 from learn_anything.application.interactors.course.update_course import UpdateCourseInputData, UpdateCourseInteractor
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
 from learn_anything.entities.course.models import CourseID
-from learn_anything.presentation.tg_bot.handlers.course.get_all_courses import get_course_text
-from learn_anything.presentation.tg_bot.keyboards.course.many_courses import cancel_text_filter_input_kb
-from learn_anything.presentation.tg_bot.keyboards.course.many_courses import get_actor_registered_courses_keyboard, \
-    get_actor_registered_courses_filters_kb
 from learn_anything.presentation.tg_bot.states.course import SearchRegisteredBy
+from learn_anything.presentors.tg_bot.keyboards.course.many_courses import cancel_text_filter_input_kb
+from learn_anything.presentors.tg_bot.keyboards.course.many_courses import get_actor_registered_courses_keyboard, \
+    get_actor_registered_courses_filters_kb
+from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_courses_text
 
 router = Router()
 
@@ -77,7 +77,7 @@ async def get_actor_registered_courses(
 
     pointer = data['registered_courses_pointer']
     current_course = courses[pointer]
-    text = get_course_text(current_course)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -117,7 +117,7 @@ async def get_actor_registered_courses(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course),
+        text=get_many_courses_text(current_course),
         reply_markup=get_actor_registered_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -288,7 +288,7 @@ async def apply_courses_actor_registered_filters(
         return
 
     current_course = courses[data['registered_courses_pointer']]
-    text = get_course_text(current_course)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -328,7 +328,7 @@ async def apply_courses_actor_registered_filters(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course),
+        text=get_many_courses_text(current_course),
         reply_markup=get_actor_registered_courses_keyboard(
             pointer=0,
             total=total,
@@ -440,7 +440,7 @@ async def watch_actor_registered_courses_prev_or_next(
     )
 
     current_course = courses[pointer]
-    text = get_course_text(current_course)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -480,7 +480,7 @@ async def watch_actor_registered_courses_prev_or_next(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course),
+        text=get_many_courses_text(current_course),
         reply_markup=get_actor_registered_courses_keyboard(
             pointer=pointer,
             total=total,

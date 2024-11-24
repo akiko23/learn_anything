@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any
 
 from aiogram import Bot, Router, F
 from aiogram.exceptions import TelegramBadRequest
@@ -8,12 +8,11 @@ from aiogram.types import CallbackQuery
 from dishka import FromDishka
 
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
-from learn_anything.application.interactors.course.get_many_courses import CourseData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.entities.course.models import CourseID
-from learn_anything.presentation.tg_bot.handlers.course.get_all_courses import get_course_text
-from learn_anything.presentation.tg_bot.keyboards.course.get_course import get_course_kb
-from learn_anything.presentation.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \
+from learn_anything.presentors.tg_bot.texts.get_course import get_single_course_text
+from learn_anything.presentors.tg_bot.keyboards.course.get_course import get_course_kb
+from learn_anything.presentors.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \
     get_actor_registered_courses_keyboard, get_actor_created_courses_keyboard
 
 router = Router()
@@ -45,7 +44,7 @@ async def get_single_course(
 
     await bot.edit_message_text(
         chat_id=user_id,
-        text=get_course_text(cast(CourseData, target_course), write_registered=True),
+        text=get_single_course_text(target_course),
         message_id=callback_query.message.message_id,
         reply_markup=get_course_kb(
             course_id=int(course_id),
@@ -70,7 +69,7 @@ async def back_to_all_courses(
     total = data['all_courses_total']
 
     current_course = courses[pointer]
-    text = get_course_text(current_course, write_registered=True)
+    text = get_single_course_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -110,7 +109,7 @@ async def back_to_all_courses(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_single_course_text(current_course),
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -137,7 +136,7 @@ async def back_to_created_courses(
     total = data['created_courses_total']
 
     current_course = courses[pointer]
-    text = get_course_text(current_course, write_registered=True)
+    text = get_single_course_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -177,7 +176,7 @@ async def back_to_created_courses(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_single_course_text(current_course),
         reply_markup=get_actor_created_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -203,7 +202,7 @@ async def back_to_registered_courses(
     total = data['registered_courses_total']
 
     current_course = courses[pointer]
-    text = get_course_text(current_course, write_registered=True)
+    text = get_single_course_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -243,7 +242,7 @@ async def back_to_registered_courses(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_single_course_text(current_course),
         reply_markup=get_actor_registered_courses_keyboard(
             pointer=pointer,
             total=total,

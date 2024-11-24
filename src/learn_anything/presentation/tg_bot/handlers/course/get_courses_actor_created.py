@@ -15,8 +15,8 @@ from learn_anything.application.interactors.course.get_many_courses import GetMa
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
 from learn_anything.entities.course.models import CourseID
-from learn_anything.presentation.tg_bot.handlers.course.get_all_courses import get_course_text
-from learn_anything.presentation.tg_bot.keyboards.course.many_courses import cancel_text_filter_input_kb, \
+from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_courses_text
+from learn_anything.presentors.tg_bot.keyboards.course.many_courses import cancel_text_filter_input_kb, \
     get_actor_created_courses_keyboard, get_actor_created_courses_filters_kb
 from learn_anything.presentation.tg_bot.states.course import SearchCreatedBy
 
@@ -76,7 +76,7 @@ async def get_actor_created_courses(
 
     pointer = data['created_courses_pointer']
     current_course = courses[pointer]
-    text = get_course_text(current_course, write_registered=True)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -116,7 +116,7 @@ async def get_actor_created_courses(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_many_courses_text(current_course),
         reply_markup=get_actor_created_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -286,7 +286,7 @@ async def apply_courses_actor_created_filters(
         return
 
     current_course = courses[data['created_courses_pointer']]
-    text = get_course_text(current_course, write_registered=True)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -326,7 +326,7 @@ async def apply_courses_actor_created_filters(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_many_courses_text(current_course),
         reply_markup=get_actor_created_courses_keyboard(
             pointer=0,
             total=total,
@@ -374,7 +374,7 @@ async def actor_created_courses_filters_back(
         return
 
     current_course = courses[pointer]
-    text = get_course_text(current_course, write_registered=True)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -414,7 +414,7 @@ async def actor_created_courses_filters_back(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_many_courses_text(current_course),
         reply_markup=get_actor_created_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -469,7 +469,7 @@ async def watch_actor_created_courses_prev_or_next(
     )
 
     current_course = courses[pointer]
-    text = get_course_text(current_course, write_registered=True)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -509,7 +509,7 @@ async def watch_actor_created_courses_prev_or_next(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_many_courses_text(current_course),
         reply_markup=get_actor_created_courses_keyboard(
             pointer=pointer,
             total=total,

@@ -16,34 +16,18 @@ from learn_anything.application.interactors.course.update_course import UpdateCo
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.user.models import UserRole
-from learn_anything.presentation.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \
+from learn_anything.presentors.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \
     get_all_courses_filters, \
     cancel_text_filter_input_kb
-from learn_anything.presentation.tg_bot.keyboards.main_menu import get_main_menu_keyboard
+from learn_anything.presentors.tg_bot.keyboards.main_menu import get_main_menu_keyboard
 from learn_anything.presentation.tg_bot.states.course import SearchAllBy
+from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_courses_text
+
 
 router = Router()
 
 DEFAULT_LIMIT = 10
 DEFAULT_FILTERS = lambda: GetManyCoursesFilters(sort_by=SortBy.POPULARITY)
-
-
-# todo: Move to presenters layer
-def get_course_text(course_data: CourseData, write_registered: bool = False):
-    registered_text = ''
-    if write_registered and course_data.user_is_registered:
-        registered_text = '\n📝Вы записаны\n'
-
-    return f"""{course_data.title}
-
-Описание: {course_data.description}
-
-Автор: {course_data.creator.title()}
-
-Зарегестрировано: {course_data.total_registered}
-{registered_text}
-Создан: {course_data.created_at}
-"""
 
 
 @router.callback_query(F.data == 'main_menu-all_courses')
@@ -97,7 +81,7 @@ async def get_all_courses(
     current_course = courses[pointer]
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_many_courses_text(current_course),
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -381,7 +365,7 @@ async def filters_back(
         return
 
     current_course = courses[pointer]
-    text = get_course_text(current_course, write_registered=True)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -421,7 +405,7 @@ async def filters_back(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_many_courses_text(current_course),
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -476,7 +460,7 @@ async def watch_all_courses_prev_or_next(
     )
 
     current_course = courses[pointer]
-    text = get_course_text(current_course, write_registered=True)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -516,7 +500,7 @@ async def watch_all_courses_prev_or_next(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_course_text(current_course, write_registered=True),
+        text=get_many_courses_text(current_course),
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
             total=total,

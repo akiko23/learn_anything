@@ -7,7 +7,7 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.course.delete_course import DeleteCourseInteractor, DeleteCourseInputData
 from learn_anything.entities.course.models import CourseID
-from learn_anything.presentation.tg_bot.keyboards.course.delete_course import get_course_pre_delete_menu_kb, \
+from learn_anything.presentors.tg_bot.keyboards.course.delete_course import get_course_pre_delete_menu_kb, \
     get_course_after_deletion_menu_kb
 
 router = Router()

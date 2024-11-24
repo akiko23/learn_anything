@@ -1,19 +1,18 @@
 from typing import Any
 
 from aiogram import Bot, Router, F
-from aiogram.types import CallbackQuery, Message
-from dishka import FromDishka
-from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
 from aiogram.utils.deep_linking import create_start_link
+from dishka import FromDishka
 
 from learn_anything.application.interactors.auth.create_auth_link import CreateAuthLinkInteractor, \
     CreateAuthLinkInputData
 from learn_anything.entities.user.models import UserRole
-from learn_anything.presentation.tg_bot.keyboards.create_auth_link import CANCEL_AUTH_LINK_CREATION_KB
-
-from learn_anything.presentation.tg_bot.keyboards.main_menu import get_main_menu_keyboard
 from learn_anything.presentation.tg_bot.states.auth_link import CreateAuthLink
+from learn_anything.presentors.tg_bot.keyboards.create_auth_link import CANCEL_AUTH_LINK_CREATION_KB
+from learn_anything.presentors.tg_bot.keyboards.main_menu import get_main_menu_keyboard
 
 router = Router()
 
