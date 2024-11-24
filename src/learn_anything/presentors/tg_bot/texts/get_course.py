@@ -1,5 +1,5 @@
 from learn_anything.application.interactors.course.get_course import GetFullCourseOutputData
-from learn_anything.application.interactors.course.get_many_courses import CourseData
+from learn_anything.presentors.tg_bot.texts.format_time import format_time
 
 
 def get_single_course_text(course_data: GetFullCourseOutputData):
@@ -7,10 +7,11 @@ def get_single_course_text(course_data: GetFullCourseOutputData):
     if course_data.user_is_registered:
         registered_text = '\n📝Вы записаны\n'
 
+    registrations_left_text = ''
     if course_data.registrations_limit:
         registrations_left = course_data.registrations_limit - course_data.total_registered
         if registrations_left > 0:
-            registrations_left_text = f"Осталось {registrations_left} мест"
+            registrations_left_text = f"\nОсталось {registrations_left} мест\n"
 
     return f"""{course_data.title}
 
@@ -19,6 +20,10 @@ def get_single_course_text(course_data: GetFullCourseOutputData):
 Автор: {course_data.creator.title()}
 {registered_text}
 👤{course_data.total_registered}
+{registrations_left_text}
+Всего заданий: {course_data.total_tasks}
+
+🕓{format_time(total_tasks=course_data.total_tasks)}
 
 Создан: {course_data.created_at}
 """
