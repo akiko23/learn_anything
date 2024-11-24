@@ -1,18 +1,20 @@
-from typing import Any
+from typing import Any, cast
 
-import aiogram.exceptions
 from aiogram import Bot, Router, F
-from aiogram.types import CallbackQuery
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from dishka import FromDishka
 from aiogram.types import BufferedInputFile
+from aiogram.types import CallbackQuery
+from dishka import FromDishka
 
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
+from learn_anything.application.interactors.course.get_many_courses import CourseData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.entities.course.models import CourseID
+from learn_anything.presentation.tg_bot.handlers.course.get_all_courses import get_course_text
+from learn_anything.presentation.tg_bot.keyboards.course.get_course import get_course_kb
 from learn_anything.presentation.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \
     get_actor_registered_courses_keyboard, get_actor_created_courses_keyboard
-from learn_anything.presentation.tg_bot.keyboards.course.get_course import get_course_kb
 
 router = Router()
 
@@ -23,12 +25,9 @@ async def get_single_course(
         bot: Bot,
         state: FSMContext,
         interactor: FromDishka[GetCourseInteractor],
-        update_course_interactor: FromDishka[UpdateCourseInteractor]
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
-
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     back_to, course_id = callback_query.data.split('-')[1:]
     target_course = await interactor.execute(
@@ -44,54 +43,10 @@ async def get_single_course(
         },
     )
 
-    text = f"""Название: {target_course.title}
-
-Описание: {target_course.description}
-
-Автор: {target_course.creator.title()}
-
-Создан: {target_course.created_at}
-"""
-
-    if target_course.photo_id:
-        try:
-            await bot.send_photo(
-                chat_id=user_id,
-                photo=target_course.photo_id,
-                caption=text,
-                reply_markup=get_course_kb(
-                    course_id=int(course_id),
-                    output_data=target_course,
-                    back_to=back_to
-                )
-            )
-        except aiogram.exceptions.TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(target_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_course_kb(
-                    course_id=int(course_id),
-                    output_data=target_course,
-                    back_to=back_to
-                )
-            )
-
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(course_id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
-                )
-            )
-        return
-
-    await bot.send_message(
+    await bot.edit_message_text(
         chat_id=user_id,
-        text=text,
+        text=get_course_text(cast(CourseData, target_course), write_registered=True),
+        message_id=callback_query.message.message_id,
         reply_markup=get_course_kb(
             course_id=int(course_id),
             output_data=target_course,
@@ -105,6 +60,7 @@ async def back_to_all_courses(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
+        update_course_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
@@ -114,18 +70,47 @@ async def back_to_all_courses(
     total = data['all_courses_total']
 
     current_course = courses[pointer]
+    text = get_course_text(current_course, write_registered=True)
+
+    if current_course.photo_id:
+        try:
+            await bot.send_photo(
+                chat_id=user_id,
+                photo=current_course.photo_id,
+                caption=text,
+                reply_markup=get_all_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+            )
+        except TelegramBadRequest:
+            msg = await bot.send_photo(
+                chat_id=user_id,
+                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
+                caption=text,
+                reply_markup=get_all_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+            )
+
+            new_photo_id = msg.photo[-1].file_id
+            new_photo = await bot.download(new_photo_id)
+
+            await update_course_interactor.execute(
+                data=UpdateCourseInputData(
+                    course_id=CourseID(int(current_course.id)),
+                    photo_id=new_photo_id,
+                    photo=new_photo
+                )
+            )
+        return
+
     await bot.send_message(
         chat_id=user_id,
-        text=f"""Название: {current_course.title}
-
-Описание: {current_course.description}
-
-Автор: {current_course.creator.title()}
-
-Зарегестрировано: {current_course.total_registered}
-
-Создан: {current_course.created_at}
-""",
+        text=get_course_text(current_course, write_registered=True),
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -139,6 +124,8 @@ async def back_to_created_courses(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
+        update_course_interactor: FromDishka[UpdateCourseInteractor],
+
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
@@ -150,17 +137,47 @@ async def back_to_created_courses(
     total = data['created_courses_total']
 
     current_course = courses[pointer]
+    text = get_course_text(current_course, write_registered=True)
+
+    if current_course.photo_id:
+        try:
+            await bot.send_photo(
+                chat_id=user_id,
+                photo=current_course.photo_id,
+                caption=text,
+                reply_markup=get_actor_created_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+            )
+        except TelegramBadRequest:
+            msg = await bot.send_photo(
+                chat_id=user_id,
+                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
+                caption=text,
+                reply_markup=get_actor_created_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+            )
+
+            new_photo_id = msg.photo[-1].file_id
+            new_photo = await bot.download(new_photo_id)
+
+            await update_course_interactor.execute(
+                data=UpdateCourseInputData(
+                    course_id=CourseID(int(current_course.id)),
+                    photo_id=new_photo_id,
+                    photo=new_photo
+                )
+            )
+        return
+
     await bot.send_message(
         chat_id=user_id,
-        text=f"""Название: {current_course.title}
-
-Описание: {current_course.description}
-
-Зарегестрировано: {current_course.total_registered}
-
-Автор: {current_course.creator.title()}
-Создан: {current_course.created_at}
-""",
+        text=get_course_text(current_course, write_registered=True),
         reply_markup=get_actor_created_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -174,6 +191,7 @@ async def back_to_registered_courses(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
+        update_course_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
@@ -185,18 +203,47 @@ async def back_to_registered_courses(
     total = data['registered_courses_total']
 
     current_course = courses[pointer]
+    text = get_course_text(current_course, write_registered=True)
+
+    if current_course.photo_id:
+        try:
+            await bot.send_photo(
+                chat_id=user_id,
+                photo=current_course.photo_id,
+                caption=text,
+                reply_markup=get_actor_registered_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+            )
+        except TelegramBadRequest:
+            msg = await bot.send_photo(
+                chat_id=user_id,
+                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
+                caption=text,
+                reply_markup=get_actor_registered_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+            )
+
+            new_photo_id = msg.photo[-1].file_id
+            new_photo = await bot.download(new_photo_id)
+
+            await update_course_interactor.execute(
+                data=UpdateCourseInputData(
+                    course_id=CourseID(int(current_course.id)),
+                    photo_id=new_photo_id,
+                    photo=new_photo
+                )
+            )
+        return
+
     await bot.send_message(
         chat_id=user_id,
-        text=f"""Название: {current_course.title}
-
-Описание: {current_course.description}
-
-Автор: {current_course.creator.title()}
-
-Зарегестрировано: {current_course.total_registered}
-
-Создан: {current_course.created_at}
-""",
+        text=get_course_text(current_course, write_registered=True),
         reply_markup=get_actor_registered_courses_keyboard(
             pointer=pointer,
             total=total,
