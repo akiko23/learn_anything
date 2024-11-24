@@ -25,9 +25,9 @@ async def publish_course(
 
     back_to, course_id = callback_query.data.split('-')[1:]
 
-    await interactor.execute(data=PublishCourseInputData(course_id=CourseID(int(course_id))))
+    published_course = await interactor.execute(data=PublishCourseInputData(course_id=CourseID(int(course_id))))
 
-    await callback_query.answer(text='Вы успешно опубликовали')
+    await callback_query.answer(text=f'Вы успешно опубликовали курс {published_course}')
 
     target_course = data['target_course']
     target_course.is_published = True

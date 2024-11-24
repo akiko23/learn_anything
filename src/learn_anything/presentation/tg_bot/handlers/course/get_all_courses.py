@@ -309,16 +309,7 @@ async def apply_filters(
     current_course = courses[data['all_courses_pointer']]
     await bot.send_message(
         chat_id=user_id,
-        text=f"""Название: {current_course.title}
-
-Описание: {current_course.description}
-
-Автор: {current_course.creator.title()}
-
-Зарегестрировано: {current_course.total_registered}
-
-Создан: {current_course.created_at}
-    """,
+        text=get_many_courses_text(current_course),
         reply_markup=get_all_courses_keyboard(
             pointer=0,
             total=total,

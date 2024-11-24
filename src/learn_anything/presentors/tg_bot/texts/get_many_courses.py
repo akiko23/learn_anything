@@ -11,8 +11,8 @@ def get_many_courses_text(course_data: CourseData):
 Описание: {course_data.description}
 
 Автор: {course_data.creator.title()}
-
-Зарегестрировано: {course_data.total_registered}
 {registered_text}
+👤{course_data.total_registered}
+
 Создан: {course_data.created_at}
 """

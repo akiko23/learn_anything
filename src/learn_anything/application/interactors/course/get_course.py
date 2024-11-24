@@ -6,7 +6,9 @@ from datetime import datetime
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
 from learn_anything.application.ports.data.file_manager import FileManager
+from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
+from learn_anything.entities.course.errors import CourseDoesNotExistError
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import actor_has_write_access, \
     ensure_actor_has_read_access
@@ -27,6 +29,7 @@ class GetFullCourseOutputData:
     photo_reader: io.IOBase | None
     is_published: bool
     registrations_limit: int | None
+    total_tasks: int
     total_registered: int
     creator_id: UserID
     creator: str
@@ -39,12 +42,14 @@ class GetCourseInteractor:
     def __init__(
             self,
             course_gateway: CourseGateway,
+            task_gateway: TaskGateway,
             registration_for_course_gateway: RegistrationForCourseGateway,
             user_gateway: UserGateway,
             file_manager: FileManager,
             id_provider: IdentityProvider
     ) -> None:
         self._course_gateway = course_gateway
+        self._task_gateway = task_gateway
         self._registration_for_course_gateway = registration_for_course_gateway
         self._user_gateway = user_gateway
         self._file_manager = file_manager
@@ -54,6 +59,8 @@ class GetCourseInteractor:
         actor = await self._id_provider.get_user()
 
         course = await self._course_gateway.with_id(data.course_id)
+        if not course:
+            raise CourseDoesNotExistError(course_id=data.course_id)
 
         creator = await self._user_gateway.with_id(course.creator_id)
         actor_is_registered = await self._registration_for_course_gateway.exists(
@@ -64,6 +71,7 @@ class GetCourseInteractor:
         share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
         ensure_actor_has_read_access(actor_id=actor.id, course=course, share_rules=share_rules)
 
+        total_tasks = await self._task_gateway.total_with_course(course_id=course.id)
         output_data = GetFullCourseOutputData(
             id=course.id,
             title=course.title,
@@ -82,6 +90,7 @@ class GetCourseInteractor:
                 course=course,
                 share_rules=share_rules
             ),
+            total_tasks=total_tasks,
         )
 
         if course.photo_id:

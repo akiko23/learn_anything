@@ -38,12 +38,16 @@ class TheoryTaskData(TaskData):
 
 
 @dataclass
-class CodeTaskData(TaskData):
+class PracticeTaskData(TaskData):
     total_submissions: int
+
+
+@dataclass
+class CodeTaskData(PracticeTaskData):
     code_duration_timeout: int
 
 
-AnyTaskData = Union[TheoryTaskData | CodeTaskData]
+AnyTaskData = Union[TheoryTaskData | PracticeTaskData]
 
 
 @dataclass

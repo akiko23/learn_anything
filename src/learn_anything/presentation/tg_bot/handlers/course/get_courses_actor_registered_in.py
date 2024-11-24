@@ -376,16 +376,7 @@ async def actor_registered_courses_filters_back(
     current_course: CourseData = courses[pointer]
     await bot.send_message(
         chat_id=user_id,
-        text=f"""Название: {current_course.title}
-
-Описание: {current_course.description}
-
-Автор: {current_course.creator.title()}
-
-Зарегестрировано: {current_course.total_registered}
-
-Создан: {current_course.created_at}
-    """,
+        text=get_many_courses_text(current_course),
         reply_markup=get_actor_registered_courses_keyboard(
             pointer=pointer,
             total=total,

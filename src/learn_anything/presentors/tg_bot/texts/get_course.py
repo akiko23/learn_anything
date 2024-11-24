@@ -17,8 +17,8 @@ def get_single_course_text(course_data: GetFullCourseOutputData):
 Описание: {course_data.description}
 
 Автор: {course_data.creator.title()}
-
-Зарегестрировано: {course_data.total_registered}
 {registered_text}
+👤{course_data.total_registered}
+
 Создан: {course_data.created_at}
 """

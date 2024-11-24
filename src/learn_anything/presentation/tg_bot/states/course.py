@@ -21,3 +21,6 @@ class CreateCourse(StatesGroup):
     get_registrations_limit = State()
 
 
+class EditCourseForm(StatesGroup):
+    get_title = State()
+    get_description = State()

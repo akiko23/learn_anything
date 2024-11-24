@@ -17,18 +17,9 @@ def get_course_tasks_keyboard(
 ):
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Назад', callback_data=f'course-{back_to}-{course_id}')],
+            [InlineKeyboardButton(text='Назад', callback_data=f'edit_course-{back_to}-{course_id}')],
         ]
     )
-
-    if user_has_write_access:
-        kb.inline_keyboard.insert(
-            0,
-            [
-                InlineKeyboardButton(text='Добавить задание',
-                                     callback_data=f'create_course_task-{back_to}-{course_id}')
-            ]
-        )
 
     if 0 < pointer < (total - 1):
         kb.inline_keyboard.insert(0, [
@@ -53,7 +44,7 @@ def get_course_tasks_keyboard(
     if user_has_write_access:
         kb.inline_keyboard.insert(
             0,
-            [InlineKeyboardButton(text='Изменить задание', callback_data=f'edit_task-{task_id}')]
+            [InlineKeyboardButton(text='Панель управления', callback_data=f'edit_task-{task_id}')]
         )
 
     if task_is_practice and course_is_published and user_is_registered:

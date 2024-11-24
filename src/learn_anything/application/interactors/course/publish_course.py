@@ -30,7 +30,7 @@ class PublishCourseInteractor:
         self._commiter = commiter
         self._registration_for_course_gateway = registration_for_course_gateway
 
-    async def execute(self, data: PublishCourseInputData) -> None:
+    async def execute(self, data: PublishCourseInputData) -> str:
         actor = await self._id_provider.get_user()
         course = await self._course_gateway.with_id(course_id=data.course_id)
         if not course:
@@ -52,3 +52,5 @@ class PublishCourseInteractor:
         await self._course_gateway.save(course)
 
         await self._commiter.commit()
+
+        return course.title

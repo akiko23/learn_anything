@@ -25,7 +25,6 @@ from learn_anything.application.interactors.submission.create_submission import 
 from learn_anything.application.interactors.task.create_task import CreateCodeTaskInteractor, CreatePollTaskInteractor, \
     CreateTaskInteractor
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor
-from learn_anything.application.interactors.task.get_task import GetTaskInteractor
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
 from learn_anything.application.ports.committer import Commiter
@@ -99,7 +98,6 @@ def interactors_provider() -> Provider:
     provider.provide(CreateTaskInteractor, scope=Scope.REQUEST)
     provider.provide(CreateCodeTaskInteractor, scope=Scope.REQUEST)
     provider.provide(CreatePollTaskInteractor, scope=Scope.REQUEST)
-    provider.provide(GetTaskInteractor, scope=Scope.REQUEST)
 
     provider.provide(CreateCodeTaskSubmissionInteractor, scope=Scope.REQUEST)
     provider.provide(CreatePollTaskSubmissionInteractor, scope=Scope.REQUEST)

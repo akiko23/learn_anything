@@ -10,10 +10,11 @@ from dishka import FromDishka
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.entities.course.models import CourseID
-from learn_anything.presentors.tg_bot.texts.get_course import get_single_course_text
 from learn_anything.presentors.tg_bot.keyboards.course.get_course import get_course_kb
 from learn_anything.presentors.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \
     get_actor_registered_courses_keyboard, get_actor_created_courses_keyboard
+from learn_anything.presentors.tg_bot.texts.get_course import get_single_course_text
+from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_courses_text
 
 router = Router()
 
@@ -27,6 +28,8 @@ async def get_single_course(
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
+
+    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     back_to, course_id = callback_query.data.split('-')[1:]
     target_course = await interactor.execute(
@@ -42,15 +45,26 @@ async def get_single_course(
         },
     )
 
-    await bot.edit_message_text(
-        chat_id=user_id,
-        text=get_single_course_text(target_course),
-        message_id=callback_query.message.message_id,
-        reply_markup=get_course_kb(
-            course_id=int(course_id),
-            output_data=target_course,
-            back_to=back_to
+    text = get_single_course_text(target_course)
+    kb = get_course_kb(
+        course_id=int(course_id),
+        output_data=target_course,
+        back_to=back_to
+    )
+
+    if target_course.photo_id:
+        await bot.send_photo(
+            chat_id=user_id,
+            photo=target_course.photo_id,
+            caption=text,
+            reply_markup=kb,
         )
+        return
+
+    await bot.send_message(
+        chat_id=user_id,
+        text=text,
+        reply_markup=kb,
     )
 
 
@@ -64,12 +78,14 @@ async def back_to_all_courses(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
+    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+
     courses = data['all_courses']
     pointer = data['all_courses_pointer']
     total = data['all_courses_total']
 
     current_course = courses[pointer]
-    text = get_single_course_text(current_course)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -109,7 +125,7 @@ async def back_to_all_courses(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_single_course_text(current_course),
+        text=text,
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -136,7 +152,7 @@ async def back_to_created_courses(
     total = data['created_courses_total']
 
     current_course = courses[pointer]
-    text = get_single_course_text(current_course)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -176,7 +192,7 @@ async def back_to_created_courses(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_single_course_text(current_course),
+        text=text,
         reply_markup=get_actor_created_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -202,7 +218,7 @@ async def back_to_registered_courses(
     total = data['registered_courses_total']
 
     current_course = courses[pointer]
-    text = get_single_course_text(current_course)
+    text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
         try:
@@ -242,7 +258,7 @@ async def back_to_registered_courses(
 
     await bot.send_message(
         chat_id=user_id,
-        text=get_single_course_text(current_course),
+        text=text,
         reply_markup=get_actor_registered_courses_keyboard(
             pointer=pointer,
             total=total,
