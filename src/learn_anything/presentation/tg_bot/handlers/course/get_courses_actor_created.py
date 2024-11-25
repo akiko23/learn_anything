@@ -18,7 +18,7 @@ from learn_anything.entities.course.models import CourseID
 from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_courses_text
 from learn_anything.presentors.tg_bot.keyboards.course.many_courses import cancel_text_filter_input_kb, \
     get_actor_created_courses_keyboard, get_actor_created_courses_filters_kb
-from learn_anything.presentation.tg_bot.states.course import SearchCreatedBy
+from learn_anything.presentation.tg_bot.states.course import SearchCreatedByForm
 
 router = Router()
 
@@ -156,7 +156,7 @@ async def proces_actor_created_courses_filters(
 
     await state.update_data(msg_for_delete=callback_query.message.message_id + 1)
 
-    await state.set_state(SearchCreatedBy.title)
+    await state.set_state(SearchCreatedByForm.title)
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
     await bot.send_message(
         chat_id=user_id,
@@ -165,7 +165,7 @@ async def proces_actor_created_courses_filters(
     )
 
 
-@router.message(StateFilter(SearchCreatedBy.title))
+@router.message(StateFilter(SearchCreatedByForm.title))
 async def process_actor_created_courses_title_filter(
         msg: Message,
         state: FSMContext,
@@ -190,7 +190,7 @@ async def process_actor_created_courses_title_filter(
     )
 
 
-@router.callback_query(StateFilter(SearchCreatedBy), F.data == 'actor_created_courses_filters-cancel_input')
+@router.callback_query(StateFilter(SearchCreatedByForm), F.data == 'actor_created_courses_filters-cancel_input')
 async def cancel_title_input_filter(
         callback_query: CallbackQuery,
         state: FSMContext,

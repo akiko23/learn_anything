@@ -1,2 +1,2 @@
 class ApplicationError(Exception):
-    pass
+    message: str

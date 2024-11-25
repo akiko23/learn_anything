@@ -35,7 +35,7 @@ class RegisterForCourseInteractor:
 
         registration_exists = await self._registration_for_course_gateway.exists(user_id=actor.id, course_id=course.id)
         if registration_exists:
-            raise UserAlreadyRegisteredForCourseError(actor.id, course.id)
+            raise UserAlreadyRegisteredForCourseError(course.title)
 
         course = increment_course_registrations_number(course=course)
         new_registration = create_registration_for_course(user_id=actor.id, course_id=course.id)

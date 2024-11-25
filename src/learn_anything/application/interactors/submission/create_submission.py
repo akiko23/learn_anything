@@ -12,7 +12,7 @@ from learn_anything.entities.course.errors import CourseDoesNotExistError
 from learn_anything.entities.submission.models import PollTaskOptionID, PollSubmission, TextInputSubmission
 from learn_anything.entities.submission.rules import create_code_submission
 from learn_anything.entities.task.errors import TaskDoesNotExistError, ActorIsNotRegisteredOnCourseError, \
-    AttemptsLimitExceededForTaskError
+    AttemptsLimitReachedForTaskError
 from learn_anything.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, CodeTask, \
     CodeTaskTest
 from learn_anything.entities.task.rules import option_is_correct, answer_is_correct
@@ -62,7 +62,7 @@ class CreateTaskSubmissionBaseInteractor(abc.ABC):
             return
 
         if self._submissions_number + 1 > task.attempts_limit:
-            raise AttemptsLimitExceededForTaskError(task_id=task.id)
+            raise AttemptsLimitReachedForTaskError(task_id=task.id)
 
 
 @dataclass

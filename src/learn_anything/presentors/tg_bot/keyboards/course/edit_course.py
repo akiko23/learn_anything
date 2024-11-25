@@ -23,7 +23,7 @@ def get_course_edit_menu_kb(course: GetFullCourseOutputData, back_to: str):
         ]
     )
 
-    if not course.is_published and course.total_tasks > 0:
+    if not course.is_published:
         kb.inline_keyboard.insert(
             1,
             [InlineKeyboardButton(text='Опубликовать', callback_data=f'publish_course-{back_to}-{course.id}')]

@@ -3,16 +3,6 @@ from typing import Any
 
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.error import ApplicationError
-from learn_anything.entities.user.models import UserRole, UserID
-
-
-@dataclass
-class CourseCreationForbiddenError(ApplicationError):
-    role: UserRole
-
-    @property
-    def message(self) -> str:
-        return f'Only teachers can create courses. Your role: "{self.role}"'
 
 
 @dataclass
@@ -26,16 +16,11 @@ class CourseDoesNotExistError(ApplicationError):
 
 @dataclass
 class UserAlreadyRegisteredForCourseError(ApplicationError):
-    user_id: UserID
-    course_id: CourseID
+    course_title: str
 
     @property
     def message(self) -> str:
-        return f'User {self.user_id} already registered for course {self.course_id}'
-
-
-class NoAccessToCourseError(ApplicationError):
-    message: str = 'Only course creator has access to his course'
+        return f'You are already registered for course \'{self.course_title}\''
 
 
 @dataclass

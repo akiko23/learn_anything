@@ -20,7 +20,7 @@ from learn_anything.presentors.tg_bot.keyboards.course.many_courses import get_a
     get_all_courses_filters, \
     cancel_text_filter_input_kb
 from learn_anything.presentors.tg_bot.keyboards.main_menu import get_main_menu_keyboard
-from learn_anything.presentation.tg_bot.states.course import SearchAllBy
+from learn_anything.presentation.tg_bot.states.course import SearchAllByForm
 from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_courses_text
 
 
@@ -127,13 +127,13 @@ async def sort_by_filters(
 
     selected_option = callback_query.data.split('-')[1]
     if selected_option == 'author':
-        await state.set_state(SearchAllBy.author)
+        await state.set_state(SearchAllByForm.author)
         await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
         await bot.send_message(chat_id=user_id, text='Введите имя автора', reply_markup=cancel_text_filter_input_kb())
         return
 
     if selected_option == 'title':
-        await state.set_state(SearchAllBy.title)
+        await state.set_state(SearchAllByForm.title)
         await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
         await bot.send_message(
             chat_id=user_id,
@@ -162,7 +162,7 @@ async def sort_by_filters(
     )
 
 
-@router.message(StateFilter(SearchAllBy.author))
+@router.message(StateFilter(SearchAllByForm.author))
 async def process_author_filter(
         msg: Message,
         state: FSMContext,
@@ -187,7 +187,7 @@ async def process_author_filter(
     )
 
 
-@router.message(StateFilter(SearchAllBy.title))
+@router.message(StateFilter(SearchAllByForm.title))
 async def process_title_filter(
         msg: Message,
         state: FSMContext,
@@ -212,7 +212,7 @@ async def process_title_filter(
     )
 
 
-@router.callback_query(StateFilter(SearchAllBy), F.data == 'all_courses_filters-cancel_input')
+@router.callback_query(StateFilter(SearchAllByForm), F.data == 'all_courses_filters-cancel_input')
 async def cancel_text_input_filters(
         callback_query: CallbackQuery,
         state: FSMContext,

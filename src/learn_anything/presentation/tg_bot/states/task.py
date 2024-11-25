@@ -1,7 +1,7 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
-class CreateTask(StatesGroup):
+class CreateTaskForm(StatesGroup):
     get_title = State()
     get_body = State()
     get_topic = State()
@@ -9,7 +9,7 @@ class CreateTask(StatesGroup):
 
 
 
-class CreateCodeTask(StatesGroup):
+class CreateCodeTaskForm(StatesGroup):
     get_attempts_limit = State()
     get_prepared_code = State()
     get_code_duration_timeout = State()
@@ -17,7 +17,7 @@ class CreateCodeTask(StatesGroup):
 
 
 
-class CreateTextInputTask(StatesGroup):
+class CreateTextInputTaskForm(StatesGroup):
     get_attempts_limit = State()
 
 

@@ -8,7 +8,7 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.course.create_course import CreateCourseInteractor, CreateCourseInputData
 from learn_anything.entities.user.models import UserRole
-from learn_anything.presentation.tg_bot.states.course import CreateCourse
+from learn_anything.presentation.tg_bot.states.course import CreateCourseForm
 from learn_anything.presentors.tg_bot.keyboards.course.create_course import CANCEL_COURSE_CREATION_KB, \
     GET_COURSE_PHOTO_KB, \
     GET_COURSE_REGISTRATIONS_LIMIT_KB
@@ -25,7 +25,7 @@ async def start_course_creation(
 ):
     user_id: int = callback_query.from_user.id
 
-    await state.set_state(CreateCourse.get_title)
+    await state.set_state(CreateCourseForm.get_title)
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
@@ -35,7 +35,7 @@ async def start_course_creation(
     )
 
 
-@router.message(StateFilter(CreateCourse.get_title))
+@router.message(StateFilter(CreateCourseForm.get_title))
 async def get_course_title(
         msg: Message,
         state: FSMContext,
@@ -48,7 +48,7 @@ async def get_course_title(
         title=msg.text
     )
 
-    await state.set_state(CreateCourse.get_description)
+    await state.set_state(CreateCourseForm.get_description)
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     msg = await bot.send_message(
@@ -61,7 +61,7 @@ async def get_course_title(
     )
 
 
-@router.message(StateFilter(CreateCourse.get_description))
+@router.message(StateFilter(CreateCourseForm.get_description))
 async def get_course_description(
         msg: Message,
         state: FSMContext,
@@ -74,7 +74,7 @@ async def get_course_description(
         description=msg.text
     )
 
-    await state.set_state(CreateCourse.get_photo)
+    await state.set_state(CreateCourseForm.get_photo)
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     msg = await bot.send_message(
@@ -87,7 +87,7 @@ async def get_course_description(
     )
 
 
-@router.message(StateFilter(CreateCourse.get_photo), F.photo)
+@router.message(StateFilter(CreateCourseForm.get_photo), F.photo)
 async def get_course_photo(
         msg: Message,
         state: FSMContext,
@@ -106,7 +106,7 @@ async def get_course_photo(
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
-    await state.set_state(state=CreateCourse.get_registrations_limit)
+    await state.set_state(state=CreateCourseForm.get_registrations_limit)
 
     msg = await bot.send_message(
         chat_id=user_id,
@@ -118,7 +118,7 @@ async def get_course_photo(
     )
 
 
-@router.callback_query(StateFilter(CreateCourse.get_photo), F.data == 'create_course-skip_photo')
+@router.callback_query(StateFilter(CreateCourseForm.get_photo), F.data == 'create_course-skip_photo')
 async def skip_photo(
         callback_query: CallbackQuery,
         state: FSMContext,
@@ -134,7 +134,7 @@ async def skip_photo(
         photo=None,
     )
 
-    await state.set_state(state=CreateCourse.get_registrations_limit)
+    await state.set_state(state=CreateCourseForm.get_registrations_limit)
 
     msg = await bot.send_message(
         chat_id=user_id,
@@ -146,7 +146,7 @@ async def skip_photo(
     )
 
 
-@router.message(StateFilter(CreateCourse.get_registrations_limit), F.text)
+@router.message(StateFilter(CreateCourseForm.get_registrations_limit), F.text)
 async def get_course_registrations_limit(
         msg: Message,
         state: FSMContext,
@@ -186,7 +186,7 @@ async def get_course_registrations_limit(
     )
 
 
-@router.callback_query(StateFilter(CreateCourse.get_registrations_limit),
+@router.callback_query(StateFilter(CreateCourseForm.get_registrations_limit),
                        F.data == 'create_course-skip_registrations_limit')
 async def skip_registrations_limit(
         callback_query: CallbackQuery,
@@ -225,7 +225,7 @@ async def skip_registrations_limit(
     )
 
 
-@router.callback_query(StateFilter(CreateCourse), F.data == 'create_course-cancel')
+@router.callback_query(StateFilter(CreateCourseForm), F.data == 'create_course-cancel')
 async def cancel_course_creation(
         callback_query: CallbackQuery,
         state: FSMContext,

@@ -7,10 +7,10 @@ from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.playground import PlaygroundFactory
-from learn_anything.entities.course.errors import CourseDoesNotExistError, NoAccessToCourseError
+from learn_anything.entities.course.errors import CourseDoesNotExistError
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import ensure_actor_has_write_access
-from learn_anything.entities.task.errors import CodeTaskTestCodeIsInvalidError, CodeTaskPreparedCodeIsInvalidError
+from learn_anything.entities.task.errors import TaskTestCodeIsInvalidError, TaskPreparedCodeIsInvalidError
 from learn_anything.entities.task.models import TaskType, TaskID, PollTask, PollTaskOption, Task
 from learn_anything.entities.task.rules import create_code_task
 from learn_anything.entities.user.models import UserID
@@ -150,7 +150,7 @@ class CreateCodeTaskInteractor:
             if task_prepared_code:
                 _, err = await pl.execute_code(code=task_prepared_code)
                 if err:
-                    raise CodeTaskPreparedCodeIsInvalidError(user_id=actor_id, code=task_prepared_code, err=err)
+                    raise TaskPreparedCodeIsInvalidError(code=task_prepared_code, err=err)
 
             for index, code in enumerate(codes_of_tests):
                 # prevent expected errors
@@ -165,7 +165,7 @@ class CreateCodeTaskInteractor:
                     code=code
                 )
                 if err:
-                    raise CodeTaskTestCodeIsInvalidError(
+                    raise TaskTestCodeIsInvalidError(
                         user_id=actor_id,
                         index=index,
                         code=code,
@@ -212,7 +212,7 @@ class CreatePollTaskInteractor:
             raise CourseDoesNotExistError(data.course_id)
 
         if actor.id != course.creator_id:
-            raise NoAccessToCourseError()
+            raise CourseDoesNotExistError(data.course_id)
 
         task = PollTask(
             id=None,

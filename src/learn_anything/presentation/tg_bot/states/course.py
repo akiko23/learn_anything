@@ -1,20 +1,20 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
-class SearchAllBy(StatesGroup):
+class SearchAllByForm(StatesGroup):
     author = State()
     title = State()
 
 
-class SearchCreatedBy(StatesGroup):
+class SearchCreatedByForm(StatesGroup):
     title = State()
 
 
-class SearchRegisteredBy(StatesGroup):
+class SearchRegisteredByForm(StatesGroup):
     title = State()
 
 
-class CreateCourse(StatesGroup):
+class CreateCourseForm(StatesGroup):
     get_title = State()
     get_description = State()
     get_photo = State()

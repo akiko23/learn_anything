@@ -5,7 +5,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from dishka import FromDishka
 
-from learn_anything.application.interactors.course.leave_course import LeaveCourseInteractor, LeaveCourseInputData
 from learn_anything.application.interactors.course.publish_course import PublishCourseInteractor, PublishCourseInputData
 from learn_anything.entities.course.models import CourseID
 from learn_anything.presentors.tg_bot.keyboards.course.get_course import get_course_kb

@@ -15,7 +15,7 @@ from learn_anything.application.interactors.course.get_many_courses import GetMa
 from learn_anything.application.interactors.course.update_course import UpdateCourseInputData, UpdateCourseInteractor
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
 from learn_anything.entities.course.models import CourseID
-from learn_anything.presentation.tg_bot.states.course import SearchRegisteredBy
+from learn_anything.presentation.tg_bot.states.course import SearchRegisteredByForm
 from learn_anything.presentors.tg_bot.keyboards.course.many_courses import cancel_text_filter_input_kb
 from learn_anything.presentors.tg_bot.keyboards.course.many_courses import get_actor_registered_courses_keyboard, \
     get_actor_registered_courses_filters_kb
@@ -157,7 +157,7 @@ async def proces_actor_registered_courses_filters(
 
     await state.update_data(msg_for_delete=callback_query.message.message_id + 1)
 
-    await state.set_state(SearchRegisteredBy.title)
+    await state.set_state(SearchRegisteredByForm.title)
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
     await bot.send_message(
         chat_id=user_id,
@@ -166,7 +166,7 @@ async def proces_actor_registered_courses_filters(
     )
 
 
-@router.message(StateFilter(SearchRegisteredBy.title))
+@router.message(StateFilter(SearchRegisteredByForm.title))
 async def process_actor_registered_courses_title_filter(
         msg: Message,
         state: FSMContext,
@@ -191,7 +191,7 @@ async def process_actor_registered_courses_title_filter(
     )
 
 
-@router.callback_query(StateFilter(SearchRegisteredBy), F.data == 'actor_registered_courses_filters-cancel_input')
+@router.callback_query(StateFilter(SearchRegisteredByForm), F.data == 'actor_registered_courses_filters-cancel_input')
 async def cancel_registered_courses_title_input_filter(
         callback_query: CallbackQuery,
         state: FSMContext,
