@@ -15,6 +15,7 @@ def get_course_edit_menu_kb(course: GetFullCourseOutputData, back_to: str):
                 InlineKeyboardButton(text="Изменить описание",
                                      callback_data=f'edit_course_description-{back_to}-{course.id}')
             ],
+            [InlineKeyboardButton(text='Изменить фото', callback_data=f'edit_course_photo-{back_to}-{course.id}')],
             [
                 InlineKeyboardButton(text="Удалить", callback_data=f'delete_course-{back_to}-{course.id}'),
             ],

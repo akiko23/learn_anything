@@ -24,3 +24,4 @@ class CreateCourse(StatesGroup):
 class EditCourseForm(StatesGroup):
     get_title = State()
     get_description = State()
+    get_photo = State()

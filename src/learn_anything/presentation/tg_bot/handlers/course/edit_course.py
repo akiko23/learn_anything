@@ -205,3 +205,63 @@ async def cancel_course_editing(
         text='Вы отменили процесс изменения',
         reply_markup=get_course_after_edit_menu_kb(back_to=back_to, course_id=course_id)
     )
+
+
+@router.callback_query(F.data.startswith('edit_course_photo'))
+async def start_editing_course_photo(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        bot: Bot,
+):
+    user_id: int = callback_query.from_user.id
+    data: dict[str, Any] = await state.get_data()
+
+    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+
+    back_to, course_id = callback_query.data.split('-')[1:]
+    await state.update_data(
+        back_to=back_to,
+        course_id=course_id
+    )
+
+    await callback_query.answer()
+
+    await state.set_state(state=EditCourseForm.get_photo)
+
+    msg = await bot.send_message(chat_id=user_id, text='Отправьте новое фото', reply_markup=CANCEL_EDITING_KB)
+    await state.update_data(
+        msg_on_delete=msg.message_id
+    )
+
+
+@router.message(StateFilter(EditCourseForm.get_photo), F.photo)
+async def edit_course_photo(
+        msg: Message,
+        state: FSMContext,
+        bot: Bot,
+        interactor: FromDishka[UpdateCourseInteractor],
+):
+    user_id: int = msg.from_user.id
+    data: dict[str, Any] = await state.get_data()
+
+    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
+
+    course_id, back_to = data['course_id'], data['back_to']
+
+    photo_id = msg.photo[-1].file_id
+    photo = await bot.download(file=photo_id)
+
+    await interactor.execute(
+        data=UpdateCourseInputData(
+            course_id=CourseID(int(course_id)),
+            photo_id=photo_id,
+            photo=photo,
+        )
+    )
+    await state.set_state(state=None)
+
+    await bot.send_message(
+        chat_id=user_id,
+        text='Фото успешно обновлено',
+        reply_markup=get_course_after_edit_menu_kb(back_to=back_to, course_id=course_id)
+    )
