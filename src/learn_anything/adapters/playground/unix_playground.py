@@ -1,11 +1,14 @@
 import logging
 import os
 import pwd
+import resource
 import shutil
 import subprocess
 import uuid
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
+from subprocess import TimeoutExpired
 from typing import Self
 
 from learn_anything.application.ports.playground import PlaygroundFactory, Playground
@@ -30,16 +33,12 @@ class UnixPlayground(Playground):
     def _apply_playground_user(self):
         pw_record = pwd.getpwnam(self._playground_user)
         user_home_dir = pw_record.pw_dir
-        user_uid = pw_record.pw_uid
-        user_gid = pw_record.pw_gid
 
         self._env = os.environ.copy()
         self._env['HOME'] = user_home_dir
         self._env['LOGNAME'] = self._playground_user
         self._env['PWD'] = str(self._playground_base_path)
         self._env['USER'] = self._playground_user
-
-        self._preexec_fn = _demote(user_uid, user_gid)
 
     async def __aenter__(self) -> Self:
         self._pl_path.mkdir(parents=True, mode=0o777)
@@ -48,19 +47,44 @@ class UnixPlayground(Playground):
 
         return self
 
+    # todo: replace with MVM
     async def execute_code(self, code: str) -> (str, str):
         process = subprocess.Popen(
             ['python3', '-c', code],
-            preexec_fn=self._preexec_fn,
+            preexec_fn=_demote,
             cwd=str(self._pl_path),
             env=self._env,
+            user=self._playground_user,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            start_new_session=True,
         )
-        process.wait(timeout=self._code_duration_timeout)
 
-        out, err = process.communicate()
+        try:
+            out, err = process.communicate(timeout=6)
+        except TimeoutExpired:
+            self._kill_derivatives(process.pid)
+
+            out, err = process.communicate()
+
+            logger.warning('Playground user processes were successfully killed')
+
+            return (
+                out.decode() + '\n' + err.decode(),
+                f'TimeoutError: \'{code}\' timed out after 2 seconds'
+            )
+
+        with suppress(ProcessLookupError):
+            self._kill_derivatives(process.pid)
+
         return out.decode().strip(), err.decode().strip()
+
+    @staticmethod
+    def _kill_derivatives(pid):
+        kill_process = subprocess.Popen(
+            ['pkill', '-s', str(os.getsid(pid)), '--signal', 'KILL'],
+        )
+        kill_process.wait()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self._pl_path)
@@ -74,12 +98,12 @@ class UnixPlayground(Playground):
         return self._playground_base_path / Path(str(playground_id))
 
 
-def _demote(user_uid, user_gid):
-    def result():
-        os.setgid(user_gid)
-        os.setuid(user_uid)
-
-    return result
+def _demote():
+    resource.prlimit(
+        os.getpid(),
+        resource.RLIMIT_NPROC,
+        (20, 20)
+    )
 
 
 class UnixPlaygroundFactory(PlaygroundFactory):
