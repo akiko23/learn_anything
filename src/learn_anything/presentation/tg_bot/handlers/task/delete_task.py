@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from dishka import FromDishka
 
+from learn_anything.application.interactors.task.delete_task import DeleteTaskInteractor, DeleteTaskInputData
 from learn_anything.entities.task.models import TaskID
 from learn_anything.presentors.tg_bot.keyboards.task.delete_task import get_task_after_deletion_menu_kb
 
@@ -28,6 +29,11 @@ async def delete_task(
 
     await interactor.execute(
         data=DeleteTaskInputData(task_id=TaskID(int(task_id)))
+    )
+
+    pointer = data[f'course_{course_id}_tasks_pointer']
+    await state.update_data(
+        **{f'course_{course_id}_tasks_pointer': max(0, pointer - 1)}
     )
 
     await bot.send_message(

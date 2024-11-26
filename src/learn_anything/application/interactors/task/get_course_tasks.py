@@ -104,6 +104,7 @@ class GetCourseTasksInteractor:
 
             elif task.type == TaskType.CODE:
                 total_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
+                correct_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
                 task_data = CodeTaskData(
                     id=task.id,
                     title=task.title,

@@ -104,14 +104,13 @@ def _demote():
         resource.RLIMIT_NPROC,
         (50, 50)
     )
-    resource.RLIMIT_MEMLOCK
 
 
 class UnixPlaygroundFactory(PlaygroundFactory):
     def create(
             self,
-            identifier: str | None,
-            code_duration_timeout: int
+            code_duration_timeout: int,
+            identifier: str | None = None,
     ) -> UnixPlayground:
         return UnixPlayground(
             identifier=identifier,

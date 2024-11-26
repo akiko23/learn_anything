@@ -45,3 +45,27 @@ def get_task_edit_menu_kb(
     builder.row(InlineKeyboardButton(text="Назад", callback_data=f'get_course_tasks-{back_to}-{course_id}'))
 
     return builder.as_markup()
+
+
+CANCEL_EDITING_KB = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="Отмена", callback_data='cancel_task_editing')]
+    ]
+)
+
+
+def get_task_after_edit_menu_kb(
+        back_to: str,
+        course_id: str,
+):
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='Назад', callback_data=f'edit_task-{back_to}-{course_id}')],
+            [
+                InlineKeyboardButton(text="К курсу", callback_data=f'course-{back_to}-{course_id}'),
+                InlineKeyboardButton(text="В главное меню", callback_data='all_courses-to_main_menu')
+            ],
+        ]
+    )
+
+    return kb

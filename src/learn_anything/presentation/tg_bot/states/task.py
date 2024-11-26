@@ -22,3 +22,14 @@ class CreateTextInputTaskForm(StatesGroup):
 
 
 
+class EditTaskForm(StatesGroup):
+    get_new_title = State()
+    get_new_topic = State()
+    get_new_body = State()
+
+
+class EditCodeTaskForm(StatesGroup):
+    get_new_prepared_code = State()
+    get_new_timeout = State()
+    get_new_attempts_limit = State()
+

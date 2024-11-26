@@ -38,9 +38,10 @@ async def process_code_task_submission(
 
     if output_data.failed_output:
         if output_data.failed_test_idx == -1:
+            print(output_data.failed_output)
             return await msg.answer(
                 text='Решение не прошло проверку, попробуйте еще раз\n\n'
-                     f'```\n{output_data.failed_output}```',
+                     f'```\n{output_data.failed_output[:500] + '...'}```',
                 reply_markup=get_do_task_kb(),
                 parse_mode='markdown',
             )

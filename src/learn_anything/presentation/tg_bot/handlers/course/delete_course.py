@@ -54,6 +54,11 @@ async def delete_course(
         data=DeleteCourseInputData(course_id=CourseID(int(course_id)))
     )
 
+    pointer = data[f'{back_to}_pointer']
+    await state.update_data(
+        **{f'{back_to}_pointer': max(0, pointer - 1)}
+    )
+
     await bot.send_message(
         chat_id=user_id,
         text='Курс успешно удален',

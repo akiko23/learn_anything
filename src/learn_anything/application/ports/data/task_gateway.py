@@ -48,3 +48,7 @@ class TaskGateway(Protocol):
 
     async def save_text_input_task(self, task: TextInputTask) -> TaskID:
         raise NotImplementedError
+
+
+    async def delete(self, task_id: TaskID) -> None:
+        raise NotImplementedError

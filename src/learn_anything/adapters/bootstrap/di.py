@@ -20,6 +20,8 @@ from learn_anything.application.interactors.course.leave_course import LeaveCour
 from learn_anything.application.interactors.course.publish_course import PublishCourseInteractor
 from learn_anything.application.interactors.course.register_for_course import RegisterForCourseInteractor
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor
+from learn_anything.application.interactors.task.delete_task import DeleteTaskInteractor
+from learn_anything.application.interactors.task.update_task import UpdateTaskInteractor, UpdateCodeTaskInteractor
 from learn_anything.application.interactors.submission.create_submission import CreateCodeTaskSubmissionInteractor, \
     CreatePollTaskSubmissionInteractor
 from learn_anything.application.interactors.task.create_task import CreateCodeTaskInteractor, CreatePollTaskInteractor, \
@@ -98,6 +100,9 @@ def interactors_provider() -> Provider:
     provider.provide(CreateTaskInteractor, scope=Scope.REQUEST)
     provider.provide(CreateCodeTaskInteractor, scope=Scope.REQUEST)
     provider.provide(CreatePollTaskInteractor, scope=Scope.REQUEST)
+    provider.provide(UpdateTaskInteractor, scope=Scope.REQUEST)
+    provider.provide(UpdateCodeTaskInteractor, scope=Scope.REQUEST)
+    provider.provide(DeleteTaskInteractor, scope=Scope.REQUEST)
 
     provider.provide(CreateCodeTaskSubmissionInteractor, scope=Scope.REQUEST)
     provider.provide(CreatePollTaskSubmissionInteractor, scope=Scope.REQUEST)

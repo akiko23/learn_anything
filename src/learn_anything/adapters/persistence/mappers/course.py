@@ -88,7 +88,7 @@ class CourseMapper(CourseGateway):
                 where(
                     func.concat(
                         func.lower(courses_table.c.title),
-                        func.lower(courses_table.c.description),
+                        func.lower(courses_table.c.body),
                     ).like(f'%{filters.title.lower()}%')
                 )
             )

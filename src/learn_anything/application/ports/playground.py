@@ -19,8 +19,8 @@ class Playground(Protocol):
 class PlaygroundFactory(Protocol):
     def create(
             self,
-            identifier: str | None,
-            code_duration_timeout: int
+            code_duration_timeout: int,
+            identifier: str | None = None,
     ) -> Playground:
         raise NotImplementedError
 

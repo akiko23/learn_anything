@@ -1,7 +1,7 @@
 import asyncio
 from collections.abc import Sequence
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -166,29 +166,31 @@ class TaskMapper(TaskGateway):
                         index_in_course=task.index_in_course,
                         prepared_code=task.prepared_code,
                         code_duration_timeout=task.code_duration_timeout,
-                    )
-                )
+                    ),
+                    where=(tasks_table.c.id == task.id)
+                ).
+                returning(tasks_table.c.id)
             )
 
         res = await self._session.execute(upsert_code_task_stmt)
-        new_task_id = res.scalar_one()
+        task_id = res.scalar_one()
 
         insert_code_task_tests_stmt = (
             insert(CodeTaskTest).
             values(
                 [
-                    {"code": test.code, "task_id": new_task_id}
+                    {"code": test.code, "task_id": task_id}
                     for test in task.tests
                 ]
             )
         )
-        insert_code_task_tests_stmt.on_conflict_do_update(
+        insert_code_task_tests_stmt = insert_code_task_tests_stmt.on_conflict_do_update(
             constraint='code_task_tests_pkey',
             set_=dict(code=insert_code_task_tests_stmt.excluded.code),
         )
 
         await self._session.execute(insert_code_task_tests_stmt)
-        return new_task_id
+        return task_id
 
     async def save_poll_task(self, task: PollTask) -> TaskID:
         task_upsert_stmt = (
@@ -201,23 +203,54 @@ class TaskMapper(TaskGateway):
                 course_id=task.course_id,
                 index_in_course=task.index_in_course
             )
-        ).on_conflict_do_update(
-            constraint='tasks_pkey',
-            set_=dict(
-                body=task.body
-            )
-        ).returning(tasks_table.c.id)
+        )
 
-        options_insert_stmt = (
+        if task.id:
+            task_upsert_stmt = (
+                insert(tasks_table).
+                values(
+                    id=task.id,
+                    type=task.type,
+                    title=task.title,
+                    topic=task.topic,
+                    body=task.body,
+                    course_id=task.course_id,
+                    index_in_course=task.index_in_course
+                )
+            ).on_conflict_do_update(
+                constraint='tasks_pkey',
+                set_=dict(
+                    title=task.title,
+                    topic=task.topic,
+                    body=task.body,
+                    index_in_course=task.index_in_course,
+                ),
+                where=(tasks_table.c.id == task.id)
+            )
+
+        task_upsert_stmt = task_upsert_stmt.returning(tasks_table.c.id)
+        insert_options_stmt = (
             insert(poll_task_options_table).
             values([
                 {'id': option.id, 'content': option.content, 'is_correct': option.is_correct}
                 for option in task.options
             ])
         )
-
-        res, _ = await asyncio.gather(
-            self._session.execute(task_upsert_stmt),
-            self._session.execute(options_insert_stmt)
+        insert_options_stmt = insert_options_stmt.on_conflict_do_update(
+            constraint='poll_task_options_pkey',
+            set_=dict(code=insert_options_stmt.excluded.code),
         )
+
+        res, _ = await self._session.execute(task_upsert_stmt)
+        await self._session.execute(insert_options_stmt)
+
         return res.scalar_one()
+
+    async def delete(self, task_id: TaskID) -> None:
+        stmt = (
+            delete(tasks_table).
+            where(
+                tasks_table.c.id == task_id,
+            )
+        )
+        await self._session.execute(stmt)
