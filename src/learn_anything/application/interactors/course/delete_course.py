@@ -29,13 +29,13 @@ class DeleteCourseInteractor:
         self._commiter = commiter
 
     async def execute(self, data: DeleteCourseInputData) -> None:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
         course = await self._course_gateway.with_id(course_id=data.course_id)
         if not course:
             raise CourseDoesNotExistError(data.course_id)
 
         share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
-        ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
+        ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         await self._course_gateway.delete(course_id=course.id)
 

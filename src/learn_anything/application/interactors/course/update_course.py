@@ -37,14 +37,14 @@ class UpdateCourseInteractor:
         self._file_manager = file_manager
 
     async def execute(self, data: UpdateCourseInputData) -> UpdateCourseOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
 
         course = await self._course_gateway.with_id(data.course_id)
         if not course:
             raise CourseDoesNotExistError
 
         share_rules = await self._course_gateway.get_share_rules(course_id=data.course_id)
-        ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
+        ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         if data.photo:
             if course.photo_id:

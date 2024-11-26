@@ -4,15 +4,10 @@ from datetime import datetime
 from enum import StrEnum, auto
 from typing import NewType, Optional
 
+from learn_anything.entities.user.enums import UserRole
+from learn_anything.entities.user.value_objects import AvailableForAuthRole, ExpiresAt
 
 UserID = NewType('UserID', int)
-
-
-class UserRole(StrEnum):
-    STUDENT = auto()
-    MENTOR = auto()
-    MODERATOR = auto()
-    BOT_OWNER = auto()
 
 
 @dataclass(kw_only=True)

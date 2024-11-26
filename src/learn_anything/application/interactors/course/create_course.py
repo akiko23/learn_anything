@@ -34,7 +34,7 @@ class CreateCourseInteractor:
         self._file_manager = file_manager
 
     async def execute(self, data: CreateCourseInputData) -> CreateCourseOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
         if data.photo:
             self._file_manager.save(data.photo.read(), f'courses/{data.photo_id}')
 
@@ -42,7 +42,7 @@ class CreateCourseInteractor:
             id_=None,
             title=data.title,
             description=data.description,
-            creator_id=actor.id,
+            creator_id=actor_id,
             is_published=False,
             photo_id=data.photo_id,
             registrations_limit=None

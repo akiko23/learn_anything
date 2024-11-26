@@ -79,9 +79,47 @@ async def get_all_courses(
 
     pointer = data['all_courses_pointer']
     current_course = courses[pointer]
+    text = get_many_courses_text(current_course)
+
+    if current_course.photo_id:
+        try:
+            await bot.send_photo(
+                chat_id=user_id,
+                photo=current_course.photo_id,
+                caption=text,
+                reply_markup=get_all_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+            )
+        except TelegramBadRequest:
+            msg = await bot.send_photo(
+                chat_id=user_id,
+                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
+                caption=text,
+                reply_markup=get_all_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+            )
+
+            new_photo_id = msg.photo[-1].file_id
+            new_photo = await bot.download(new_photo_id)
+
+            await update_course_interactor.execute(
+                data=UpdateCourseInputData(
+                    course_id=CourseID(int(current_course.id)),
+                    photo_id=new_photo_id,
+                    photo=new_photo
+                )
+            )
+        return
+
     await bot.send_message(
         chat_id=user_id,
-        text=get_many_courses_text(current_course),
+        text=text,
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
             total=total,

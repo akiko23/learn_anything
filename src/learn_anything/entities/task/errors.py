@@ -56,4 +56,4 @@ class TaskTestCodeIsInvalidError(ApplicationError):
         return f"Invalid code for the test #{self.index}. Stderr: {self.err}"
 
 
-InvalidCodeError = Union[TaskTestCodeIsInvalidError, TaskPreparedCodeIsInvalidError]
+InvalidTaskCodeError = Union[TaskTestCodeIsInvalidError, TaskPreparedCodeIsInvalidError]

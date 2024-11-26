@@ -56,7 +56,7 @@ class GetManyCoursesInteractor:
         self._id_provider = id_provider
 
     async def execute(self, data: GetManyCoursesInputData) -> GetManyCoursesOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
 
         courses, total = await self._course_gateway.all(
             pagination=data.pagination,
@@ -68,7 +68,7 @@ class GetManyCoursesInteractor:
         for course in courses:
             creator, registration = await asyncio.gather(
                 self._user_gateway.with_id(course.creator_id),
-                self._registration_for_course_gateway.read(user_id=actor.id, course_id=course.id)
+                self._registration_for_course_gateway.read(user_id=actor_id, course_id=course.id)
             )
 
             course_data = CourseData(

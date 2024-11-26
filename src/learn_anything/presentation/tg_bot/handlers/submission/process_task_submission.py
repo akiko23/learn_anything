@@ -8,10 +8,13 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.submission.create_submission import CreateCodeTaskSubmissionInteractor, \
     CreateCodeTaskSubmissionInputData
+from learn_anything.application.interactors.task.get_course_tasks import TaskData, CodeTaskData
 from learn_anything.entities.task.models import TaskType
 from learn_anything.presentors.tg_bot.keyboards.task.do_course_task import get_do_task_kb
 from learn_anything.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
 from learn_anything.presentation.tg_bot.states.submission import SubmissionForm
+from learn_anything.presentors.tg_bot.texts.get_task import get_task_text
+from learn_anything.presentors.tg_bot.texts.submission import get_on_failed_code_submission_text
 
 router = Router()
 
@@ -26,7 +29,7 @@ async def process_code_task_submission(
     user_id: int = msg.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    target_task = data['target_task']
+    target_task: CodeTaskData = data['target_task']
     submission = msg.text
 
     output_data = await interactor.execute(
@@ -37,18 +40,9 @@ async def process_code_task_submission(
     )
 
     if output_data.failed_output:
-        if output_data.failed_test_idx == -1:
-            print(output_data.failed_output)
-            return await msg.answer(
-                text='Решение не прошло проверку, попробуйте еще раз\n\n'
-                     f'```\n{output_data.failed_output[:500] + '...'}```',
-                reply_markup=get_do_task_kb(),
-                parse_mode='markdown',
-            )
+        text = get_on_failed_code_submission_text(output_data)
         return await msg.answer(
-            text='Решение не прошло проверку, попробуйте еще раз\n\n'
-                 f'Тест #{output_data.failed_test_idx + 1} провалился:\n'
-                 f'```\n{output_data.failed_output}```',
+            text=text,
             reply_markup=get_do_task_kb(),
             parse_mode='markdown',
         )
@@ -59,44 +53,35 @@ async def process_code_task_submission(
     back_to = data['back_to']
 
     tasks = data[f'course_{course_id}_tasks']
-    task_data = tasks[data[f'course_{course_id}_tasks_pointer']]
     pointer = data[f'course_{course_id}_tasks_pointer']
     total = data[f'course_{course_id}_tasks_total']
     current_course = data['target_course']
 
-    await msg.answer(f'Поздравляем! Задача \'{task_data.title}\' решена')
+    tasks[pointer].solved_by_actor = True
+    tasks[pointer].total_correct_submissions += 1
+    tasks[pointer].total_submissions += 1
 
-    task_topic = 'Без темы'
-    if task_data.topic:
-        task_topic = f'Тема: {task_data.topic}'
+    await state.update_data(
+        **{f'course_{course_id}_tasks': tasks}
+    )
+
+    await msg.answer(
+        f'Поздравляем! Задача \'{target_task.title}\' решена'
+    )
 
     await bot.send_message(
         chat_id=user_id,
-        text=(
-            f'{task_data.title}\n'
-            f'\n'
-            f'Тип: Задание на код\n'
-            f'\n'
-            f'{task_topic}\n'
-            f'\n'
-            f'Тело: {task_data.body}\n'
-            f'\n'
-            f'Макс. время выполнения: {task_data.code_duration_timeout} с.\n'
-            f'\n'
-            f'Решений отправлено: {task_data.total_submissions}\n'
-            f'\n'
-            f'Создано: {task_data.created_at}\n'
-        ),
+        text=get_task_text(target_task),
         reply_markup=get_course_tasks_keyboard(
             pointer=pointer,
             total=total,
             back_to=back_to,
             course_id=course_id,
-            task_id=task_data.id,
+            task_id=target_task.id,
             user_has_write_access=current_course.user_has_write_access,
             user_is_registered=current_course.user_is_registered,
             course_is_published=current_course.is_published,
-            task_is_practice=task_data.type != TaskType.THEORY
+            task_is_practice=target_task.type != TaskType.THEORY
         ),
     )
 

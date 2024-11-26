@@ -1,6 +1,5 @@
-
-from aiogram.types import TelegramObject
-
+from aiogram.enums import MessageEntityType
+from aiogram.types import TelegramObject, Message
 from dishka import (
     AsyncContainer,
     Provider,
@@ -10,34 +9,6 @@ from dishka import (
     provide,
 )
 
-from learn_anything.application.interactors.auth.create_auth_link import CreateAuthLinkInteractor
-from learn_anything.application.interactors.auth.invalidate_auth_link import InvalidateAuthLinkInteractor
-from learn_anything.application.interactors.course.create_course import CreateCourseInteractor
-from learn_anything.application.interactors.course.delete_course import DeleteCourseInteractor
-from learn_anything.application.interactors.course.get_course import GetCourseInteractor
-from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor
-from learn_anything.application.interactors.course.leave_course import LeaveCourseInteractor
-from learn_anything.application.interactors.course.publish_course import PublishCourseInteractor
-from learn_anything.application.interactors.course.register_for_course import RegisterForCourseInteractor
-from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor
-from learn_anything.application.interactors.task.delete_task import DeleteTaskInteractor
-from learn_anything.application.interactors.task.update_task import UpdateTaskInteractor, UpdateCodeTaskInteractor
-from learn_anything.application.interactors.submission.create_submission import CreateCodeTaskSubmissionInteractor, \
-    CreatePollTaskSubmissionInteractor
-from learn_anything.application.interactors.task.create_task import CreateCodeTaskInteractor, CreatePollTaskInteractor, \
-    CreateTaskInteractor
-from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor
-from learn_anything.application.ports.auth.identity_provider import IdentityProvider
-from learn_anything.application.ports.auth.token import TokenProcessor
-from learn_anything.application.ports.committer import Commiter
-from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGateway
-from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
-from learn_anything.application.ports.data.file_manager import FileManager
-from learn_anything.application.ports.data.submission_gateway import SubmissionGateway
-from learn_anything.application.ports.data.task_gateway import TaskGateway
-from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.application.interactors.auth.authenticate import Authenticate
-from learn_anything.application.ports.playground import PlaygroundFactory
 from learn_anything.adapters.auth.tg_auth import TgIdentityProvider, TgB64TokenProcessor
 from learn_anything.adapters.persistence.commiter import SACommiter
 from learn_anything.adapters.persistence.config import load_db_config, DatabaseConfig
@@ -49,6 +20,34 @@ from learn_anything.adapters.persistence.providers import get_async_sessionmaker
 from learn_anything.adapters.playground.unix_playground import UnixPlaygroundFactory
 from learn_anything.adapters.s3.config import load_s3_config, S3Config
 from learn_anything.adapters.s3.s3_file_manager import S3FileManager
+from learn_anything.application.interactors.auth.authenticate import Authenticate
+from learn_anything.application.interactors.auth.create_auth_link import CreateAuthLinkInteractor
+from learn_anything.application.interactors.auth.invalidate_auth_link import InvalidateAuthLinkInteractor
+from learn_anything.application.interactors.course.create_course import CreateCourseInteractor
+from learn_anything.application.interactors.course.delete_course import DeleteCourseInteractor
+from learn_anything.application.interactors.course.get_course import GetCourseInteractor
+from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor
+from learn_anything.application.interactors.course.leave_course import LeaveCourseInteractor
+from learn_anything.application.interactors.course.publish_course import PublishCourseInteractor
+from learn_anything.application.interactors.course.register_for_course import RegisterForCourseInteractor
+from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor
+from learn_anything.application.interactors.submission.create_submission import CreateCodeTaskSubmissionInteractor, \
+    CreatePollTaskSubmissionInteractor
+from learn_anything.application.interactors.task.create_task import CreateCodeTaskInteractor, CreatePollTaskInteractor, \
+    CreateTaskInteractor
+from learn_anything.application.interactors.task.delete_task import DeleteTaskInteractor
+from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor
+from learn_anything.application.interactors.task.update_task import UpdateTaskInteractor, UpdateCodeTaskInteractor
+from learn_anything.application.ports.auth.identity_provider import IdentityProvider
+from learn_anything.application.ports.auth.token import TokenProcessor
+from learn_anything.application.ports.committer import Commiter
+from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGateway
+from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
+from learn_anything.application.ports.data.file_manager import FileManager
+from learn_anything.application.ports.data.submission_gateway import SubmissionGateway
+from learn_anything.application.ports.data.task_gateway import TaskGateway
+from learn_anything.application.ports.data.user_gateway import UserGateway
+from learn_anything.application.ports.playground import PlaygroundFactory
 from learn_anything.presentation.tg_bot.config import load_bot_config, BotConfig
 
 
@@ -57,12 +56,9 @@ def gateways_provider() -> Provider:
 
     provider.provide(UserMapper, scope=Scope.REQUEST, provides=UserGateway)
     provider.provide(AuthLinkMapper, scope=Scope.REQUEST, provides=AuthLinkGateway)
-
     provider.provide(CourseMapper, scope=Scope.REQUEST, provides=CourseGateway)
-    provider.provide(RegistrationForCourseMapper, scope=Scope.REQUEST,provides=RegistrationForCourseGateway)
-
+    provider.provide(RegistrationForCourseMapper, scope=Scope.REQUEST, provides=RegistrationForCourseGateway)
     provider.provide(TaskMapper, scope=Scope.REQUEST, provides=TaskGateway)
-
     provider.provide(SubmissionMapper, scope=Scope.REQUEST, provides=SubmissionGateway)
 
     provider.provide(SACommiter, scope=Scope.REQUEST, provides=Commiter)
@@ -127,11 +123,20 @@ class TgProvider(Provider):
     async def get_user_id(self, obj: TelegramObject) -> int:
         return obj.from_user.id
 
+    @provide(scope=Scope.REQUEST)
+    async def get_command(self, obj: TelegramObject) -> str | None:
+        if not isinstance(obj, Message) or not obj.entities:
+            return None
+
+        for entity in obj.entities:
+            if entity.type == MessageEntityType.BOT_COMMAND:
+                return obj.text
 
     @provide(scope=Scope.REQUEST)
     async def get_identity_provider(
             self,
             user_id: int,
+            command: str | None,
             user_gateway: UserGateway,
             auth_link_gateway: AuthLinkGateway,
             token_processor: TokenProcessor,
@@ -141,6 +146,7 @@ class TgProvider(Provider):
             user_gateway=user_gateway,
             auth_link_gateway=auth_link_gateway,
             token_processor=token_processor,
+            command=command,
         )
 
         return identity_provider

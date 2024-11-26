@@ -17,7 +17,7 @@ async def cmd_start(
         msg: Message | CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        command: CommandObject,
+        command,
         interactor: FromDishka[Authenticate],
 ):
     user_id: int = msg.from_user.id
@@ -29,7 +29,6 @@ async def cmd_start(
             user_id=UserID(user_id),
             fullname=fullname,
             username=username,
-            token=command.args,
         ),
     )
 

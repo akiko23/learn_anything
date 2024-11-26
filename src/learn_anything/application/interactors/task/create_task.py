@@ -41,14 +41,14 @@ class CreateTaskInteractor:
         self._commiter = commiter
 
     async def execute(self, data: CreateTaskInputData) -> CreateTaskOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
 
         course = await self._course_gateway.with_id(data.course_id)
         if not course:
             raise CourseDoesNotExistError(data.course_id)
 
         share_rules = await self._course_gateway.get_share_rules(course.id)
-        ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
+        ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         task = Task(
             id=None,
@@ -102,18 +102,17 @@ class CreateCodeTaskInteractor:
         self._commiter = commiter
 
     async def execute(self, data: CreateCodeTaskInputData) -> CreateCodeTaskOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
 
         course = await self._course_gateway.with_id(data.course_id)
         if not course:
             raise CourseDoesNotExistError(data.course_id)
 
         share_rules = await self._course_gateway.get_share_rules(course.id)
-
-        ensure_actor_has_write_access(actor_id=actor.id, course=course, share_rules=share_rules)
+        ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         await self._ensure_codes_are_valid(
-            actor_id=actor.id,
+            actor_id=actor_id,
             task_prepared_code=data.prepared_code,
             code_duration_timeout=data.code_duration_timeout,
             codes_of_tests=data.tests,
@@ -205,14 +204,14 @@ class CreatePollTaskInteractor:
         self._commiter = commiter
 
     async def execute(self, data: CreatePollTaskInputData) -> CreatePollTaskOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
 
         course = await self._course_gateway.with_id(data.course_id)
         if not course:
             raise CourseDoesNotExistError(data.course_id)
 
-        if actor.id != course.creator_id:
-            raise CourseDoesNotExistError(data.course_id)
+        share_rules = await self._course_gateway.get_share_rules(course.id)
+        ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         task = PollTask(
             id=None,

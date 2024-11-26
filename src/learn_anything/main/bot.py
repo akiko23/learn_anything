@@ -31,7 +31,7 @@ async def main():
         events_isolation=SimpleEventIsolation()
     )
 
-    dp.message.outer_middleware.register(AuthMiddleware(container))
+    dp.message.middleware.register(AuthMiddleware(container))
     dp.callback_query.outer_middleware.register(AuthMiddleware(container))
     dp.message.outer_middleware.register(LoggingMiddleware())
     dp.callback_query.outer_middleware.register(LoggingMiddleware())

@@ -56,7 +56,7 @@ class GetCourseInteractor:
         self._id_provider = id_provider
 
     async def execute(self, data: GetCourseInputData) -> GetFullCourseOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
 
         course = await self._course_gateway.with_id(data.course_id)
         if not course:
@@ -64,12 +64,12 @@ class GetCourseInteractor:
 
         creator = await self._user_gateway.with_id(course.creator_id)
         registration = await self._registration_for_course_gateway.read(
-            user_id=actor.id,
+            user_id=actor_id,
             course_id=course.id
         )
 
         share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
-        ensure_actor_has_read_access(actor_id=actor.id, course=course, share_rules=share_rules)
+        ensure_actor_has_read_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         total_tasks = await self._task_gateway.total_with_course(course_id=course.id)
         output_data = GetFullCourseOutputData(
@@ -86,7 +86,7 @@ class GetCourseInteractor:
             creator=creator.fullname.title(),
             user_is_registered=registration is not None,
             user_has_write_access=actor_has_write_access(
-                actor_id=actor.id,
+                actor_id=actor_id,
                 course=course,
                 share_rules=share_rules
             ),

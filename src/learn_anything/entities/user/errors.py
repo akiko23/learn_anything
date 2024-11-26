@@ -3,11 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from learn_anything.entities.error import ApplicationError
-from learn_anything.entities.user.models import UserID, UserRole
-
-
-class UserNotAuthenticatedError(Exception):
-    message: str = "User not authenticated"
+from learn_anything.entities.user.models import UserRole
 
 
 @dataclass
@@ -21,15 +17,6 @@ class UsernameToShortError(ApplicationError):
 
 
 @dataclass
-class UserAlreadyExistError(ApplicationError):
-    user_id: UserID
-
-    @property
-    def message(self):
-        return f"User with id={self.user_id} already exists."
-
-
-@dataclass
 class AuthLinkCreationForbiddenError(ApplicationError):
     role: UserRole
 
@@ -39,7 +26,7 @@ class AuthLinkCreationForbiddenError(ApplicationError):
 
 
 @dataclass
-class RoleUnavailableForAuthError(ApplicationError):
+class RoleIsUnavailableForAuthError(ApplicationError):
     role: UserRole
 
     @property

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
@@ -13,7 +14,7 @@ from learn_anything.entities.user.rules import create_auth_link
 class CreateAuthLinkInputData:
     for_role: UserRole
     usages: int
-    expires_at: str
+    expires_at: datetime
 
 
 @dataclass
@@ -35,14 +36,14 @@ class CreateAuthLinkInteractor:
         self._id_provider = id_provider
 
     async def execute(self, data: CreateAuthLinkInputData) -> CreateAuthLinkOutputData:
-        actor = await self._id_provider.get_user()
-        if actor.role != UserRole.BOT_OWNER:
-            raise AuthLinkCreationForbiddenError(actor.role)
+        actor_role = await self._id_provider.get_current_user_role()
+        if actor_role != UserRole.BOT_OWNER:
+            raise AuthLinkCreationForbiddenError(actor_role)
 
         auth_link = create_auth_link(
             link_id=None,
             for_role=data.for_role,
-            usages=int(data.usages),
+            usages=data.usages,
             expires_at=data.expires_at,
         )
         new_auth_link_id = await self._auth_link_gateway.save(auth_link)

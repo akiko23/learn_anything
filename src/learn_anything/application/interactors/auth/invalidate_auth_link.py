@@ -22,9 +22,9 @@ class InvalidateAuthLinkInteractor:
         self._id_provider = id_provider
 
     async def execute(self, data: InvalidateAuthLinkInputData) -> None:
-        actor = await self._id_provider.get_user()
-        if actor.role != UserRole.BOT_OWNER:
-            raise AuthLinkCreationForbiddenError(actor.role)
+        actor_role = await self._id_provider.get_current_user_role()
+        if actor_role != UserRole.BOT_OWNER:
+            raise AuthLinkCreationForbiddenError(actor_role)
 
         auth_link = await self._auth_link_gateway.with_id(data.link_id)
         if not auth_link:

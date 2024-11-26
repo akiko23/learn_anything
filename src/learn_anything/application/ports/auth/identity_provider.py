@@ -1,12 +1,11 @@
-from abc import abstractmethod
 from typing import Protocol
 
-from learn_anything.entities.user.models import User, UserRole
+from learn_anything.entities.user.models import UserRole, UserID
 
 
 class IdentityProvider(Protocol):
-    async def get_user(self) -> User:
+    async def get_current_user_id(self) -> UserID:
         raise NotImplementedError
 
-    async def get_role(self) -> UserRole:
+    async def get_current_user_role(self) -> UserRole:
         raise NotImplementedError

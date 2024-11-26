@@ -16,7 +16,7 @@ from learn_anything.entities.task.errors import TaskDoesNotExistError, ActorIsNo
 from learn_anything.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, CodeTask, \
     CodeTaskTest
 from learn_anything.entities.task.rules import option_is_correct, answer_is_correct
-from learn_anything.entities.user.models import User, UserID
+from learn_anything.entities.user.models import UserID
 
 
 class CreateTaskSubmissionBaseInteractor(abc.ABC):
@@ -38,7 +38,7 @@ class CreateTaskSubmissionBaseInteractor(abc.ABC):
         self._playground_factory = playground_factory
         self._commiter = commiter
 
-    async def _ensure_actor_can_create_submission(self, actor: User, task: PracticeTask):
+    async def _ensure_actor_can_create_submission(self, actor_id: UserID, task: PracticeTask):
         course = await self._course_gateway.with_id(task.course_id)
         if not course:
             raise CourseDoesNotExistError(task.course_id)
@@ -46,11 +46,11 @@ class CreateTaskSubmissionBaseInteractor(abc.ABC):
         if not course.is_published:
             raise CourseDoesNotExistError(task.course_id)
 
-        registration = await self._registration_for_course_gateway.read(actor.id, course.id)
+        registration = await self._registration_for_course_gateway.read(actor_id, course.id)
         if not registration:
             raise ActorIsNotRegisteredOnCourseError(course.id)
 
-        return await self._check_attempts_limit(actor_id=actor.id, task=task)
+        return await self._check_attempts_limit(actor_id=actor_id, task=task)
 
     async def _check_attempts_limit(self, actor_id: UserID, task: PracticeTask):
         self._submissions_number = await self._submission_gateway.get_user_submissions_number_for_task(
@@ -79,21 +79,21 @@ class CreateCodeTaskSubmissionOutputData:
 
 class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
     async def execute(self, data: CreateCodeTaskSubmissionInputData) -> CreateCodeTaskSubmissionOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
         task = await self._task_gateway.get_code_task_with_id(data.task_id)
         if not task:
             raise TaskDoesNotExistError(data.task_id)
 
-        await self._ensure_actor_can_create_submission(actor=actor, task=task)
+        await self._ensure_actor_can_create_submission(actor_id=actor_id, task=task)
 
         result_output, failed_test_idx = await self._check_submission(
-            actor=actor,
+            actor_id=actor_id,
             task=task,
             submission=data.submission,
         )
 
         submission = create_code_submission(
-            user_id=actor.id,
+            user_id=actor_id,
             code=data.submission,
             task_id=task.id,
             tests_result_output=result_output,
@@ -111,9 +111,9 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
             )
         return CreateCodeTaskSubmissionOutputData()
 
-    async def _check_submission(self, actor: User, task: CodeTask, submission: str):
+    async def _check_submission(self, actor_id: UserID, task: CodeTask, submission: str):
         async with self._playground_factory.create(
-                identifier=f'{actor.id}_{task.id}',
+                identifier=f'{actor_id}_{task.id}',
                 code_duration_timeout=task.code_duration_timeout,
         ) as pl:
             self._pl = pl
@@ -167,15 +167,15 @@ class CreatePollTaskSubmissionOutputData:
 
 class CreatePollTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
     async def execute(self, data: CreatePollTaskSubmissionInputData) -> CreatePollTaskSubmissionOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
         task = await self._task_gateway.get_poll_task_with_id(data.task_id)
         if not task:
             raise TaskDoesNotExistError(data.task_id)
 
-        await self._ensure_actor_can_create_submission(actor=actor, task=task)
+        await self._ensure_actor_can_create_submission(actor_id=actor_id, task=task)
 
         submission = PollSubmission(
-            user_id=actor.id,
+            user_id=actor_id,
             selected_option=data.selected_option,
             task_id=task.id,
             created_at=datetime.now(),
@@ -205,15 +205,15 @@ class CreateTextInputTaskSubmissionOutputData:
 
 class CreateTextInputTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
     async def execute(self, data: CreateTextInputTaskSubmissionInputData) -> CreateTextInputTaskSubmissionOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
         task = await self._task_gateway.get_text_input_task_with_id(data.task_id)
         if not task:
             raise TaskDoesNotExistError(data.task_id)
 
-        await self._ensure_actor_can_create_submission(actor=actor, task=task)
+        await self._ensure_actor_can_create_submission(actor_id=actor_id, task=task)
 
         submission = TextInputSubmission(
-            user_id=actor.id,
+            user_id=actor_id,
             task_id=task.id,
             created_at=datetime.now(),
             answer=data.value,

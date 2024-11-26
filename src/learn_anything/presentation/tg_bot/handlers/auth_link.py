@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from aiogram import Bot, Router, F
@@ -39,11 +40,12 @@ async def start_auth_link_creation(
     )
 
 
-@router.message(StateFilter(CreateAuthLinkForm.get_role))
+@router.message(StateFilter(CreateAuthLinkForm.get_role), F.text.cast(UserRole).as_('for_role'))
 async def get_auth_link_role(
         msg: Message,
         state: FSMContext,
         bot: Bot,
+        for_role: UserRole,
 ):
     user_id: int = msg.from_user.id
     data: dict[str, Any] = await state.get_data()
@@ -51,11 +53,10 @@ async def get_auth_link_role(
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await state.update_data(
-        for_role=msg.text
+        for_role=for_role
     )
 
     await state.set_state(CreateAuthLinkForm.get_usages)
-    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     msg = await bot.send_message(
         chat_id=user_id,
@@ -84,11 +85,10 @@ async def get_auth_link_usages(
     )
 
     await state.set_state(CreateAuthLinkForm.get_expires_at)
-    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     msg = await bot.send_message(
         chat_id=user_id,
-        text='Введите дату, до которой ссылка будет валидна',
+        text='Введите дату, до которой ссылка будет валидна (в формате %d-%m-%Y %H-%M)',
         reply_markup=CANCEL_AUTH_LINK_CREATION_KB,
     )
     await state.update_data(
@@ -118,11 +118,9 @@ async def get_auth_link_expires_at(
         data=CreateAuthLinkInputData(
             for_role=data['for_role'],
             usages=data['usages'],
-            expires_at=msg.text,
+            expires_at=datetime.strptime(msg.text, '%d-%m-%Y %H-%M'),
         )
     )
-
-    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     del data['msg_on_delete']
     del data['for_role']

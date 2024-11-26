@@ -11,7 +11,7 @@ from learn_anything.application.ports.data.task_gateway import TaskGateway, GetT
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import ensure_actor_has_read_access
-from learn_anything.entities.task.models import TaskID, TaskType, PracticeTask, CodeTask
+from learn_anything.entities.task.models import TaskID, TaskType, CodeTask
 from learn_anything.entities.task.rules import is_task_solved_by_actor
 
 
@@ -78,12 +78,12 @@ class GetCourseTasksInteractor:
         self._id_provider = id_provider
 
     async def execute(self, data: GetCourseTasksInputData) -> GetCourseTasksOutputData:
-        actor = await self._id_provider.get_user()
+        actor_id = await self._id_provider.get_current_user_id()
 
         course = await self._course_gateway.with_id(data.course_id)
         share_rules = await self._course_gateway.get_share_rules(data.course_id)
 
-        ensure_actor_has_read_access(actor_id=actor.id, course=course, share_rules=share_rules)
+        ensure_actor_has_read_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         tasks, total = await self._task_gateway.with_course(
             course_id=data.course_id,
@@ -115,7 +115,7 @@ class GetCourseTasksInteractor:
                 total_correct_submissions = await self._submission_gateway.total_correct_with_task_id(task_id=task.id)
 
                 user_submissions = await self._submission_gateway.with_user_and_task_id(
-                    user_id=actor.id, task_id=task.id
+                    user_id=actor_id, task_id=task.id
                 )
 
                 is_solved: bool = is_task_solved_by_actor(actor_submissions=user_submissions)

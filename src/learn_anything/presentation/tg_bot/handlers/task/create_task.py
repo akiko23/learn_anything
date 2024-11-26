@@ -17,7 +17,7 @@ from learn_anything.application.interactors.task.create_task import CreateTaskIn
     CreateCodeTaskInteractor, CreateCodeTaskInputData
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.errors import TaskPreparedCodeIsInvalidError, TaskTestCodeIsInvalidError, \
-    InvalidCodeError
+    InvalidTaskCodeError
 from learn_anything.entities.task.models import TaskType
 from learn_anything.presentation.tg_bot.states.task import CreateTaskForm, CreateCodeTaskForm, CreateTextInputTaskForm
 from learn_anything.presentors.tg_bot.keyboards.course.edit_course import get_course_edit_menu_kb
@@ -503,7 +503,7 @@ async def handle_invalid_code_error(
         event: ErrorEvent, msg: Message
 ):
     user_id: int = msg.from_user.id
-    err: InvalidCodeError = cast(InvalidCodeError, event.exception)
+    err: InvalidTaskCodeError = cast(InvalidTaskCodeError, event.exception)
 
     logger.warning(
         'User with id=%d ran following code: \'%s\' and got error: \'%s\'',
