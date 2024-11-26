@@ -118,7 +118,7 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
         ) as pl:
             self._pl = pl
 
-            out, err = await pl.execute_code(code=submission)
+            out, err = await pl.execute_code(code=task.prepared_code + '\n' + submission)
             user_output = (out + '\n' + err).strip()
             if err:
                 return f"Your Output:\n{user_output}", -1

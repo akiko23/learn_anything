@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from sqlalchemy import select, func, and_, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,12 +20,33 @@ class SubmissionMapper(SubmissionGateway):
 
         return result.scalar_one_or_none()
 
+    async def with_user_and_task_id(self, user_id: UserID, task_id: TaskID) -> Sequence[Submission]:
+        stmt = (
+            select(Submission).
+            where(submissions_table.c.user_id == user_id).
+            where(submissions_table.c.task_id == task_id)
+        )
+        result = await self._session.execute(stmt)
+        return result.scalars().all()
+
     async def total_with_task_id(self, task_id: TaskID) -> int:
         stmt = (
             select(
                 func.count()
             ).
             where(submissions_table.c.task_id == task_id)
+        )
+        result = await self._session.execute(stmt)
+
+        return result.scalar_one()
+
+    async def total_correct_with_task_id(self, task_id: TaskID) -> int:
+        stmt = (
+            select(
+                func.count()
+            ).
+            where(submissions_table.c.task_id == task_id).
+            where(submissions_table.c.is_correct)
         )
         result = await self._session.execute(stmt)
 

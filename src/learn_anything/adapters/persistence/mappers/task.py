@@ -34,7 +34,7 @@ class TaskMapper(TaskGateway):
         get_tests_stmt = select(CodeTaskTest).where(code_task_tests_table.c.task_id == task_id)
         get_tests_result = await self._session.execute(get_tests_stmt)
 
-        task.tests = get_tests_result.scalars()
+        task.tests = get_tests_result.scalars().all()
         return task
 
     async def get_poll_task_with_id(self, task_id: TaskID) -> PollTask:

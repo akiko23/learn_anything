@@ -11,7 +11,8 @@ from learn_anything.application.ports.data.task_gateway import TaskGateway, GetT
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import ensure_actor_has_read_access
-from learn_anything.entities.task.models import TaskID, TaskType
+from learn_anything.entities.task.models import TaskID, TaskType, PracticeTask, CodeTask
+from learn_anything.entities.task.rules import is_task_solved_by_actor
 
 
 @dataclass
@@ -30,6 +31,7 @@ class TaskData:
     type: TaskType
     # creator: str
     created_at: datetime
+    updated_at: datetime
 
 
 @dataclass
@@ -40,6 +42,9 @@ class TheoryTaskData(TaskData):
 @dataclass
 class PracticeTaskData(TaskData):
     total_submissions: int
+    total_correct_submissions: int
+    solved_by_actor: bool
+    attempts_left: int
 
 
 @dataclass
@@ -100,11 +105,21 @@ class GetCourseTasksInteractor:
                     type=task.type,
                     created_at=task.created_at,
                     # creator=creator.fullname,
+                    updated_at=course.updated_at,
                 )
 
             elif task.type == TaskType.CODE:
+                task: CodeTask
+
                 total_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
-                correct_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
+                total_correct_submissions = await self._submission_gateway.total_correct_with_task_id(task_id=task.id)
+
+                user_submissions = await self._submission_gateway.with_user_and_task_id(
+                    user_id=actor.id, task_id=task.id
+                )
+
+                is_solved: bool = is_task_solved_by_actor(actor_submissions=user_submissions)
+
                 task_data = CodeTaskData(
                     id=task.id,
                     title=task.title,
@@ -114,7 +129,11 @@ class GetCourseTasksInteractor:
                     created_at=task.created_at,
                     # creator=creator.fullname,
                     total_submissions=total_submissions,
-                    code_duration_timeout=task.code_duration_timeout
+                    total_correct_submissions=total_correct_submissions,
+                    solved_by_actor=is_solved,
+                    code_duration_timeout=task.code_duration_timeout,
+                    attempts_left=task.attempts_limit,
+                    updated_at=course.updated_at,
                 )
 
             tasks_output_data.append(task_data)

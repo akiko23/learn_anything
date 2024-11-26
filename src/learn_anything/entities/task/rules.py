@@ -1,9 +1,12 @@
+from collections.abc import Iterable
 from datetime import datetime
 from typing import Sequence
 
 from learn_anything.entities.course.models import CourseID
+from learn_anything.entities.submission.models import Submission
 from learn_anything.entities.task.models import PollTask, PollTaskOptionID, TextInputTask, TextInputTaskAnswer, \
-    TaskType, CodeTask, CodeTaskTest
+    TaskType, CodeTask, CodeTaskTest, PracticeTask
+from learn_anything.entities.user.models import User
 
 
 def option_is_correct(task: PollTask, option_id: PollTaskOptionID):
@@ -17,7 +20,6 @@ def answer_is_correct(task: TextInputTask, answer: TextInputTaskAnswer) -> bool:
     if answer in task.correct_answers:
         return True
     return False
-
 
 
 def create_code_task(
@@ -45,3 +47,11 @@ def create_code_task(
         attempts_limit=attempts_limit,
         created_at=datetime.now()
     )
+
+
+
+def is_task_solved_by_actor(actor_submissions: Iterable[Submission]) -> bool:
+    for submission in actor_submissions:
+        if submission.is_correct:
+            return True
+    return False

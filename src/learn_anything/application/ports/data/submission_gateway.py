@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, Sequence
 
 from learn_anything.entities.submission.models import PollSubmission, CodeSubmission, Submission, TextInputSubmission
 from learn_anything.entities.task.models import TaskID
@@ -6,10 +6,13 @@ from learn_anything.entities.user.models import UserID
 
 
 class SubmissionGateway(Protocol):
-    async def with_user_id(self, user_id: UserID) -> Submission:
+    async def with_user_and_task_id(self, user_id: UserID, task_id: TaskID) -> Sequence[Submission]:
         raise NotImplementedError
 
     async def total_with_task_id(self, task_id: TaskID) -> int:
+        raise NotImplementedError
+
+    async def total_correct_with_task_id(self, task_id: TaskID) -> int:
         raise NotImplementedError
 
     async def save_for_code_task(self, submission: CodeSubmission) -> None:
@@ -23,4 +26,3 @@ class SubmissionGateway(Protocol):
 
     async def get_user_submissions_number_for_task(self, user_id: UserID, task_id: TaskID) -> int:
         raise NotImplementedError
-

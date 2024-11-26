@@ -61,7 +61,7 @@ class UnixPlayground(Playground):
         )
 
         try:
-            out, err = process.communicate(timeout=6)
+            out, err = process.communicate(timeout=self._code_duration_timeout)
         except TimeoutExpired:
             self._kill_derivatives(process.pid)
 
@@ -71,7 +71,7 @@ class UnixPlayground(Playground):
 
             return (
                 out.decode() + '\n' + err.decode(),
-                f'TimeoutError: \'{code}\' timed out after 2 seconds'
+                f'TimeoutError: \'{code}\' timed out after {self._code_duration_timeout} seconds'
             )
 
         with suppress(ProcessLookupError):

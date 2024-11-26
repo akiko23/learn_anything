@@ -98,7 +98,7 @@ async def start_editing_task_prepared_code(
 
     await callback_query.answer()
 
-    await state.set_state(state=EditCodeTaskForm.get_new_timeout)
+    await state.set_state(state=EditCodeTaskForm.get_new_prepared_code)
 
     msg = await bot.send_message(chat_id=user_id, text='Отправьте новый код инициализации задания',
                                  reply_markup=CANCEL_EDITING_KB)
