@@ -66,9 +66,9 @@ class GetManyCoursesInteractor:
 
         courses_output_data = []
         for course in courses:
-            creator, user_is_registered = await asyncio.gather(
+            creator, registration = await asyncio.gather(
                 self._user_gateway.with_id(course.creator_id),
-                self._registration_for_course_gateway.exists(user_id=actor.id, course_id=course.id)
+                self._registration_for_course_gateway.read(user_id=actor.id, course_id=course.id)
             )
 
             course_data = CourseData(
@@ -78,7 +78,7 @@ class GetManyCoursesInteractor:
                 created_at=course.created_at,
                 creator=creator.fullname,
                 total_registered=course.total_registered,
-                user_is_registered=user_is_registered,
+                user_is_registered=registration is not None,
                 photo_id=None,
                 photo_reader=None,
             )

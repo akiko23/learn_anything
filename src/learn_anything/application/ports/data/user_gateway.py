@@ -9,7 +9,3 @@ class UserGateway(Protocol):
 
     async def save(self, user: User) -> None:
         raise NotImplementedError
-
-    async def exists(self, user_id: UserID) -> bool:
-        raise NotImplementedError
-

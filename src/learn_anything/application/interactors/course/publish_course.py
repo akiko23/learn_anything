@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.committer import Commiter
-from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
+from learn_anything.application.ports.data.course_gateway import CourseGateway
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.entities.course.errors import CourseDoesNotExistError, CourseAlreadyPublishedError, \
     NeedAtLeastOneTaskToPublishCourseError
@@ -20,7 +20,6 @@ class PublishCourseInteractor:
             self,
             course_gateway: CourseGateway,
             task_gateway: TaskGateway,
-            registration_for_course_gateway: RegistrationForCourseGateway,
             commiter: Commiter,
             id_provider: IdentityProvider
     ) -> None:
@@ -28,7 +27,6 @@ class PublishCourseInteractor:
         self._course_gateway = course_gateway
         self._task_gateway = task_gateway
         self._commiter = commiter
-        self._registration_for_course_gateway = registration_for_course_gateway
 
     async def execute(self, data: PublishCourseInputData) -> str:
         actor = await self._id_provider.get_user()

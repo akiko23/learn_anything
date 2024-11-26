@@ -69,10 +69,7 @@ class CourseGateway(Protocol):
 
 
 class RegistrationForCourseGateway(Protocol):
-    async def read(self, user_id: UserID, course_id: CourseID) -> RegistrationForCourse:
-        raise NotImplementedError
-
-    async def exists(self, user_id: UserID, course_id: CourseID) -> bool:
+    async def read(self, user_id: UserID, course_id: CourseID) -> RegistrationForCourse | None:
         raise NotImplementedError
 
     async def save(self, registration: RegistrationForCourse) -> None:

@@ -37,8 +37,6 @@ class TaskMapper(TaskGateway):
         task.tests = get_tests_result.scalars()
         return task
 
-
-
     async def get_poll_task_with_id(self, task_id: TaskID) -> PollTask:
         select_poll_task_stmt = (
             select(PollTask, PollTaskOption).
@@ -50,15 +48,12 @@ class TaskMapper(TaskGateway):
         )
 
         poll_task_res = await self._session.execute(select_poll_task_stmt)
-
         poll_task = poll_task_res.scalar_one()
-        print(poll_task)
-        print(poll_task.options)
 
         return poll_task
 
     async def with_course(self, course_id: CourseID, pagination: Pagination, filters: GetTasksFilters | None) -> (
-    Sequence[Task], int):
+            Sequence[Task], int):
         stmt = (
             select(
                 Task
@@ -194,7 +189,6 @@ class TaskMapper(TaskGateway):
 
         await self._session.execute(insert_code_task_tests_stmt)
         return new_task_id
-
 
     async def save_poll_task(self, task: PollTask) -> TaskID:
         task_upsert_stmt = (

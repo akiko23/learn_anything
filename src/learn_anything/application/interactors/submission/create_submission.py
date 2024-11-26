@@ -46,9 +46,9 @@ class CreateTaskSubmissionBaseInteractor(abc.ABC):
         if not course.is_published:
             raise CourseDoesNotExistError(task.course_id)
 
-        actor_is_registered_on_course = await self._registration_for_course_gateway.exists(actor.id, course.id)
-        if not actor_is_registered_on_course:
-            raise ActorIsNotRegisteredOnCourseError(actor.id, task.course_id)
+        registration = await self._registration_for_course_gateway.read(actor.id, course.id)
+        if not registration:
+            raise ActorIsNotRegisteredOnCourseError(course.id)
 
         return await self._check_attempts_limit(actor_id=actor.id, task=task)
 

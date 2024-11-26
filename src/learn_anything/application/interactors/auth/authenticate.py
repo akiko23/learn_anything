@@ -66,8 +66,8 @@ class Authenticate:
             role=role
         )
 
-        actor_exists = await self._user_gateway.exists(user_id=data.user_id)
-        is_newbie = not actor_exists
+        actor = await self._user_gateway.with_id(user_id=data.user_id)
+        is_newbie = not actor
 
         await self._user_gateway.save(user)
         await self._committer.commit()

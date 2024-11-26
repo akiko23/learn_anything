@@ -102,8 +102,9 @@ def _demote():
     resource.prlimit(
         os.getpid(),
         resource.RLIMIT_NPROC,
-        (20, 20)
+        (50, 50)
     )
+    resource.RLIMIT_MEMLOCK
 
 
 class UnixPlaygroundFactory(PlaygroundFactory):

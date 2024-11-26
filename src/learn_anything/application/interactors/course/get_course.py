@@ -63,7 +63,7 @@ class GetCourseInteractor:
             raise CourseDoesNotExistError(course_id=data.course_id)
 
         creator = await self._user_gateway.with_id(course.creator_id)
-        actor_is_registered = await self._registration_for_course_gateway.exists(
+        registration = await self._registration_for_course_gateway.read(
             user_id=actor.id,
             course_id=course.id
         )
@@ -84,7 +84,7 @@ class GetCourseInteractor:
             created_at=course.created_at,
             creator_id=creator.id,
             creator=creator.fullname.title(),
-            user_is_registered=actor_is_registered,
+            user_is_registered=registration is not None,
             user_has_write_access=actor_has_write_access(
                 actor_id=actor.id,
                 course=course,

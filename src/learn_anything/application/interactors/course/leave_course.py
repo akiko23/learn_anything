@@ -33,8 +33,8 @@ class LeaveCourseInteractor:
         if (not course) or (not course.is_published):
             raise CourseDoesNotExistError(data.course_id)
 
-        registration_exists = await self._registration_for_course_gateway.exists(user_id=actor.id, course_id=course.id)
-        if not registration_exists:
+        registration = await self._registration_for_course_gateway.read(user_id=actor.id, course_id=course.id)
+        if not registration:
             raise RegistrationForCourseDoesNotExistError
 
         course = decrement_course_registrations_number(course=course)

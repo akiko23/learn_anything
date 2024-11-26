@@ -1,7 +1,7 @@
 from typing import Sequence
 
 from sqlalchemy import and_
-from sqlalchemy import select, exists, func, desc, delete
+from sqlalchemy import select, func, desc, delete
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Bundle
@@ -219,19 +219,6 @@ class RegistrationForCourseMapper(RegistrationForCourseGateway):
         res = await self._session.execute(stmt)
 
         return res.scalar_one_or_none()
-
-    async def exists(self, user_id: UserID, course_id: CourseID) -> bool:
-        stmt = select(exists(
-            select(RegistrationForCourse).
-            where(
-                and_(
-                    registrations_for_courses_table.c.course_id == course_id,
-                    registrations_for_courses_table.c.user_id == user_id,
-                )
-            )
-        ))
-        res = await self._session.execute(stmt)
-        return res.scalar()
 
     async def save(self, registration: RegistrationForCourse) -> None:
         stmt = (

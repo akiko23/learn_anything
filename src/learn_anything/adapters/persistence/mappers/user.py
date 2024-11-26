@@ -1,14 +1,13 @@
 import uuid
 
-from sqlalchemy import select, exists
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from learn_anything.adapters.persistence.tables.user import users_table, auth_links_table
 from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.user.models import UserID, User, AuthLink
-from learn_anything.adapters.persistence.tables.user import users_table, auth_links_table
-
-from sqlalchemy.dialects.postgresql import insert
 
 
 class UserMapper(UserGateway):
@@ -42,15 +41,6 @@ class UserMapper(UserGateway):
         result = await self._session.execute(stmt)
 
         return result.scalar_one_or_none()
-
-    async def exists(self, user_id: UserID) -> User | None:
-        stmt = select(exists(
-            select(User).where(users_table.c.id == user_id)
-        ))
-        result = await self._session.execute(stmt)
-
-        return result.scalar_one_or_none()
-
 
 
 class AuthLinkMapper(AuthLinkGateway):

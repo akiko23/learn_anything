@@ -5,7 +5,7 @@ from typing import Sequence, Union
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.data.course_gateway import \
-    RegistrationForCourseGateway, CourseGateway
+    CourseGateway
 from learn_anything.application.ports.data.submission_gateway import SubmissionGateway
 from learn_anything.application.ports.data.task_gateway import TaskGateway, GetTasksFilters
 from learn_anything.application.ports.data.user_gateway import UserGateway
@@ -63,14 +63,12 @@ class GetCourseTasksInteractor:
             task_gateway: TaskGateway,
             course_gateway: CourseGateway,
             submission_gateway: SubmissionGateway,
-            registration_for_course_gateway: RegistrationForCourseGateway,
             user_gateway: UserGateway,
             id_provider: IdentityProvider
     ) -> None:
         self._task_gateway = task_gateway
         self._course_gateway = course_gateway
         self._submission_gateway = submission_gateway
-        self._registration_for_course_gateway = registration_for_course_gateway
         self._user_gateway = user_gateway
         self._id_provider = id_provider
 
