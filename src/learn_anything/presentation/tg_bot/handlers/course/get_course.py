@@ -3,7 +3,7 @@ from typing import Any
 from aiogram import Bot, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import BufferedInputFile
+from aiogram.types import BufferedInputFile, InputMediaPhoto
 from aiogram.types import CallbackQuery
 from dishka import FromDishka
 
@@ -29,8 +29,6 @@ async def get_single_course(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
-
     back_to, course_id = callback_query.data.split('-')[1:]
     target_course = await interactor.execute(
         data=GetCourseInputData(
@@ -53,16 +51,19 @@ async def get_single_course(
     )
 
     if target_course.photo_id:
-        await bot.send_photo(
+        return await bot.edit_message_media(
             chat_id=user_id,
-            photo=target_course.photo_id,
-            caption=text,
+            message_id=callback_query.message.message_id,
+            media=InputMediaPhoto(
+                media=target_course.photo_id,
+                caption=text
+            ),
             reply_markup=kb,
         )
-        return
 
-    await bot.send_message(
+    await bot.edit_message_text(
         chat_id=user_id,
+        message_id=callback_query.message.message_id,
         text=text,
         reply_markup=kb,
     )
@@ -73,12 +74,9 @@ async def back_to_all_courses(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        update_course_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
-
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     courses = data['all_courses']
     pointer = data['all_courses_pointer']
@@ -87,44 +85,21 @@ async def back_to_all_courses(
     current_course = courses[pointer]
     text = get_many_courses_text(current_course)
 
-    if current_course.photo_id:
-        try:
-            await bot.send_photo(
-                chat_id=user_id,
-                photo=current_course.photo_id,
-                caption=text,
-                reply_markup=get_all_courses_keyboard(
-                    pointer=pointer,
-                    total=total,
-                    current_course_id=current_course.id,
-                ),
-            )
-        except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_all_courses_keyboard(
-                    pointer=pointer,
-                    total=total,
-                    current_course_id=current_course.id,
-                ),
-            )
+    if callback_query.message.photo:
+        return await bot.edit_message_caption(
+            chat_id=user_id,
+            message_id=callback_query.message.message_id,
+            caption=text,
+            reply_markup=get_all_courses_keyboard(
+                pointer=pointer,
+                total=total,
+                current_course_id=current_course.id,
+            ),
+        )
 
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
-                )
-            )
-        return
-
-    await bot.send_message(
+    await bot.edit_message_text(
         chat_id=user_id,
+        message_id=callback_query.message.message_id,
         text=text,
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
@@ -139,13 +114,9 @@ async def back_to_created_courses(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        update_course_interactor: FromDishka[UpdateCourseInteractor],
-
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
-
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     courses = data['created_courses']
     pointer = data['created_courses_pointer']
@@ -154,44 +125,21 @@ async def back_to_created_courses(
     current_course = courses[pointer]
     text = get_many_courses_text(current_course)
 
-    if current_course.photo_id:
-        try:
-            await bot.send_photo(
-                chat_id=user_id,
-                photo=current_course.photo_id,
-                caption=text,
-                reply_markup=get_actor_created_courses_keyboard(
-                    pointer=pointer,
-                    total=total,
-                    current_course_id=current_course.id,
-                ),
-            )
-        except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_actor_created_courses_keyboard(
-                    pointer=pointer,
-                    total=total,
-                    current_course_id=current_course.id,
-                ),
-            )
+    if callback_query.message.photo:
+        return await bot.edit_message_caption(
+            chat_id=user_id,
+            message_id=callback_query.message.message_id,
+            caption=text,
+            reply_markup=get_actor_created_courses_keyboard(
+                pointer=pointer,
+                total=total,
+                current_course_id=current_course.id,
+            ),
+        )
 
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
-                )
-            )
-        return
-
-    await bot.send_message(
+    await bot.edit_message_text(
         chat_id=user_id,
+        message_id=callback_query.message.message_id,
         text=text,
         reply_markup=get_actor_created_courses_keyboard(
             pointer=pointer,
@@ -206,12 +154,9 @@ async def back_to_registered_courses(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        update_course_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
-
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     courses = data['registered_courses']
     pointer = data['registered_courses_pointer']
@@ -220,44 +165,22 @@ async def back_to_registered_courses(
     current_course = courses[pointer]
     text = get_many_courses_text(current_course)
 
-    if current_course.photo_id:
-        try:
-            await bot.send_photo(
-                chat_id=user_id,
-                photo=current_course.photo_id,
-                caption=text,
-                reply_markup=get_actor_registered_courses_keyboard(
-                    pointer=pointer,
-                    total=total,
-                    current_course_id=current_course.id,
-                ),
-            )
-        except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_actor_registered_courses_keyboard(
-                    pointer=pointer,
-                    total=total,
-                    current_course_id=current_course.id,
-                ),
-            )
 
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
+    if callback_query.message.photo:
+        return await bot.edit_message_caption(
+            chat_id=user_id,
+            message_id=callback_query.message.message_id,
+            caption=text,
+            reply_markup=get_actor_registered_courses_keyboard(
+                pointer=pointer,
+                total=total,
+                current_course_id=current_course.id,
+            ),
+        )
 
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
-                )
-            )
-        return
-
-    await bot.send_message(
+    await bot.edit_message_text(
         chat_id=user_id,
+        message_id=callback_query.message.message_id,
         text=text,
         reply_markup=get_actor_registered_courses_keyboard(
             pointer=pointer,
