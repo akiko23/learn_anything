@@ -17,7 +17,7 @@ def get_course_tasks_keyboard(
 ):
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Назад', callback_data=f'edit_course-{back_to}-{course_id}')],
+            [InlineKeyboardButton(text='Назад', callback_data=f'course-{back_to}-{course_id}')],
         ]
     )
 
