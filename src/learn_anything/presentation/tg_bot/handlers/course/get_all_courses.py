@@ -5,8 +5,8 @@ from aiogram import Bot, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import BufferedInputFile
 from aiogram.types import CallbackQuery, Message
+from aiogram.types import InputMediaPhoto
 from dishka import FromDishka
 
 from learn_anything.application.input_data import Pagination
@@ -14,15 +14,14 @@ from learn_anything.application.interactors.course.get_many_courses import GetMa
     GetManyCoursesInputData, CourseData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
-from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.user.models import UserRole
+from learn_anything.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
+from learn_anything.presentation.tg_bot.states.course import SearchAllByForm
 from learn_anything.presentors.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \
     get_all_courses_filters, \
     cancel_text_filter_input_kb
 from learn_anything.presentors.tg_bot.keyboards.main_menu import get_main_menu_keyboard
-from learn_anything.presentation.tg_bot.states.course import SearchAllByForm
 from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_courses_text
-
 
 router = Router()
 
@@ -36,6 +35,7 @@ async def get_all_courses(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[GetManyCoursesInteractor],
+        update_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
@@ -83,7 +83,7 @@ async def get_all_courses(
 
     if current_course.photo_id:
         try:
-            await bot.send_photo(
+            return await bot.send_photo(
                 chat_id=user_id,
                 photo=current_course.photo_id,
                 caption=text,
@@ -94,28 +94,19 @@ async def get_all_courses(
                 ),
             )
         except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_all_courses_keyboard(
+            raise NoMediaOnTelegramServersException(
+                media_buffer=current_course.photo_reader,
+                text_to_send=text,
+                keyboard=get_all_courses_keyboard(
                     pointer=pointer,
                     total=total,
                     current_course_id=current_course.id,
                 ),
-            )
-
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
+                update_interactor=update_interactor,
+                interactor_input_data=UpdateCourseInputData(
+                    course_id=current_course.id
                 )
             )
-        return
 
     await bot.send_message(
         chat_id=user_id,
@@ -190,9 +181,8 @@ async def sort_by_filters(
 
     await state.update_data(all_courses_new_filters=new_filters)
 
-    await bot.edit_message_text(
+    await bot.edit_message_reply_markup(
         chat_id=user_id,
-        text='Выберите фильтры',
         message_id=callback_query.message.message_id,
         reply_markup=get_all_courses_filters(
             current_filters=new_filters,
@@ -299,11 +289,10 @@ async def apply_filters(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[GetManyCoursesInteractor],
+        update_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
-
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     data = await state.update_data(
         all_courses_filters=data['all_courses_new_filters'],
@@ -334,7 +323,7 @@ async def apply_filters(
         if filters != DEFAULT_FILTERS():
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
-        await bot.send_message(
+        return await bot.send_message(
             chat_id=user_id,
             text=msg_text,
             reply_markup=get_all_courses_keyboard(
@@ -342,14 +331,46 @@ async def apply_filters(
                 total=0,
             )
         )
-        return
 
     current_course = courses[data['all_courses_pointer']]
-    await bot.send_message(
+    text = get_many_courses_text(current_course)
+    pointer = 0
+
+    if current_course.photo_id:
+        try:
+            return await bot.edit_message_media(
+                chat_id=user_id,
+                message_id=callback_query.message.message_id,
+                media=InputMediaPhoto(
+                    media=current_course.photo_id,
+                    caption=text
+                ),
+                reply_markup=get_all_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+            )
+        except TelegramBadRequest:
+            raise NoMediaOnTelegramServersException(
+                media_buffer=current_course.photo_reader,
+                text_to_send=text,
+                keyboard=get_all_courses_keyboard(
+                    pointer=pointer,
+                    total=total,
+                    current_course_id=current_course.id,
+                ),
+                update_interactor=update_interactor,
+                interactor_input_data=UpdateCourseInputData(
+                    course_id=current_course.id
+                )
+            )
+
+    await bot.edit_message_text(
         chat_id=user_id,
-        text=get_many_courses_text(current_course),
+        text=text,
         reply_markup=get_all_courses_keyboard(
-            pointer=0,
+            pointer=pointer,
             total=total,
             current_course_id=current_course.id,
         ),
@@ -372,8 +393,6 @@ async def filters_back(
 
     filters = data['all_courses_filters']
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
-
     courses = data['all_courses']
     total = data['all_courses_total']
     pointer = data['all_courses_pointer']
@@ -383,7 +402,7 @@ async def filters_back(
         if filters != DEFAULT_FILTERS():
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
-        await bot.send_message(
+        await bot.edit_message_text(
             chat_id=user_id,
             text=msg_text,
             reply_markup=get_all_courses_keyboard(
@@ -398,10 +417,13 @@ async def filters_back(
 
     if current_course.photo_id:
         try:
-            await bot.send_photo(
+            return await bot.edit_message_media(
                 chat_id=user_id,
-                photo=current_course.photo_id,
-                caption=text,
+                message_id=callback_query.message.message_id,
+                media=InputMediaPhoto(
+                    media=current_course.photo_id,
+                    caption=text
+                ),
                 reply_markup=get_all_courses_keyboard(
                     pointer=pointer,
                     total=total,
@@ -409,32 +431,23 @@ async def filters_back(
                 ),
             )
         except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_all_courses_keyboard(
+            raise NoMediaOnTelegramServersException(
+                media_buffer=current_course.photo,
+                text_to_send=text,
+                keyboard=get_all_courses_keyboard(
                     pointer=pointer,
                     total=total,
                     current_course_id=current_course.id,
                 ),
-            )
-
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
+                update_interactor=update_course_interactor,
+                interactor_input_data=UpdateCourseInputData(
+                    course_id=current_course.id
                 )
             )
-        return
 
-    await bot.send_message(
+    await bot.edit_message_text(
         chat_id=user_id,
-        text=get_many_courses_text(current_course),
+        text=text,
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
             total=total,
@@ -449,7 +462,7 @@ async def watch_all_courses_prev_or_next(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[GetManyCoursesInteractor],
-        update_course_interactor: FromDishka[UpdateCourseInteractor],
+        update_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
@@ -493,7 +506,7 @@ async def watch_all_courses_prev_or_next(
 
     if current_course.photo_id:
         try:
-            await bot.send_photo(
+            return await bot.send_photo(
                 chat_id=user_id,
                 photo=current_course.photo_id,
                 caption=text,
@@ -504,28 +517,19 @@ async def watch_all_courses_prev_or_next(
                 ),
             )
         except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_all_courses_keyboard(
+            raise NoMediaOnTelegramServersException(
+                media_buffer=current_course.photo_reader,
+                text_to_send=text,
+                keyboard=get_all_courses_keyboard(
                     pointer=pointer,
                     total=total,
                     current_course_id=current_course.id,
                 ),
-            )
-
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
+                update_interactor=update_interactor,
+                interactor_input_data=UpdateCourseInputData(
+                    course_id=current_course.id
                 )
             )
-        return
 
     await bot.send_message(
         chat_id=user_id,

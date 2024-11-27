@@ -14,7 +14,7 @@ from .course.get_courses_actor_registered_in import router as get_courses_actor_
 from .course.leave_course import router as leave_course_router
 from .course.publish_course import router as publish_course_router
 from .course.register_for_course import router as register_for_course_router
-from .exception_handlers import handle_user_error, exception_handler
+from .exception_handlers import handle_user_error, exception_handler, load_media_if_not_exists
 from .start import router as start_router
 from .submission.process_task_submission import router as process_task_submission_router
 from .task.create_task import router as create_course_task_router
@@ -23,6 +23,7 @@ from .task.edit_task import router as edit_task_router
 from .task.edit_code_task import router as edit_code_task_router
 from .task.delete_task import router as delete_task_router
 from .task.get_course_tasks import router as get_course_tasks_router
+from ..exceptions import NoMediaOnTelegramServersException
 
 
 def register_handlers(dp: Dispatcher) -> None:
@@ -56,5 +57,11 @@ def register_handlers(dp: Dispatcher) -> None:
         (F.update.message.as_("msg") | F.update.callback_query.message.as_("msg"))
     )
     dp.error.register(
+        load_media_if_not_exists,
+        ExceptionTypeFilter(NoMediaOnTelegramServersException),
+        (F.update.message.as_("msg") | F.update.callback_query.message.as_("msg"))
+    )
+    dp.error.register(
         exception_handler
     )
+

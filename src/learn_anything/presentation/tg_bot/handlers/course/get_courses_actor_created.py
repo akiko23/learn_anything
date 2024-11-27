@@ -5,7 +5,6 @@ from aiogram import Bot, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import BufferedInputFile
 from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
@@ -14,11 +13,11 @@ from learn_anything.application.interactors.course.get_many_courses import GetMa
     GetManyCoursesInputData, CourseData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
-from learn_anything.entities.course.models import CourseID
-from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_courses_text
+from learn_anything.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
+from learn_anything.presentation.tg_bot.states.course import SearchCreatedByForm
 from learn_anything.presentors.tg_bot.keyboards.course.many_courses import cancel_text_filter_input_kb, \
     get_actor_created_courses_keyboard, get_actor_created_courses_filters_kb
-from learn_anything.presentation.tg_bot.states.course import SearchCreatedByForm
+from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_courses_text
 
 router = Router()
 
@@ -80,7 +79,7 @@ async def get_actor_created_courses(
 
     if current_course.photo_id:
         try:
-            await bot.send_photo(
+            return await bot.send_photo(
                 chat_id=user_id,
                 photo=current_course.photo_id,
                 caption=text,
@@ -91,28 +90,19 @@ async def get_actor_created_courses(
                 ),
             )
         except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_actor_created_courses_keyboard(
+            raise NoMediaOnTelegramServersException(
+                media_buffer=current_course.photo_reader,
+                text_to_send=text,
+                keyboard=get_actor_created_courses_keyboard(
                     pointer=pointer,
                     total=total,
                     current_course_id=current_course.id,
                 ),
-            )
-
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
+                update_interactor=update_course_interactor,
+                interactor_input_data=UpdateCourseInputData(
+                    course_id=current_course.id
                 )
             )
-        return
 
     await bot.send_message(
         chat_id=user_id,
@@ -290,7 +280,7 @@ async def apply_courses_actor_created_filters(
 
     if current_course.photo_id:
         try:
-            await bot.send_photo(
+            return await bot.send_photo(
                 chat_id=user_id,
                 photo=current_course.photo_id,
                 caption=text,
@@ -301,28 +291,19 @@ async def apply_courses_actor_created_filters(
                 ),
             )
         except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_actor_created_courses_keyboard(
+            raise NoMediaOnTelegramServersException(
+                media_buffer=current_course.photo_reader,
+                text_to_send=text,
+                keyboard=get_actor_created_courses_keyboard(
                     pointer=0,
                     total=total,
                     current_course_id=current_course.id,
                 ),
-            )
-
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
+                update_interactor=update_course_interactor,
+                interactor_input_data=UpdateCourseInputData(
+                    course_id=current_course.id
                 )
             )
-        return
 
     await bot.send_message(
         chat_id=user_id,
@@ -378,7 +359,7 @@ async def actor_created_courses_filters_back(
 
     if current_course.photo_id:
         try:
-            await bot.send_photo(
+            return await bot.send_photo(
                 chat_id=user_id,
                 photo=current_course.photo_id,
                 caption=text,
@@ -389,28 +370,19 @@ async def actor_created_courses_filters_back(
                 ),
             )
         except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_actor_created_courses_keyboard(
+            raise NoMediaOnTelegramServersException(
+                media_buffer=current_course.photo,
+                text_to_send=text,
+                keyboard=get_actor_created_courses_keyboard(
                     pointer=pointer,
                     total=total,
                     current_course_id=current_course.id,
                 ),
-            )
-
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
+                update_interactor=update_course_interactor,
+                interactor_input_data=UpdateCourseInputData(
+                    course_id=current_course.id
                 )
             )
-        return
 
     await bot.send_message(
         chat_id=user_id,
@@ -473,7 +445,7 @@ async def watch_actor_created_courses_prev_or_next(
 
     if current_course.photo_id:
         try:
-            await bot.send_photo(
+            return await bot.send_photo(
                 chat_id=user_id,
                 photo=current_course.photo_id,
                 caption=text,
@@ -484,28 +456,19 @@ async def watch_actor_created_courses_prev_or_next(
                 ),
             )
         except TelegramBadRequest:
-            msg = await bot.send_photo(
-                chat_id=user_id,
-                photo=BufferedInputFile(current_course.photo_reader.read(), 'stub'),
-                caption=text,
-                reply_markup=get_actor_created_courses_keyboard(
+            raise NoMediaOnTelegramServersException(
+                media_buffer=current_course.photo_reader,
+                text_to_send=text,
+                keyboard=get_actor_created_courses_keyboard(
                     pointer=pointer,
                     total=total,
                     current_course_id=current_course.id,
                 ),
-            )
-
-            new_photo_id = msg.photo[-1].file_id
-            new_photo = await bot.download(new_photo_id)
-
-            await update_course_interactor.execute(
-                data=UpdateCourseInputData(
-                    course_id=CourseID(int(current_course.id)),
-                    photo_id=new_photo_id,
-                    photo=new_photo
+                update_interactor=update_course_interactor,
+                interactor_input_data=UpdateCourseInputData(
+                    course_id=current_course.id
                 )
             )
-        return
 
     await bot.send_message(
         chat_id=user_id,
