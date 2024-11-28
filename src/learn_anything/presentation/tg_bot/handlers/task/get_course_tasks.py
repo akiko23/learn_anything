@@ -1,4 +1,3 @@
-from ast import Index
 from typing import Any
 
 from aiogram import Bot, Router, F
@@ -114,7 +113,7 @@ async def watch_course_tasks_prev_or_next(
     total = data[f'course_{course_id}_tasks_total']
 
     if command == 'next':
-        if (pointer + 1) % DEFAULT_LIMIT == 0:
+        if (pointer + 1) == offset + DEFAULT_LIMIT:
             output_data = await interactor.execute(
                 GetCourseTasksInputData(
                     course_id=CourseID(int(course_id)),
