@@ -47,6 +47,7 @@ class CourseGateway(Protocol):
     ) -> (Sequence[Course], int):
         raise NotImplementedError
 
+    # todo: rewrite this (srp violation)
     async def all(
             self,
             pagination: Pagination,

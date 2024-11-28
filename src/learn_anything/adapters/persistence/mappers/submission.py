@@ -17,7 +17,7 @@ class SubmissionMapper(SubmissionGateway):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def with_user_and_task_id(self, user_id: UserID, task_id: TaskID) -> Sequence[Submission]:
+    async def with_id(self, user_id: UserID, task_id: TaskID) -> Sequence[Submission]:
         stmt = (
             select(Submission).
             where(submissions_table.c.user_id == user_id).
@@ -30,7 +30,7 @@ class SubmissionMapper(SubmissionGateway):
             self,
             task_id: TaskID,
             filters: GetManySubmissionsFilters,
-            pagination: Pagination | None = None
+            pagination: Pagination
     ) -> (Sequence[CodeSubmission], int):
         stmt = (
             select(CodeSubmission).
@@ -65,7 +65,7 @@ class SubmissionMapper(SubmissionGateway):
             self,
             task_id: TaskID,
             filters: GetManySubmissionsFilters,
-            pagination: Pagination | None = None
+            pagination: Pagination
     ) -> (Sequence[PollSubmission], int):
         stmt = (
             select(

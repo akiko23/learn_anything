@@ -113,7 +113,7 @@ class GetCourseTasksInteractor:
                 total_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
                 total_correct_submissions = await self._submission_gateway.total_correct_with_task_id(task_id=task.id)
 
-                user_submissions = await self._submission_gateway.with_user_and_task_id(
+                user_submissions = await self._submission_gateway.with_id(
                     user_id=actor_id, task_id=task.id
                 )
 

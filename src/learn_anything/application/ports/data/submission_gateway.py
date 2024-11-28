@@ -23,22 +23,24 @@ class GetManySubmissionsFilters:
 
 
 class SubmissionGateway(Protocol):
-    async def with_user_and_task_id(self, user_id: UserID, task_id: TaskID) -> Sequence[Submission]:
+    async def with_id(self, user_id: UserID, task_id: TaskID) -> Sequence[Submission]:
         raise NotImplementedError
 
+    # todo: rewrite this (srp violation)
     async def many_with_code_task_id(
             self,
             task_id: TaskID,
             filters: GetManySubmissionsFilters,
-            pagination: Pagination | None = None
+            pagination: Pagination
     ) -> (Sequence[CodeSubmission], int):
         raise NotImplementedError
 
+    # todo: rewrite this (srp violation)
     async def many_with_poll_task_id(
             self,
             task_id: TaskID,
             filters: GetManySubmissionsFilters,
-            pagination: Pagination | None = None
+            pagination: Pagination
     ) -> (Sequence[PollSubmission], int):
         raise NotImplementedError
 
