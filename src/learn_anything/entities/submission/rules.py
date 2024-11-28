@@ -10,7 +10,6 @@ def create_code_submission(
         code: str,
         task_id: TaskID,
         tests_result_output: str,
-        attempt_number: int,
 ):
     is_correct = False
     if tests_result_output == 'ok':
@@ -22,5 +21,4 @@ def create_code_submission(
         code=code,
         is_correct=is_correct,
         created_at=datetime.now(),
-        attempt_number=attempt_number,
     )

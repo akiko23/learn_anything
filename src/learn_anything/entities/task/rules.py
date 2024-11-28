@@ -5,16 +5,13 @@ from typing import Sequence
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.submission.models import Submission
 from learn_anything.entities.task.models import PollTask, PollTaskOptionID, TextInputTask, TextInputTaskAnswer, \
-    TaskType, CodeTask, CodeTaskTest, PracticeTask
-from learn_anything.entities.user.models import User
+    TaskType, CodeTask, CodeTaskTest
 
 
-def option_is_correct(task: PollTask, option_id: PollTaskOptionID):
+def find_task_option_by_id(task: PollTask, target_option_id: PollTaskOptionID):
     for option in task.options:
-        if option.is_correct and option.id == option_id:
-            return True
-    return False
-
+        if option.id == target_option_id:
+            return option
 
 def answer_is_correct(task: TextInputTask, answer: TextInputTaskAnswer) -> bool:
     if answer in task.correct_answers:

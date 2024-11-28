@@ -3,7 +3,7 @@ from typing import Union
 
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.error import ApplicationError
-from learn_anything.entities.task.models import TaskID
+from learn_anything.entities.task.models import TaskID, PollTaskOptionID
 from learn_anything.entities.user.models import UserID
 
 
@@ -57,3 +57,21 @@ class TaskTestCodeIsInvalidError(ApplicationError):
 
 
 InvalidTaskCodeError = Union[TaskTestCodeIsInvalidError, TaskPreparedCodeIsInvalidError]
+
+
+@dataclass
+class PollTaskOptionDoesNotExistError(ApplicationError):
+    option_id: PollTaskOptionID
+
+    @property
+    def message(self) -> str:
+        return f"Poll task option with id={self.option_id} does not exist"
+
+
+@dataclass
+class TheoryTaskHasNoSubmissionsError(ApplicationError):
+    task_id: TaskID
+
+    @property
+    def message(self) -> str:
+        return f"Theory task with id={self.task_id} can't have submissions"

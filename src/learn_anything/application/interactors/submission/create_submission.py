@@ -9,13 +9,13 @@ from learn_anything.application.ports.data.submission_gateway import SubmissionG
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.playground import PlaygroundFactory
 from learn_anything.entities.course.errors import CourseDoesNotExistError
-from learn_anything.entities.submission.models import PollTaskOptionID, PollSubmission, TextInputSubmission
+from learn_anything.entities.submission.models import PollSubmission, TextInputSubmission
 from learn_anything.entities.submission.rules import create_code_submission
 from learn_anything.entities.task.errors import TaskDoesNotExistError, ActorIsNotRegisteredOnCourseError, \
-    AttemptsLimitReachedForTaskError
+    AttemptsLimitReachedForTaskError, PollTaskOptionDoesNotExistError
 from learn_anything.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, CodeTask, \
-    CodeTaskTest
-from learn_anything.entities.task.rules import option_is_correct, answer_is_correct
+    CodeTaskTest, PollTaskOptionID
+from learn_anything.entities.task.rules import answer_is_correct, find_task_option_by_id
 from learn_anything.entities.user.models import UserID
 
 
@@ -97,7 +97,6 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
             code=data.submission,
             task_id=task.id,
             tests_result_output=result_output,
-            attempt_number=self._submissions_number + 1
         )
 
         await self._submission_gateway.save_for_code_task(submission=submission)
@@ -157,7 +156,7 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
 @dataclass
 class CreatePollTaskSubmissionInputData:
     task_id: TaskID
-    selected_option: PollTaskOptionID
+    selected_option_id: PollTaskOptionID
 
 
 @dataclass
@@ -174,13 +173,16 @@ class CreatePollTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
 
         await self._ensure_actor_can_create_submission(actor_id=actor_id, task=task)
 
+        selected_option = find_task_option_by_id(task=task, target_option_id=data.selected_option_id)
+        if not selected_option:
+            raise PollTaskOptionDoesNotExistError(option_id=data.selected_option_id)
+
         submission = PollSubmission(
             user_id=actor_id,
-            selected_option=data.selected_option,
+            selected_option=selected_option,
             task_id=task.id,
             created_at=datetime.now(),
-            is_correct=option_is_correct(task, data.selected_option),
-            attempt_number=self._submissions_number + 1
+            is_correct=selected_option.is_correct,
         )
 
         await self._submission_gateway.save_for_poll_task(submission=submission)
@@ -218,7 +220,6 @@ class CreateTextInputTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor
             created_at=datetime.now(),
             answer=data.value,
             is_correct=answer_is_correct(task, TextInputTaskAnswer(data.value)),
-            attempt_number=self._submissions_number + 1
         )
 
         await self._submission_gateway.save_for_text_input_task(submission=submission)

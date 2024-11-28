@@ -23,6 +23,8 @@ from .task.edit_task import router as edit_task_router
 from .task.edit_code_task import router as edit_code_task_router
 from .task.delete_task import router as delete_task_router
 from .task.get_course_tasks import router as get_course_tasks_router
+from .submission.get_actor_submissions import router as get_actor_submissions_router
+
 from ..exceptions import NoMediaOnTelegramServersException
 
 
@@ -49,6 +51,7 @@ def register_handlers(dp: Dispatcher) -> None:
     dp.include_router(delete_task_router)
 
     dp.include_router(process_task_submission_router)
+    dp.include_router(get_actor_submissions_router)
 
     # register global error handler
     dp.error.register(
