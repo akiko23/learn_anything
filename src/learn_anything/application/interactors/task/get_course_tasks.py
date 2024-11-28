@@ -90,7 +90,6 @@ class GetCourseTasksInteractor:
             pagination=data.pagination,
             filters=data.filters,
         )
-        print('Loaded course tasks:', tasks)
 
         tasks_output_data = []
         for task in tasks:

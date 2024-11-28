@@ -16,9 +16,11 @@ class SortBy(StrEnum):
 
 @dataclass
 class GetManyCoursesFilters:
+    ### public filters
     sort_by: SortBy
     author_name: str | None = None
     title: str | None = None
+    ###
 
     # if you want to get only courses where actor registered in
     with_registered_actor_id: UserID | None = None

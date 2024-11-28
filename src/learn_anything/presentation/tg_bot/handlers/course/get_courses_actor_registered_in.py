@@ -9,7 +9,7 @@ from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
 from learn_anything.application.input_data import Pagination
-from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor, \
+from learn_anything.application.interactors.course.get_many_courses import GetActorRegisteredCoursesInteractor, \
     GetManyCoursesInputData, CourseData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInputData, UpdateCourseInteractor
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
@@ -23,7 +23,7 @@ from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_cou
 router = Router()
 
 DEFAULT_LIMIT = 50
-DEFAULT_FILTERS = lambda actor_id: GetManyCoursesFilters(sort_by=SortBy.POPULARITY, with_registered_actor_id=actor_id)
+DEFAULT_FILTERS = GetManyCoursesFilters(sort_by=SortBy.POPULARITY)
 
 
 @router.callback_query(F.data == 'main_menu-get_registered_courses')
@@ -31,7 +31,7 @@ async def get_actor_registered_courses(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetManyCoursesInteractor],
+        interactor: FromDishka[GetActorRegisteredCoursesInteractor],
         update_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
@@ -42,11 +42,11 @@ async def get_actor_registered_courses(
     output_data = await interactor.execute(
         GetManyCoursesInputData(
             pagination=Pagination(offset=0, limit=DEFAULT_LIMIT),
-            filters=data.get('registered_courses_filters', DEFAULT_FILTERS(actor_id=user_id)),
+            filters=data.get('registered_courses_filters', DEFAULT_FILTERS),
         )
     )
 
-    current_filters = data.get('registered_courses_filters', DEFAULT_FILTERS(actor_id=user_id))
+    current_filters = data.get('registered_courses_filters', DEFAULT_FILTERS)
 
     data = await state.update_data(
         registered_courses=output_data.courses,
@@ -61,7 +61,7 @@ async def get_actor_registered_courses(
 
     if total == 0:
         msg_text = 'Вы не зарегестрированы ни на один курс'
-        if current_filters != DEFAULT_FILTERS(actor_id=user_id):
+        if current_filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
@@ -210,7 +210,7 @@ async def reset_course_actor_registered_filters(
     user_id: int = callback_query.from_user.id
 
     data = await state.update_data(
-        registered_courses_new_filters=DEFAULT_FILTERS(actor_id=user_id),
+        registered_courses_new_filters=DEFAULT_FILTERS,
         registered_courses_pointer=0,
         registered_courses_offset=0,
     )
@@ -229,7 +229,7 @@ async def apply_courses_actor_registered_filters(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetManyCoursesInteractor],
+        interactor: FromDishka[GetActorRegisteredCoursesInteractor],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
 
 ):
@@ -264,7 +264,7 @@ async def apply_courses_actor_registered_filters(
 
     if total == 0:
         msg_text = 'Вы не зарегестрированы ни на один курс'
-        if filters != DEFAULT_FILTERS(actor_id=user_id):
+        if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
@@ -341,7 +341,7 @@ async def actor_registered_courses_filters_back(
 
     if total == 0:
         msg_text = 'Вы не зарегестрированы ни на один курс'
-        if filters != DEFAULT_FILTERS(actor_id=user_id):
+        if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
@@ -371,7 +371,7 @@ async def watch_actor_registered_courses_prev_or_next(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetManyCoursesInteractor],
+        interactor: FromDishka[GetActorRegisteredCoursesInteractor],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
@@ -391,7 +391,7 @@ async def watch_actor_registered_courses_prev_or_next(
             output_data = await interactor.execute(
                 GetManyCoursesInputData(
                     pagination=Pagination(offset=offset + DEFAULT_LIMIT, limit=DEFAULT_LIMIT),
-                    filters=data.get('registered_courses_filters', DEFAULT_FILTERS(actor_id=user_id)),
+                    filters=data.get('registered_courses_filters', DEFAULT_FILTERS),
                 )
             )
 

@@ -10,7 +10,7 @@ from aiogram.types import InputMediaPhoto
 from dishka import FromDishka
 
 from learn_anything.application.input_data import Pagination
-from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor, \
+from learn_anything.application.interactors.course.get_many_courses import GetAllCoursesInteractor, \
     GetManyCoursesInputData, CourseData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
@@ -26,7 +26,7 @@ from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_cou
 router = Router()
 
 DEFAULT_LIMIT = 10
-DEFAULT_FILTERS = lambda: GetManyCoursesFilters(sort_by=SortBy.POPULARITY)
+DEFAULT_FILTERS = GetManyCoursesFilters(sort_by=SortBy.POPULARITY)
 
 
 @router.callback_query(F.data == 'main_menu-all_courses')
@@ -34,13 +34,13 @@ async def get_all_courses(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetManyCoursesInteractor],
+        interactor: FromDishka[GetAllCoursesInteractor],
         update_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    filters = data.get('all_courses_filters', DEFAULT_FILTERS())
+    filters = data.get('all_courses_filters', DEFAULT_FILTERS)
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
@@ -64,7 +64,7 @@ async def get_all_courses(
 
     if total == 0:
         msg_text = 'Еще ни один курс не был опубликован :('
-        if filters != DEFAULT_FILTERS():
+        if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
@@ -269,7 +269,7 @@ async def reset_filters(
     user_id: int = callback_query.from_user.id
 
     data = await state.update_data(
-        all_courses_new_filters=DEFAULT_FILTERS(),
+        all_courses_new_filters=DEFAULT_FILTERS,
         all_courses_pointer=0,
         all_courses_offset=0,
     )
@@ -288,7 +288,7 @@ async def apply_filters(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetManyCoursesInteractor],
+        interactor: FromDishka[GetAllCoursesInteractor],
         update_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
@@ -320,7 +320,7 @@ async def apply_filters(
 
     if total == 0:
         msg_text = 'Еще ни один курс не был опубликован :('
-        if filters != DEFAULT_FILTERS():
+        if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         return await bot.send_message(
@@ -399,7 +399,7 @@ async def filters_back(
 
     if total == 0:
         msg_text = 'Eще ни один курс не был опубликован :('
-        if filters != DEFAULT_FILTERS():
+        if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.edit_message_text(
@@ -461,7 +461,7 @@ async def watch_all_courses_prev_or_next(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetManyCoursesInteractor],
+        interactor: FromDishka[GetAllCoursesInteractor],
         update_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
@@ -481,7 +481,7 @@ async def watch_all_courses_prev_or_next(
             output_data = await interactor.execute(
                 GetManyCoursesInputData(
                     pagination=Pagination(offset=offset + DEFAULT_LIMIT, limit=DEFAULT_LIMIT),
-                    filters=data.get('all_courses_filters', DEFAULT_FILTERS()),
+                    filters=data.get('all_courses_filters', DEFAULT_FILTERS),
                 )
             )
 

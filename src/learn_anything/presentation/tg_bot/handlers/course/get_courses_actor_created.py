@@ -9,7 +9,7 @@ from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
 from learn_anything.application.input_data import Pagination
-from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor, \
+from learn_anything.application.interactors.course.get_many_courses import GetActorCreatedCoursesInteractor, \
     GetManyCoursesInputData, CourseData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
@@ -22,7 +22,7 @@ from learn_anything.presentors.tg_bot.texts.get_many_courses import get_many_cou
 router = Router()
 
 DEFAULT_LIMIT = 10
-DEFAULT_FILTERS = lambda actor_id: GetManyCoursesFilters(sort_by=SortBy.DATE, with_creator_id=actor_id)
+DEFAULT_FILTERS = GetManyCoursesFilters(sort_by=SortBy.DATE)
 
 
 @router.callback_query(F.data == 'main_menu-get_created_courses')
@@ -30,13 +30,13 @@ async def get_actor_created_courses(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetManyCoursesInteractor],
+        interactor: FromDishka[GetActorCreatedCoursesInteractor],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    filters = data.get('created_courses_filters', DEFAULT_FILTERS(actor_id=user_id))
+    filters = data.get('created_courses_filters', DEFAULT_FILTERS)
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
@@ -60,7 +60,7 @@ async def get_actor_created_courses(
 
     if total == 0:
         msg_text = 'Вы еще не создали ни одного курса'
-        if filters != DEFAULT_FILTERS(actor_id=user_id):
+        if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
@@ -209,7 +209,7 @@ async def reset_course_actor_created_filters(
     user_id: int = callback_query.from_user.id
 
     data = await state.update_data(
-        created_courses_new_filters=DEFAULT_FILTERS(actor_id=user_id),
+        created_courses_new_filters=DEFAULT_FILTERS,
         created_courses_pointer=0,
         created_courses_offset=0,
     )
@@ -228,7 +228,7 @@ async def apply_courses_actor_created_filters(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetManyCoursesInteractor],
+        interactor: FromDishka[GetActorCreatedCoursesInteractor],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
@@ -262,7 +262,7 @@ async def apply_courses_actor_created_filters(
 
     if total == 0:
         msg_text = 'Вы еще не создали ни одного курса'
-        if filters != DEFAULT_FILTERS(actor_id=user_id):
+        if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
@@ -341,7 +341,7 @@ async def actor_created_courses_filters_back(
 
     if total == 0:
         msg_text = 'Вы еще не создали ни одного курса'
-        if filters != DEFAULT_FILTERS(actor_id=user_id):
+        if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
@@ -400,7 +400,7 @@ async def watch_actor_created_courses_prev_or_next(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetManyCoursesInteractor],
+        interactor: FromDishka[GetActorCreatedCoursesInteractor],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
 ):
     user_id: int = callback_query.from_user.id
@@ -420,7 +420,7 @@ async def watch_actor_created_courses_prev_or_next(
             output_data = await interactor.execute(
                 GetManyCoursesInputData(
                     pagination=Pagination(offset=offset + DEFAULT_LIMIT, limit=DEFAULT_LIMIT),
-                    filters=data.get('created_courses_filters', DEFAULT_FILTERS(actor_id=user_id)),
+                    filters=data.get('created_courses_filters', DEFAULT_FILTERS),
                 )
             )
 

@@ -93,7 +93,7 @@ class CourseMapper(CourseGateway):
                 )
             )
 
-        # exclude published courses for everyone
+        # exclude published courses for everyone, but include for creator
         if not filters.with_creator_id:
             get_courses_stmt = get_courses_stmt.where(courses_table.c.is_published)
         else:
@@ -125,7 +125,6 @@ class CourseMapper(CourseGateway):
             offset(pagination.offset).
             limit(pagination.limit)
         )
-        print(get_courses_stmt)
 
         res = await self._session.execute(get_courses_stmt)
 
