@@ -1,7 +1,8 @@
+import io
 from typing import Protocol
 
-import io
 
+# todo: add concurrency here
 class FileManager(Protocol):
     def save(self, payload: bytes, file_path: str) -> None:
         raise NotImplementedError

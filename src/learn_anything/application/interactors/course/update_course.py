@@ -66,7 +66,6 @@ class UpdateCourseInteractor:
             course.registrations_limit = data.registrations_limit
 
         course.updated_at = datetime.now()
-
         updated_course_id = await self._course_gateway.save(course=course)
 
         await self._commiter.commit()

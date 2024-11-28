@@ -1,3 +1,4 @@
+import asyncio
 import io
 import os
 from dataclasses import dataclass
@@ -34,6 +35,7 @@ class GetFullCourseOutputData:
     creator_id: UserID
     creator: str
     created_at: datetime
+    updated_at: datetime
     user_is_registered: bool
     user_has_write_access: bool
 
@@ -62,10 +64,12 @@ class GetCourseInteractor:
         if not course:
             raise CourseDoesNotExistError(course_id=data.course_id)
 
-        creator = await self._user_gateway.with_id(course.creator_id)
-        registration = await self._registration_for_course_gateway.read(
-            user_id=actor_id,
-            course_id=course.id
+        creator, registration = await asyncio.gather(
+            self._user_gateway.with_id(course.creator_id),
+            self._registration_for_course_gateway.read(
+                user_id=actor_id,
+                course_id=course.id
+            )
         )
 
         share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
@@ -82,6 +86,7 @@ class GetCourseInteractor:
             registrations_limit=course.registrations_limit,
             total_registered=course.total_registered,
             created_at=course.created_at,
+            updated_at=course.updated_at,
             creator_id=creator.id,
             creator=creator.fullname.title(),
             user_is_registered=registration is not None,

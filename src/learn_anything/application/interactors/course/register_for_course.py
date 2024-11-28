@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
@@ -40,7 +41,9 @@ class RegisterForCourseInteractor:
         course = increment_course_registrations_number(course=course)
         new_registration = create_registration_for_course(user_id=actor_id, course_id=course.id)
 
-        await self._course_gateway.save(course)
-        await self._registration_for_course_gateway.save(new_registration)
+        await asyncio.gather(
+            self._course_gateway.save(course),
+            self._registration_for_course_gateway.save(new_registration)
+        )
 
         await self._commiter.commit()

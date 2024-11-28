@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import pwd
@@ -5,13 +6,15 @@ import resource
 import shutil
 import subprocess
 import uuid
+from concurrent.futures.process import ProcessPoolExecutor
 from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from subprocess import TimeoutExpired
 from typing import Self
 
-from learn_anything.application.ports.playground import PlaygroundFactory, Playground
+from learn_anything.application.ports.playground import PlaygroundFactory, Playground, StdErr, StdOut, \
+    CodeIsInvalidError
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +28,8 @@ class UnixPlayground(Playground):
             identifier: str | None,
             code_duration_timeout: int
     ):
-        self._code_duration_timeout = code_duration_timeout
         self._pl_path = self._generate_playground_path(additional_identifier=identifier)
+        self._code_duration_timeout = code_duration_timeout
 
         self._apply_playground_user()
 
@@ -48,7 +51,21 @@ class UnixPlayground(Playground):
         return self
 
     # todo: replace with MVM
-    async def execute_code(self, code: str) -> (str, str):
+    async def execute_code(self, code: str, raise_exc_on_err: bool = False) -> (StdOut, StdErr):
+        loop = asyncio.get_running_loop()
+
+        with ProcessPoolExecutor() as pool:
+            out, err = await loop.run_in_executor(
+                pool,
+                self._execute_code,
+                code
+            )
+            if err and raise_exc_on_err:
+                raise CodeIsInvalidError(code=code, out=out, err=err)
+
+        return out, err
+
+    def _execute_code(self, code: str) -> (StdOut, StdErr):
         process = subprocess.Popen(
             ['python3', '-c', code],
             preexec_fn=_demote,
@@ -114,5 +131,5 @@ class UnixPlaygroundFactory(PlaygroundFactory):
     ) -> UnixPlayground:
         return UnixPlayground(
             identifier=identifier,
-            code_duration_timeout=code_duration_timeout
+            code_duration_timeout=code_duration_timeout,
         )

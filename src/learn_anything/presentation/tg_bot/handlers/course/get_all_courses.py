@@ -368,6 +368,7 @@ async def apply_filters(
 
     await bot.edit_message_text(
         chat_id=user_id,
+        message_id=callback_query.message.message_id,
         text=text,
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
@@ -432,7 +433,7 @@ async def filters_back(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo,
+                media_buffer=current_course.photo_reader,
                 text_to_send=text,
                 keyboard=get_all_courses_keyboard(
                     pointer=pointer,

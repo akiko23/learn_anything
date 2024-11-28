@@ -5,7 +5,7 @@ from aiogram import Bot, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, InputMediaPhoto
 from dishka import FromDishka
 
 from learn_anything.application.input_data import Pagination
@@ -234,8 +234,6 @@ async def apply_courses_actor_created_filters(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
-
     data = await state.update_data(
         created_courses_filters=data['created_courses_new_filters'],
         created_courses_new_filters=None,
@@ -265,8 +263,9 @@ async def apply_courses_actor_created_filters(
         if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
-        await bot.send_message(
+        await bot.edit_message_text(
             chat_id=user_id,
+            message_id=callback_query.message.message_id,
             text=msg_text,
             reply_markup=get_actor_created_courses_keyboard(
                 pointer=0,
@@ -280,10 +279,13 @@ async def apply_courses_actor_created_filters(
 
     if current_course.photo_id:
         try:
-            return await bot.send_photo(
+            return await bot.edit_message_media(
                 chat_id=user_id,
-                photo=current_course.photo_id,
-                caption=text,
+                message_id=callback_query.message.message_id,
+                media=InputMediaPhoto(
+                    media=current_course.photo_id,
+                    caption=text
+                ),
                 reply_markup=get_actor_created_courses_keyboard(
                     pointer=0,
                     total=total,
@@ -305,8 +307,9 @@ async def apply_courses_actor_created_filters(
                 )
             )
 
-    await bot.send_message(
+    await bot.edit_message_text(
         chat_id=user_id,
+        message_id=callback_query.message.message_id,
         text=get_many_courses_text(current_course),
         reply_markup=get_actor_created_courses_keyboard(
             pointer=0,
@@ -333,8 +336,6 @@ async def actor_created_courses_filters_back(
 
     filters = data['created_courses_filters']
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
-
     courses = data['created_courses']
     total = data['created_courses_total']
     pointer = data['created_courses_pointer']
@@ -344,8 +345,9 @@ async def actor_created_courses_filters_back(
         if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
-        await bot.send_message(
+        await bot.edit_message_text(
             chat_id=user_id,
+            message_id=callback_query.message.message_id,
             text=msg_text,
             reply_markup=get_actor_created_courses_keyboard(
                 pointer=0,
@@ -359,10 +361,13 @@ async def actor_created_courses_filters_back(
 
     if current_course.photo_id:
         try:
-            return await bot.send_photo(
+            return await bot.edit_message_media(
                 chat_id=user_id,
-                photo=current_course.photo_id,
-                caption=text,
+                message_id=callback_query.message.message_id,
+                media=InputMediaPhoto(
+                    media=current_course.photo_id,
+                    caption=text
+                ),
                 reply_markup=get_actor_created_courses_keyboard(
                     pointer=pointer,
                     total=total,
@@ -371,7 +376,7 @@ async def actor_created_courses_filters_back(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo,
+                media_buffer=current_course.photo_reader,
                 text_to_send=text,
                 keyboard=get_actor_created_courses_keyboard(
                     pointer=pointer,
@@ -384,8 +389,9 @@ async def actor_created_courses_filters_back(
                 )
             )
 
-    await bot.send_message(
+    await bot.edit_message_text(
         chat_id=user_id,
+        message_id=callback_query.message.message_id,
         text=get_many_courses_text(current_course),
         reply_markup=get_actor_created_courses_keyboard(
             pointer=pointer,

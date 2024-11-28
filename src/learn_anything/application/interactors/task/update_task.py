@@ -120,7 +120,9 @@ class UpdateCodeTaskInteractor:
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         if data.prepared_code:
-            async with self._playground_factory.create(code_duration_timeout=task.code_duration_timeout) as pl:
+            async with self._playground_factory.create(
+                    code_duration_timeout=task.code_duration_timeout,
+            ) as pl:
                 out, err = await pl.execute_code(code=data.prepared_code)
                 if err:
                     return UpdateCodeTaskOutputData(err=err)

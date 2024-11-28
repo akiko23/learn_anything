@@ -1,5 +1,5 @@
 from learn_anything.application.interactors.course.get_course import GetFullCourseOutputData
-from learn_anything.presentors.tg_bot.texts.format_time import format_time
+from learn_anything.presentors.tg_bot.texts.formatters import format_time, format_date
 
 
 def get_single_course_text(course_data: GetFullCourseOutputData):
@@ -25,5 +25,6 @@ def get_single_course_text(course_data: GetFullCourseOutputData):
 
 🕓{format_time(total_tasks=course_data.total_tasks)}
 
-Создан: {course_data.created_at}
+Создан: {format_date(course_data.created_at)}
+Обновлен: {format_date(course_data.updated_at)}
 """

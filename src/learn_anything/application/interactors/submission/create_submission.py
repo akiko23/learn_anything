@@ -130,7 +130,7 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
                 )
                 if not passed:
                     return f"Your Output:\n{user_output}" + '\n\n' + output, index
-            return 'ok', -1
+        return 'ok', -1
 
     async def _check_test(
             self,

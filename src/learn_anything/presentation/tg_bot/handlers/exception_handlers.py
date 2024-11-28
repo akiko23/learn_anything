@@ -22,6 +22,8 @@ async def load_media_if_not_exists(
 
     logger.error('Telegram deleted media from its servers. Uploading new..')
 
+    await bot.delete_message(chat_id=user_id, message_id=msg.message_id)
+
     msg = await bot.send_photo(
         chat_id=user_id,
         photo=BufferedInputFile(exc.media_buffer.read(), 'stub'),

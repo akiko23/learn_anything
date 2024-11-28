@@ -1,5 +1,6 @@
 from learn_anything.application.interactors.task.get_course_tasks import AnyTaskData
 from learn_anything.entities.task.models import TaskType
+from learn_anything.presentors.tg_bot.texts.formatters import format_date
 
 
 def get_task_text(task_data: AnyTaskData):
@@ -8,8 +9,8 @@ def get_task_text(task_data: AnyTaskData):
         task_topic = f'Тема: {task_data.topic}'
 
 
-    creation_date_text = task_data.created_at.strftime('%d.%m.%Y %H:%M')
-    last_update_date_text = task_data.updated_at.strftime('%d.%m.%Y %H:%M')
+    creation_date_text = format_date(task_data.created_at)
+    last_update_date_text = format_date(task_data.updated_at)
     match task_data.type:
         case TaskType.THEORY:
             text = (

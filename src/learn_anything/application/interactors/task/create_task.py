@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -6,7 +7,7 @@ from learn_anything.application.ports.auth.identity_provider import IdentityProv
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway
 from learn_anything.application.ports.data.task_gateway import TaskGateway
-from learn_anything.application.ports.playground import PlaygroundFactory
+from learn_anything.application.ports.playground import PlaygroundFactory, CodeIsInvalidError
 from learn_anything.entities.course.errors import CourseDoesNotExistError
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import ensure_actor_has_write_access
@@ -151,25 +152,47 @@ class CreateCodeTaskInteractor:
                 if err:
                     raise TaskPreparedCodeIsInvalidError(code=task_prepared_code, err=err)
 
+            check_tests_tasks = []
+            code_index_mapping = {}
             for index, code in enumerate(codes_of_tests):
                 # prevent expected errors
                 code = (
                     f'from contextlib import suppress\n'
                     '\n'
+                    'stdout, stderr = "stub", "stub"\n'
                     f'with suppress(AssertionError, NameError):\n'
                     f'    {code}'
                 )
 
-                _, err = await pl.execute_code(
-                    code=code
-                )
-                if err:
+                task = asyncio.create_task(pl.execute_code(
+                    code=code,
+                    raise_exc_on_err=True
+                ))
+                check_tests_tasks.append(task)
+
+                code_index_mapping[code] = index
+
+            done, pending = await asyncio.wait(check_tests_tasks, return_when=asyncio.FIRST_EXCEPTION)
+            if not pending:
+                return
+
+            for task in pending:
+                task.cancel()
+
+            for task in done:
+                exc: BaseException | None = task.exception()
+                if exc is None:
+                    continue
+
+                if isinstance(exc, CodeIsInvalidError):
                     raise TaskTestCodeIsInvalidError(
                         user_id=actor_id,
-                        index=index,
-                        code=code,
-                        err=err
+                        index=code_index_mapping[code],
+                        code=exc.code,
+                        err=exc.err
                     )
+
+                raise exc
 
 
 @dataclass

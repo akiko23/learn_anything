@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 def format_time(total_tasks: int):
     total_spent_minutes = 20 * total_tasks
     spent_hours, spent_minutes = total_spent_minutes // 60, total_spent_minutes % 60
@@ -6,3 +9,8 @@ def format_time(total_tasks: int):
     spent_minutes = f'{spent_minutes} мин' if spent_minutes else ''
 
     return f'{spent_hours} {spent_minutes}'
+
+
+
+def format_date(date: datetime):
+    return date.strftime('%d.%m.%Y %H:%M')
