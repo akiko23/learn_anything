@@ -387,7 +387,7 @@ async def watch_actor_registered_courses_prev_or_next(
     total = data['registered_courses_total']
 
     if command == 'next':
-        if pointer >= DEFAULT_LIMIT:
+        if (pointer + 1) == (offset + DEFAULT_LIMIT):
             output_data = await interactor.execute(
                 GetManyCoursesInputData(
                     pagination=Pagination(offset=offset + DEFAULT_LIMIT, limit=DEFAULT_LIMIT),
