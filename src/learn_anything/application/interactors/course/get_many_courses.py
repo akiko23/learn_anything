@@ -114,12 +114,12 @@ class GetActorCreatedCoursesInteractor:
     async def execute(self, data: GetManyCoursesInputData) -> GetManyCoursesOutputData:
         actor_id = await self._id_provider.get_current_user_id()
 
+        data.filters.with_creator_id = actor_id
+
         courses, total = await self._course_gateway.all(
             pagination=data.pagination,
             filters=data.filters,
         )
-
-        data.filters.with_creator_id = actor_id
 
         courses_output_data = []
         for course in courses:
@@ -172,12 +172,12 @@ class GetActorRegisteredCoursesInteractor:
     async def execute(self, data: GetManyCoursesInputData) -> GetManyCoursesOutputData:
         actor_id = await self._id_provider.get_current_user_id()
 
+        data.filters.with_registered_actor_id = actor_id
+
         courses, total = await self._course_gateway.all(
             pagination=data.pagination,
             filters=data.filters,
         )
-
-        data.filters.with_registered_actor_id = actor_id
 
         courses_output_data = []
         for course in courses:

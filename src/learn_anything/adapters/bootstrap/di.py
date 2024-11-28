@@ -26,7 +26,8 @@ from learn_anything.application.interactors.auth.invalidate_auth_link import Inv
 from learn_anything.application.interactors.course.create_course import CreateCourseInteractor
 from learn_anything.application.interactors.course.delete_course import DeleteCourseInteractor
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor
-from learn_anything.application.interactors.course.get_many_courses import GetManyCoursesInteractor
+from learn_anything.application.interactors.course.get_many_courses import GetAllCoursesInteractor, \
+    GetActorCreatedCoursesInteractor, GetActorRegisteredCoursesInteractor
 from learn_anything.application.interactors.course.leave_course import LeaveCourseInteractor
 from learn_anything.application.interactors.course.publish_course import PublishCourseInteractor
 from learn_anything.application.interactors.course.register_for_course import RegisterForCourseInteractor
@@ -88,7 +89,9 @@ def interactors_provider() -> Provider:
     provider.provide(UpdateCourseInteractor, scope=Scope.REQUEST)
     provider.provide(GetCourseInteractor, scope=Scope.REQUEST)
     provider.provide(GetCourseTasksInteractor, scope=Scope.REQUEST)
-    provider.provide(GetManyCoursesInteractor, scope=Scope.REQUEST)
+    provider.provide(GetAllCoursesInteractor, scope=Scope.REQUEST)
+    provider.provide(GetActorCreatedCoursesInteractor, scope=Scope.REQUEST)
+    provider.provide(GetActorRegisteredCoursesInteractor, scope=Scope.REQUEST)
     provider.provide(RegisterForCourseInteractor, scope=Scope.REQUEST)
     provider.provide(LeaveCourseInteractor, scope=Scope.REQUEST)
     provider.provide(PublishCourseInteractor, scope=Scope.REQUEST)
