@@ -39,29 +39,33 @@ async def get_actor_registered_courses(
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
+    offset = data.get('registered_courses_offset', 0)
+    pointer = data.get('registered_courses_pointer', 0)
+    filters = data.get('registered_courses_filters', DEFAULT_FILTERS)
+
     output_data = await interactor.execute(
         GetManyCoursesInputData(
-            pagination=Pagination(offset=0, limit=DEFAULT_LIMIT),
-            filters=data.get('registered_courses_filters', DEFAULT_FILTERS),
+            pagination=Pagination(offset=offset, limit=DEFAULT_LIMIT),
+            filters=filters,
         )
     )
 
-    current_filters = data.get('registered_courses_filters', DEFAULT_FILTERS)
+    courses = data.get('registered_courses', output_data.courses)
+    courses[offset: offset + DEFAULT_LIMIT] = output_data.courses
 
-    data = await state.update_data(
-        registered_courses=output_data.courses,
-        registered_courses_pointer=0,
-        registered_courses_offset=0,
-        registered_courses_total=output_data.total,
-        registered_courses_filters=current_filters,
-    )
-
-    courses = output_data.courses
     total = output_data.total
+
+    await state.update_data(
+        registered_courses=courses,
+        registered_courses_pointer=pointer,
+        registered_courses_offset=offset,
+        registered_courses_total=output_data.total,
+        registered_courses_filters=filters,
+    )
 
     if total == 0:
         msg_text = 'Вы не зарегестрированы ни на один курс'
-        if current_filters != DEFAULT_FILTERS:
+        if filters != DEFAULT_FILTERS:
             msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
@@ -74,7 +78,6 @@ async def get_actor_registered_courses(
         )
         return
 
-    pointer = data['registered_courses_pointer']
     current_course = courses[pointer]
     text = get_many_courses_text(current_course)
 
@@ -152,7 +155,7 @@ async def proces_actor_registered_courses_filters(
     await bot.send_message(
         chat_id=user_id,
         text='Введите название курса',
-        reply_markup=cancel_text_filter_input_kb()
+        reply_markup=cancel_text_filter_input_kb(back_to='registered_courses')
     )
 
 
@@ -181,8 +184,8 @@ async def process_actor_registered_courses_title_filter(
     )
 
 
-@router.callback_query(StateFilter(SearchRegisteredByForm), F.data == 'actor_registered_courses_filters-cancel_input')
-async def cancel_registered_courses_title_input_filter(
+@router.callback_query(StateFilter(SearchRegisteredByForm), F.data == 'registered_courses_filters-cancel_input')
+async def cancel_registered_courses_input_filters(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot

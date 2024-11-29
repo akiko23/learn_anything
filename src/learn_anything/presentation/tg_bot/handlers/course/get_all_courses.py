@@ -41,26 +41,30 @@ async def get_all_courses(
     data: dict[str, Any] = await state.get_data()
 
     filters = data.get('all_courses_filters', DEFAULT_FILTERS)
+    pointer = data.get('all_courses_pointer', 0)
+    offset = data.get('all_courses_offset', 0)
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     output_data = await interactor.execute(
         GetManyCoursesInputData(
-            pagination=Pagination(offset=0, limit=DEFAULT_LIMIT),
+            pagination=Pagination(offset=offset, limit=DEFAULT_LIMIT),
             filters=filters,
         )
     )
+    courses = data.get('all_courses', output_data.courses)
+    courses[offset: offset + DEFAULT_LIMIT] = output_data.courses
 
-    data = await state.update_data(
-        all_courses=output_data.courses,
-        all_courses_pointer=0,
-        all_courses_offset=0,
+    total = output_data.total
+
+    await state.update_data(
+        all_courses=courses,
+        all_courses_pointer=pointer,
+        all_courses_offset=offset,
         all_courses_total=output_data.total,
         all_courses_filters=filters,
     )
 
-    courses = output_data.courses
-    total = output_data.total
 
     if total == 0:
         msg_text = 'Еще ни один курс не был опубликован :('
@@ -77,7 +81,6 @@ async def get_all_courses(
         )
         return
 
-    pointer = data['all_courses_pointer']
     current_course = courses[pointer]
     text = get_many_courses_text(current_course)
 
@@ -158,7 +161,11 @@ async def sort_by_filters(
     if selected_option == 'author':
         await state.set_state(SearchAllByForm.author)
         await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
-        await bot.send_message(chat_id=user_id, text='Введите имя автора', reply_markup=cancel_text_filter_input_kb())
+        await bot.send_message(
+            chat_id=user_id,
+            text='Введите имя автора',
+            reply_markup=cancel_text_filter_input_kb(back_to='all_courses')
+        )
         return
 
     if selected_option == 'title':
@@ -167,7 +174,7 @@ async def sort_by_filters(
         await bot.send_message(
             chat_id=user_id,
             text='Введите название курса',
-            reply_markup=cancel_text_filter_input_kb()
+            reply_markup=cancel_text_filter_input_kb(back_to='all_courses')
         )
         return
 

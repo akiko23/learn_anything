@@ -37,27 +37,29 @@ async def get_course_tasks(
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
-    output_data = await interactor.execute(
-        GetCourseTasksInputData(
-            course_id=CourseID(int(course_id)),
-            pagination=Pagination(offset=0, limit=DEFAULT_LIMIT),
-        )
-    )
-
     pointer = data.get(f'course_{course_id}_tasks_pointer', 0)
     offset = data.get(f'course_{course_id}_tasks_offset', 0)
 
+    output_data = await interactor.execute(
+        GetCourseTasksInputData(
+            course_id=CourseID(int(course_id)),
+            pagination=Pagination(offset=offset, limit=DEFAULT_LIMIT),
+        )
+    )
+    tasks = data.get(f'course_{course_id}_tasks', output_data.tasks)
+    tasks[offset: offset + DEFAULT_LIMIT] = output_data.tasks
+
+    total = output_data.total
+
     data = await state.update_data(
         **{
-            f'course_{course_id}_tasks': output_data.tasks,
+            f'course_{course_id}_tasks': tasks,
             f'course_{course_id}_tasks_pointer': pointer,
             f'course_{course_id}_tasks_offset': offset,
             f'course_{course_id}_tasks_total': output_data.total,
         },
     )
 
-    tasks = output_data.tasks
-    total = output_data.total
 
     current_course = data['target_course']
     if total == 0:

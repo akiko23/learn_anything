@@ -37,26 +37,29 @@ async def get_actor_created_courses(
     data: dict[str, Any] = await state.get_data()
 
     filters = data.get('created_courses_filters', DEFAULT_FILTERS)
+    pointer = data.get('created_courses_pointer', 0)
+    offset = data.get('created_courses_offset', 0)
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     output_data = await interactor.execute(
         GetManyCoursesInputData(
-            pagination=Pagination(offset=0, limit=DEFAULT_LIMIT),
+            pagination=Pagination(offset=offset, limit=DEFAULT_LIMIT),
             filters=filters,
         )
     )
+    courses = data.get('created_courses', output_data.courses)
+    courses[offset: offset + DEFAULT_LIMIT] = output_data.courses
 
-    data = await state.update_data(
-        created_courses=output_data.courses,
-        created_courses_pointer=0,
-        created_courses_offset=0,
+    total = output_data.total
+
+    await state.update_data(
+        created_courses=courses,
+        created_courses_pointer=pointer,
+        created_courses_offset=offset,
         created_courses_total=output_data.total,
         created_courses_filters=filters,
     )
-
-    courses = output_data.courses
-    total = output_data.total
 
     if total == 0:
         msg_text = 'Вы еще не создали ни одного курса'
@@ -73,7 +76,6 @@ async def get_actor_created_courses(
         )
         return
 
-    pointer = data['created_courses_pointer']
     current_course = courses[pointer]
     text = get_many_courses_text(current_course)
 
@@ -151,7 +153,9 @@ async def proces_actor_created_courses_filters(
     await bot.send_message(
         chat_id=user_id,
         text='Введите название курса',
-        reply_markup=cancel_text_filter_input_kb()
+        reply_markup=cancel_text_filter_input_kb(
+            back_to='created_courses'
+        )
     )
 
 
@@ -180,8 +184,8 @@ async def process_actor_created_courses_title_filter(
     )
 
 
-@router.callback_query(StateFilter(SearchCreatedByForm), F.data == 'actor_created_courses_filters-cancel_input')
-async def cancel_title_input_filter(
+@router.callback_query(StateFilter(SearchCreatedByForm), F.data == 'created_courses_filters-cancel_input')
+async def cancel_created_courses_title_input_filter(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot
@@ -320,7 +324,7 @@ async def apply_courses_actor_created_filters(
 
 
 @router.callback_query(F.data == 'actor_created_courses_filters-back')
-async def actor_created_courses_filters_back(
+async def created_courses_filters_back(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,

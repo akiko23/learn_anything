@@ -43,6 +43,8 @@ async def get_my_submissions(
     )
 
     submissions = data.get(f'actor_submissions_{task_id}', output_data.submissions)
+    submissions[offset: offset + DEFAULT_LIMIT] = output_data.submissions
+
     data = await state.update_data(
         **{
             f'actor_submissions_{task_id}': submissions,
