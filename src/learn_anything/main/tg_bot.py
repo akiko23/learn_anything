@@ -1,13 +1,18 @@
 import asyncio
+import json
 import logging
+from functools import partial
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import SimpleEventIsolation
+from aiogram.fsm.storage.redis import RedisStorage
 from dishka.integrations.aiogram import setup_dishka
 
 from learn_anything.adapters.bootstrap.tg_bot_di import setup_di
 from learn_anything.adapters.persistence.tables.map import map_tables
-from learn_anything.presentation.tg_bot.config import load_bot_config
+from learn_anything.adapters.redis.config import RedisConfig
+from learn_anything.adapters.json_serializers import DTOJSONEncoder, dto_obj_hook
+from learn_anything.presentation.tg_bot.config import load_bot_config, BotConfig
 from learn_anything.presentation.tg_bot.handlers import register_handlers
 from learn_anything.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
 from learn_anything.presentation.tg_bot.middlewares.auth import AuthMiddleware
@@ -21,8 +26,16 @@ async def main():
 
     container = setup_di()
 
+    redis_cfg = await container.get(RedisConfig)
+
+    storage = RedisStorage.from_url(
+        url=redis_cfg.dsn,
+        json_dumps=partial(json.dumps, cls=DTOJSONEncoder),
+        json_loads=partial(json.loads, object_hook=dto_obj_hook),
+    )
     dp = Dispatcher(
-        events_isolation=SimpleEventIsolation()
+        events_isolation=SimpleEventIsolation(),
+        storage=storage
     )
 
     dp.message.middleware.register(AuthMiddleware(container))
@@ -35,7 +48,7 @@ async def main():
     map_tables()
     register_handlers(dp)
 
-    bot_cfg = load_bot_config()
+    bot_cfg = await container.get(BotConfig)
 
     await dp.start_polling(Bot(token=bot_cfg.token))
 

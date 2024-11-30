@@ -2,11 +2,12 @@ from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from learn_anything.application.interactors.task.get_course_tasks import AnyTaskData, PracticeTaskData, CodeTaskData
+from learn_anything.application.interactors.task.get_course_tasks import TaskData
+from learn_anything.entities.task.models import TaskType
 
 
 def get_task_edit_menu_kb(
-        task: AnyTaskData,
+        task: TaskData,
         course_id: str,
         back_to: str
 ):
@@ -23,8 +24,8 @@ def get_task_edit_menu_kb(
     )
     builder = InlineKeyboardBuilder(base_kb.inline_keyboard)
 
-    if isinstance(task, PracticeTaskData):
-        if isinstance(task, CodeTaskData):
+    if task.type != TaskType.THEORY:
+        if task.type == TaskType.CODE:
             builder.row(
                 InlineKeyboardButton(text="Тесты", callback_data=f'get_task_tests-{task.id}'),
             )

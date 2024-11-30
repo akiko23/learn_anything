@@ -1,9 +1,9 @@
-from learn_anything.application.interactors.task.get_course_tasks import AnyTaskData
+from learn_anything.application.interactors.task.get_course_tasks import TaskData
 from learn_anything.entities.task.models import TaskType
 from learn_anything.presentors.tg_bot.texts.formatters import format_date
 
 
-def get_task_text(task_data: AnyTaskData):
+def get_task_text(task_data: TaskData):
     task_topic = 'Без темы'
     if task_data.topic:
         task_topic = f'Тема: {task_data.topic}'

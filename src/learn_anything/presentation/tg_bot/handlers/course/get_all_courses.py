@@ -81,7 +81,7 @@ async def get_all_courses(
         )
         return
 
-    current_course = courses[pointer]
+    current_course: CourseData = courses[pointer]
     text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
@@ -98,7 +98,7 @@ async def get_all_courses(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_all_courses_keyboard(
                     pointer=pointer,
@@ -360,7 +360,7 @@ async def apply_filters(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_all_courses_keyboard(
                     pointer=pointer,
@@ -420,7 +420,7 @@ async def filters_back(
         )
         return
 
-    current_course = courses[pointer]
+    current_course: CourseData = courses[pointer]
     text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
@@ -440,7 +440,7 @@ async def filters_back(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_all_courses_keyboard(
                     pointer=pointer,
@@ -509,7 +509,7 @@ async def watch_all_courses_prev_or_next(
         all_courses_pointer=pointer,
     )
 
-    current_course = courses[pointer]
+    current_course: CourseData = courses[pointer]
     text = get_many_courses_text(current_course)
 
     if current_course.photo_id:
@@ -526,7 +526,7 @@ async def watch_all_courses_prev_or_next(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_all_courses_keyboard(
                     pointer=pointer,

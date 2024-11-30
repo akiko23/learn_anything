@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Sequence, Union
+from typing import Sequence
 
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
@@ -33,31 +33,17 @@ class TaskData:
     created_at: datetime
     updated_at: datetime
 
+    total_submissions: int | None = None
+    total_correct_submissions: int | None = None
+    solved_by_actor: bool | None = None
+    attempts_left: int | None = None
 
-@dataclass
-class TheoryTaskData(TaskData):
-    pass
-
-
-@dataclass
-class PracticeTaskData(TaskData):
-    total_submissions: int
-    total_correct_submissions: int
-    solved_by_actor: bool
-    attempts_left: int
-
-
-@dataclass
-class CodeTaskData(PracticeTaskData):
-    code_duration_timeout: int
-
-
-AnyTaskData = Union[TheoryTaskData | PracticeTaskData]
+    code_duration_timeout: int | None = None
 
 
 @dataclass
 class GetCourseTasksOutputData:
-    tasks: Sequence[AnyTaskData]
+    tasks: Sequence[TaskData]
     pagination: Pagination
     total: int
 
@@ -95,19 +81,18 @@ class GetCourseTasksInteractor:
         for task in tasks:
             # creator = await self._user_gateway.with_id(task.creator_id)
 
-            if task.type == TaskType.THEORY:
-                task_data = TheoryTaskData(
-                    id=task.id,
-                    title=task.title,
-                    body=task.body,
-                    topic=task.topic,
-                    type=task.type,
-                    created_at=task.created_at,
-                    # creator=creator.fullname,
-                    updated_at=course.updated_at,
-                )
+            task_data = TaskData(
+                id=task.id,
+                title=task.title,
+                body=task.body,
+                topic=task.topic,
+                type=task.type,
+                created_at=task.created_at,
+                # creator=creator.fullname,
+                updated_at=course.updated_at,
+            )
 
-            elif task.type == TaskType.CODE:
+            if task.type == TaskType.CODE:
                 task: CodeTask
 
                 total_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
@@ -117,23 +102,11 @@ class GetCourseTasksInteractor:
                     user_id=actor_id, task_id=task.id
                 )
 
-                is_solved: bool = is_task_solved_by_actor(actor_submissions=user_submissions)
-
-                task_data = CodeTaskData(
-                    id=task.id,
-                    title=task.title,
-                    body=task.body,
-                    topic=task.topic,
-                    type=task.type,
-                    created_at=task.created_at,
-                    # creator=creator.fullname,
-                    total_submissions=total_submissions,
-                    total_correct_submissions=total_correct_submissions,
-                    solved_by_actor=is_solved,
-                    code_duration_timeout=task.code_duration_timeout,
-                    attempts_left=task.attempts_limit,
-                    updated_at=course.updated_at,
-                )
+                task_data.total_submissions = total_submissions
+                task_data.total_correct_submissions = total_correct_submissions
+                task_data.solved_by_actor = is_task_solved_by_actor(actor_submissions=user_submissions)
+                task_data.code_duration_timeout = task.code_duration_timeout
+                task_data.attempts_left = task.attempts_limit
 
             tasks_output_data.append(task_data)
 

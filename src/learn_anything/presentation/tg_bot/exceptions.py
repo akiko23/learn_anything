@@ -9,7 +9,7 @@ from learn_anything.application.interactors.course.update_course import UpdateCo
 
 @dataclass
 class NoMediaOnTelegramServersException(Exception):
-    media_buffer: io.IOBase
+    media_path: str
     text_to_send: str
     keyboard: InlineKeyboardMarkup
     update_interactor: UpdateCourseInteractor

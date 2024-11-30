@@ -3,7 +3,9 @@ from typing import cast
 
 from aiogram import Bot
 from aiogram.types import Message, ErrorEvent, BufferedInputFile
+from dishka import FromDishka
 
+from learn_anything.application.ports.data.file_manager import FileManager
 from learn_anything.entities.error import ApplicationError
 from learn_anything.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
 
@@ -13,6 +15,7 @@ logger = logging.getLogger(__name__)
 async def load_media_if_not_exists(
         event: ErrorEvent,
         msg: Message,
+        file_manager: FromDishka[FileManager],
         bot: Bot,
 ):
     user_id: int = msg.from_user.id
@@ -24,9 +27,10 @@ async def load_media_if_not_exists(
 
     await bot.delete_message(chat_id=user_id, message_id=msg.message_id)
 
+    media_buffer = file_manager.get_by_file_path(file_path=exc.media_path)
     msg = await bot.send_photo(
         chat_id=user_id,
-        photo=BufferedInputFile(exc.media_buffer.read(), 'stub'),
+        photo=BufferedInputFile(media_buffer.read(), 'stub'),
         caption=exc.text_to_send,
         reply_markup=exc.keyboard,
     )

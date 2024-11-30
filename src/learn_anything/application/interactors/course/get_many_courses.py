@@ -1,6 +1,4 @@
 import asyncio
-import io
-import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Sequence
@@ -9,7 +7,7 @@ from learn_anything.application.input_data import Pagination
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.data.course_gateway import CourseGateway, GetManyCoursesFilters, \
     RegistrationForCourseGateway
-from learn_anything.application.ports.data.file_manager import FileManager
+from learn_anything.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.models import CourseID
 
@@ -29,7 +27,7 @@ class CourseData:
     creator: str
     total_registered: int
     photo_id: str | None
-    photo_reader: io.IOBase | None
+    photo_path: str | None
     user_is_registered: bool
 
 
@@ -79,13 +77,11 @@ class GetAllCoursesInteractor:
                 total_registered=course.total_registered,
                 user_is_registered=registration is not None,
                 photo_id=None,
-                photo_reader=None,
+                photo_path=None,
             )
             if course.photo_id:
                 course_data.photo_id = course.photo_id
-
-                photo_reader = self._file_manager.get_by_file_path(file_path=os.path.join('courses', course.photo_id))
-                course_data.photo_reader = photo_reader
+                course_data.photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
 
             courses_output_data.append(course_data)
 
@@ -137,13 +133,11 @@ class GetActorCreatedCoursesInteractor:
                 total_registered=course.total_registered,
                 user_is_registered=registration is not None,
                 photo_id=None,
-                photo_reader=None,
+                photo_path=None,
             )
             if course.photo_id:
                 course_data.photo_id = course.photo_id
-
-                photo_reader = self._file_manager.get_by_file_path(file_path=os.path.join('courses', course.photo_id))
-                course_data.photo_reader = photo_reader
+                course_data.photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
 
             courses_output_data.append(course_data)
 
@@ -195,13 +189,11 @@ class GetActorRegisteredCoursesInteractor:
                 total_registered=course.total_registered,
                 user_is_registered=registration is not None,
                 photo_id=None,
-                photo_reader=None,
+                photo_path=None,
             )
             if course.photo_id:
                 course_data.photo_id = course.photo_id
-
-                photo_reader = self._file_manager.get_by_file_path(file_path=os.path.join('courses', course.photo_id))
-                course_data.photo_reader = photo_reader
+                course_data.photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
 
             courses_output_data.append(course_data)
 

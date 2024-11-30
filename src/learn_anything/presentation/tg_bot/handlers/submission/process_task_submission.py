@@ -8,7 +8,7 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.submission.create_submission import CreateCodeTaskSubmissionInteractor, \
     CreateCodeTaskSubmissionInputData
-from learn_anything.application.interactors.task.get_course_tasks import TaskData, CodeTaskData
+from learn_anything.application.interactors.task.get_course_tasks import TaskData
 from learn_anything.entities.task.models import TaskType
 from learn_anything.presentors.tg_bot.keyboards.task.do_course_task import get_do_task_kb
 from learn_anything.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
@@ -29,7 +29,7 @@ async def process_code_task_submission(
     user_id: int = msg.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    target_task: CodeTaskData = data['target_task']
+    target_task: TaskData = data['target_task']
     submission = msg.text
 
     output_data = await interactor.execute(

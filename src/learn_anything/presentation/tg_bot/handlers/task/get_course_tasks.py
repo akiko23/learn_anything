@@ -7,7 +7,7 @@ from dishka import FromDishka
 
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
-    GetCourseTasksInputData, TheoryTaskData, CodeTaskData
+    GetCourseTasksInputData, TaskData
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.models import TaskType
 from learn_anything.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
@@ -110,7 +110,7 @@ async def watch_course_tasks_prev_or_next(
     command, back_to, course_id = callback_query.data.split('-')[1:]
 
     pointer = data[f'course_{course_id}_tasks_pointer']
-    tasks: list[TheoryTaskData | CodeTaskData] = data[f'course_{course_id}_tasks']
+    tasks: list[TaskData] = data[f'course_{course_id}_tasks']
     offset: int = data[f'course_{course_id}_tasks_offset']
     total = data[f'course_{course_id}_tasks_total']
 

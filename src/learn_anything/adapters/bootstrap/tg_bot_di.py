@@ -18,6 +18,7 @@ from learn_anything.adapters.persistence.mappers.task import TaskMapper
 from learn_anything.adapters.persistence.mappers.user import UserMapper, AuthLinkMapper
 from learn_anything.adapters.persistence.providers import get_async_sessionmaker, get_engine, get_async_session
 from learn_anything.adapters.playground.unix_playground import UnixPlaygroundFactory
+from learn_anything.adapters.redis.config import load_redis_config, RedisConfig
 from learn_anything.adapters.s3.config import load_s3_config, S3Config
 from learn_anything.adapters.s3.s3_file_manager import S3FileManager
 from learn_anything.application.interactors.auth.authenticate import Authenticate
@@ -117,6 +118,7 @@ def configs_provider() -> Provider:
     provider.provide(lambda: load_db_config(), scope=Scope.APP, provides=DatabaseConfig)
     provider.provide(lambda: load_bot_config(), scope=Scope.APP, provides=BotConfig)
     provider.provide(lambda: load_s3_config(), scope=Scope.APP, provides=S3Config)
+    provider.provide(lambda: load_redis_config(), scope=Scope.APP, provides=RedisConfig)
 
     return provider
 

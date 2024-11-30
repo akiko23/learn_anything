@@ -25,7 +25,7 @@ def alembic_handler(argv):
 
 def command_start_handler(argv):
     if argv[0] == 'bot':
-        from learn_anything.main.bot import main
+        from learn_anything.main.tg_bot import main
 
         try:
             logger.info('Starting bot from cli..')

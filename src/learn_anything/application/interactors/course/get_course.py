@@ -1,12 +1,11 @@
 import asyncio
-import io
 import os
 from dataclasses import dataclass
 from datetime import datetime
 
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
-from learn_anything.application.ports.data.file_manager import FileManager
+from learn_anything.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.errors import CourseDoesNotExistError
@@ -27,7 +26,7 @@ class GetFullCourseOutputData:
     title: str
     description: str
     photo_id: str | None
-    photo_reader: io.IOBase | None
+    photo_path: str | None
     is_published: bool
     registrations_limit: int | None
     total_tasks: int
@@ -81,7 +80,7 @@ class GetCourseInteractor:
             title=course.title,
             description=course.description,
             photo_id=None,
-            photo_reader=None,
+            photo_path=None,
             is_published=course.is_published,
             registrations_limit=course.registrations_limit,
             total_registered=course.total_registered,
@@ -100,8 +99,6 @@ class GetCourseInteractor:
 
         if course.photo_id:
             output_data.photo_id = course.photo_id
-
-            photo_reader = self._file_manager.get_by_file_path(file_path=os.path.join('courses', course.photo_id))
-            output_data.photo_reader = photo_reader
+            output_data.photo_path = os.path.join(COURSES_DEFAULT_DIRECTORY, course.photo_id)
 
         return output_data

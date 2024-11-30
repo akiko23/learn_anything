@@ -85,10 +85,10 @@ def get_all_courses_filters(current_filters: GetManyCoursesFilters):
     return kb
 
 
-def cancel_text_filter_input_kb():
+def cancel_text_filter_input_kb(back_to: str):
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Отмена', callback_data='all_courses_filters-cancel_input')]
+            [InlineKeyboardButton(text='Отмена', callback_data=f'{back_to}_filters-cancel_input')]
         ]
     )
 

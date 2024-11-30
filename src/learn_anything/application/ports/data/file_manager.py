@@ -1,6 +1,8 @@
 import io
 from typing import Protocol
 
+COURSES_DEFAULT_DIRECTORY = 'courses'
+
 
 # todo: add concurrency here
 class FileManager(Protocol):
