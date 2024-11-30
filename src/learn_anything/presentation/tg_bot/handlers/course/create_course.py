@@ -99,7 +99,10 @@ async def get_course_photo(
     photo_id: str = msg.photo[-1].file_id
     data: dict[str, Any] = await state.get_data()
 
-    file_path = f'{COURSES_DEFAULT_DIRECTORY}/{photo_id}'
+    file_path = file_manager.generate_path(
+        directories=(COURSES_DEFAULT_DIRECTORY,),
+        filename=photo_id,
+    )
 
     obj = file_manager.get_by_file_path(file_path=file_path)
     if obj:
@@ -108,9 +111,15 @@ async def get_course_photo(
         )
 
     photo = await bot.download(file=photo_id)
+    file_path = file_manager.generate_path(
+        directories=(COURSES_DEFAULT_DIRECTORY,),
+        filename=photo_id,
+    )
+    file_manager.save(payload=photo.read(), file_path=file_path)
+
     await state.update_data(
         photo_id=photo_id,
-        photo=photo,
+        photo=None,
     )
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
@@ -246,7 +255,10 @@ async def cancel_course_creation(
     data = await state.get_data()
 
     photo_id = data['photo_id']
-    file_path = f'{COURSES_DEFAULT_DIRECTORY}/{photo_id}'
+    file_path = file_manager.generate_path(
+        directories=(COURSES_DEFAULT_DIRECTORY,),
+        filename=photo_id,
+    )
     file_manager.delete(file_path=file_path)
 
     await state.set_state(state=None)

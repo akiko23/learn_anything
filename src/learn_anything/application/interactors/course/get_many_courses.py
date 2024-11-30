@@ -81,7 +81,10 @@ class GetAllCoursesInteractor:
             )
             if course.photo_id:
                 course_data.photo_id = course.photo_id
-                course_data.photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
+                course_data.photo_path = self._file_manager.generate_path(
+                    directories=(COURSES_DEFAULT_DIRECTORY, ),
+                    filename=course.photo_id,
+                )
 
             courses_output_data.append(course_data)
 
@@ -137,7 +140,10 @@ class GetActorCreatedCoursesInteractor:
             )
             if course.photo_id:
                 course_data.photo_id = course.photo_id
-                course_data.photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
+                course_data.photo_path = self._file_manager.generate_path(
+                    directories=(COURSES_DEFAULT_DIRECTORY, ),
+                    filename=course.photo_id,
+                )
 
             courses_output_data.append(course_data)
 
@@ -193,7 +199,10 @@ class GetActorRegisteredCoursesInteractor:
             )
             if course.photo_id:
                 course_data.photo_id = course.photo_id
-                course_data.photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
+                course_data.photo_path = self._file_manager.generate_path(
+                    directories=(COURSES_DEFAULT_DIRECTORY, ),
+                    filename=course.photo_id,
+                )
 
             courses_output_data.append(course_data)
 

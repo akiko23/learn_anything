@@ -36,7 +36,11 @@ class CreateCourseInteractor:
     async def execute(self, data: CreateCourseInputData) -> CreateCourseOutputData:
         actor_id = await self._id_provider.get_current_user_id()
         if data.photo:
-            self._file_manager.save(data.photo.read(), f'courses/{data.photo_id}')
+            file_path = file_manager.generate_path(
+                directories=(COURSES_DEFAULT_DIRECTORY,),
+                filename=photo_id,
+            )
+            self._file_manager.save(data.photo.read(), file_path=file_path)
 
         course = create_course(
             id_=None,

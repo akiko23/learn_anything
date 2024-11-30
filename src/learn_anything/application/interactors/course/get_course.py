@@ -1,5 +1,4 @@
 import asyncio
-import os
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -99,6 +98,9 @@ class GetCourseInteractor:
 
         if course.photo_id:
             output_data.photo_id = course.photo_id
-            output_data.photo_path = os.path.join(COURSES_DEFAULT_DIRECTORY, course.photo_id)
+            output_data.photo_path = self._file_manager.generate_path(
+                directories=(COURSES_DEFAULT_DIRECTORY,),
+                filename=course.photo_id,
+            )
 
         return output_data

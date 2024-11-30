@@ -48,11 +48,17 @@ class UpdateCourseInteractor:
 
         if data.photo:
             if course.photo_id:
-                old_photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
+                old_photo_path = self._file_manager.generate_path(
+                    directories=(COURSES_DEFAULT_DIRECTORY,),
+                    filename=course.photo_id,
+                )
                 self._file_manager.delete(old_photo_path)
 
-            new_photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{data.photo_id}'
-            self._file_manager.save(data.photo.read(), new_photo_path)
+            new_photo_path = self._file_manager.generate_path(
+                directories=(COURSES_DEFAULT_DIRECTORY,),
+                filename=data.photo_id,
+            )
+            self._file_manager.save(payload=data.photo.read(), file_path=new_photo_path)
 
             course.photo_id = data.photo_id
 
