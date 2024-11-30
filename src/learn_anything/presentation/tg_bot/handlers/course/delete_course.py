@@ -56,7 +56,11 @@ async def delete_course(
 
     pointer = data[f'{back_to}_pointer']
     await state.update_data(
-        **{f'{back_to}_pointer': max(0, pointer - 1)}
+        **{
+            f'registered_courses_pointer': max(0, pointer - 1),
+            f'created_courses_pointer': max(0, pointer - 1),
+            f'all_courses_pointer': max(0, pointer - 1)
+        }
     )
 
     await bot.send_message(

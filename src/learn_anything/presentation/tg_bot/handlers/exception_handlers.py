@@ -2,7 +2,9 @@ import logging
 from typing import cast
 
 from aiogram import Bot
-from aiogram.types import Message, ErrorEvent, BufferedInputFile
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, ErrorEvent, BufferedInputFile, CallbackQuery
 from dishka import FromDishka
 
 from learn_anything.application.ports.data.file_manager import FileManager
@@ -14,18 +16,25 @@ logger = logging.getLogger(__name__)
 
 async def load_media_if_not_exists(
         event: ErrorEvent,
-        msg: Message,
-        file_manager: FromDishka[FileManager],
+        state: FSMContext,
         bot: Bot,
+        file_manager: FromDishka[FileManager],
 ):
-    user_id: int = msg.from_user.id
+    update: Message | CallbackQuery = event.update.message or event.update.callback_query
+    data = await state.get_data()
+
+    user_id: int = update.from_user.id
     exc: NoMediaOnTelegramServersException = cast(NoMediaOnTelegramServersException, event.exception)
     update_interactor = exc.update_interactor
     input_data = exc.interactor_input_data
 
     logger.error('Telegram deleted media from its servers. Uploading new..')
 
-    await bot.delete_message(chat_id=user_id, message_id=msg.message_id)
+    message_id = update.message.message_id if isinstance(update, CallbackQuery) else update.message_id
+    try:
+        await bot.delete_message(chat_id=user_id, message_id=message_id)
+    except TelegramBadRequest:
+        pass
 
     media_buffer = file_manager.get_by_file_path(file_path=exc.media_path)
     msg = await bot.send_photo(
@@ -42,6 +51,13 @@ async def load_media_if_not_exists(
     input_data.photo = new_photo
     await update_interactor.execute(
         data=input_data
+    )
+
+    collection = data[exc.collection_key]
+    collection[data[f'{exc.collection_key}_pointer']].photo_id = new_photo_id
+
+    await state.update_data(
+        **{exc.collection_key: collection}
     )
 
 

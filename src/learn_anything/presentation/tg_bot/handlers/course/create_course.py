@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
 from learn_anything.application.interactors.course.create_course import CreateCourseInteractor, CreateCourseInputData
+from learn_anything.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
 from learn_anything.entities.user.models import UserRole
 from learn_anything.presentation.tg_bot.states.course import CreateCourseForm
 from learn_anything.presentors.tg_bot.keyboards.course.create_course import CANCEL_COURSE_CREATION_KB, \
@@ -92,6 +93,7 @@ async def get_course_photo(
         msg: Message,
         state: FSMContext,
         bot: Bot,
+        file_manager: FromDishka[FileManager]
 ):
     user_id: int = msg.from_user.id
     photo_id: str = msg.photo[-1].file_id
@@ -99,9 +101,12 @@ async def get_course_photo(
 
     photo = await bot.download(file=photo_id)
 
+    file_path = f'{COURSES_DEFAULT_DIRECTORY}/{photo_id}'
+    file_manager.save(file_path=file_path, payload=photo.read())
+
     await state.update_data(
         photo_id=photo_id,
-        photo=photo,
+        photo=None,
     )
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
@@ -131,7 +136,7 @@ async def skip_photo(
 
     await state.update_data(
         photo_id=None,
-        photo=None,
+        photo=None
     )
 
     await state.set_state(state=CreateCourseForm.get_registrations_limit)
@@ -231,8 +236,14 @@ async def cancel_course_creation(
         state: FSMContext,
         bot: Bot,
         user_role: UserRole,
+        file_manager: FromDishka[FileManager]
 ):
     user_id: int = callback_query.from_user.id
+    data = await state.get_data()
+
+    photo_id = data['photo_id']
+    file_path = f'{COURSES_DEFAULT_DIRECTORY}/{photo_id}'
+    file_manager.delete(file_path=file_path)
 
     await state.set_state(state=None)
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)

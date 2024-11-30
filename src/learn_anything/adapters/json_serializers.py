@@ -30,6 +30,5 @@ class DTOJSONEncoder(json.JSONEncoder):
 def dto_obj_hook(dct):
     encoded_dto = dct.get('dto')
     if encoded_dto:
-        print('fimoz:', DTOWrapperModel.model_validate(dct).dto, type(DTOWrapperModel.model_validate(dct).dto))
         return DTOWrapperModel.model_validate(dct).dto
     return dct

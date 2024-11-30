@@ -108,7 +108,9 @@ async def get_all_courses(
                 update_interactor=update_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='all_courses',
+
             )
 
     await bot.send_message(
@@ -370,7 +372,8 @@ async def apply_filters(
                 update_interactor=update_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='all_courses',
             )
 
     await bot.edit_message_text(
@@ -450,7 +453,8 @@ async def filters_back(
                 update_interactor=update_course_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='all_courses',
             )
 
     await bot.edit_message_text(
@@ -536,7 +540,8 @@ async def watch_all_courses_prev_or_next(
                 update_interactor=update_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='all_courses',
             )
 
     await bot.send_message(

@@ -95,7 +95,7 @@ async def get_actor_registered_courses(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_actor_registered_courses_keyboard(
                     pointer=pointer,
@@ -105,7 +105,8 @@ async def get_actor_registered_courses(
                 update_interactor=update_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='registered_courses',
             )
 
     await bot.send_message(
@@ -299,7 +300,7 @@ async def apply_courses_actor_registered_filters(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_actor_registered_courses_keyboard(
                     pointer=0,
@@ -309,7 +310,8 @@ async def apply_courses_actor_registered_filters(
                 update_interactor=update_course_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='registered_courses',
             )
 
     await bot.edit_message_text(
@@ -380,7 +382,7 @@ async def actor_registered_courses_filters_back(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_actor_registered_courses_keyboard(
                     pointer=pointer,
@@ -390,7 +392,8 @@ async def actor_registered_courses_filters_back(
                 update_interactor=update_course_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='registered_courses',
             )
 
     await bot.edit_message_text(
@@ -466,7 +469,7 @@ async def watch_actor_registered_courses_prev_or_next(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_actor_registered_courses_keyboard(
                     pointer=pointer,
@@ -476,7 +479,8 @@ async def watch_actor_registered_courses_prev_or_next(
                 update_interactor=update_course_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='registered_courses',
             )
 
     await bot.send_message(

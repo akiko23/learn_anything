@@ -48,8 +48,12 @@ async def get_actor_created_courses(
             filters=filters,
         )
     )
+    print(output_data.courses)
+
     courses = data.get('created_courses', output_data.courses)
     courses[offset: offset + DEFAULT_LIMIT] = output_data.courses
+
+    print(courses)
 
     total = output_data.total
 
@@ -93,7 +97,7 @@ async def get_actor_created_courses(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_actor_created_courses_keyboard(
                     pointer=pointer,
@@ -103,7 +107,8 @@ async def get_actor_created_courses(
                 update_interactor=update_course_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='created_courses'
             )
 
     await bot.send_message(
@@ -298,7 +303,7 @@ async def apply_courses_actor_created_filters(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_actor_created_courses_keyboard(
                     pointer=0,
@@ -308,7 +313,8 @@ async def apply_courses_actor_created_filters(
                 update_interactor=update_course_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='created_courses'
             )
 
     await bot.edit_message_text(
@@ -380,7 +386,7 @@ async def created_courses_filters_back(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_actor_created_courses_keyboard(
                     pointer=pointer,
@@ -390,7 +396,8 @@ async def created_courses_filters_back(
                 update_interactor=update_course_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='created_courses'
             )
 
     await bot.edit_message_text(
@@ -467,7 +474,7 @@ async def watch_actor_created_courses_prev_or_next(
             )
         except TelegramBadRequest:
             raise NoMediaOnTelegramServersException(
-                media_buffer=current_course.photo_reader,
+                media_path=current_course.photo_path,
                 text_to_send=text,
                 keyboard=get_actor_created_courses_keyboard(
                     pointer=pointer,
@@ -477,7 +484,8 @@ async def watch_actor_created_courses_prev_or_next(
                 update_interactor=update_course_interactor,
                 interactor_input_data=UpdateCourseInputData(
                     course_id=current_course.id
-                )
+                ),
+                collection_key='created_courses'
             )
 
     await bot.send_message(

@@ -14,3 +14,4 @@ class NoMediaOnTelegramServersException(Exception):
     keyboard: InlineKeyboardMarkup
     update_interactor: UpdateCourseInteractor
     interactor_input_data: Any
+    collection_key: str

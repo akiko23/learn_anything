@@ -5,7 +5,7 @@ from typing import BinaryIO
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway
-from learn_anything.application.ports.data.file_manager import FileManager
+from learn_anything.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.errors import CourseDoesNotExistError
 from learn_anything.entities.course.models import CourseID
@@ -47,11 +47,11 @@ class UpdateCourseInteractor:
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         if data.photo:
-            if course.photo_id:
-                old_photo_path = f'courses/{course.photo_id}'
-                self._file_manager.delete(old_photo_path)
+            # if course.photo_id:
+                # old_photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
+                # self._file_manager.delete(old_photo_path)
 
-            new_photo_path = f'courses/{data.photo_id}'
+            new_photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{data.photo_id}'
             self._file_manager.save(data.photo.read(), new_photo_path)
 
             course.photo_id = data.photo_id
