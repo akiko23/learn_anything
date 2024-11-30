@@ -47,9 +47,9 @@ class UpdateCourseInteractor:
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         if data.photo:
-            # if course.photo_id:
-                # old_photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
-                # self._file_manager.delete(old_photo_path)
+            if course.photo_id:
+                old_photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{course.photo_id}'
+                self._file_manager.delete(old_photo_path)
 
             new_photo_path = f'{COURSES_DEFAULT_DIRECTORY}/{data.photo_id}'
             self._file_manager.save(data.photo.read(), new_photo_path)

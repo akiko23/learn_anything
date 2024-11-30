@@ -10,10 +10,15 @@ from learn_anything.application.interactors.course.get_many_courses import Cours
 from learn_anything.application.interactors.submission.get_many_submissions import SubmissionData
 from learn_anything.application.interactors.task.get_course_tasks import TaskData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters
+from learn_anything.application.ports.data.submission_gateway import GetManySubmissionsFilters
 
 
 class DTOWrapperModel(BaseModel):
-    dto: CourseData | GetFullCourseOutputData | GetManyCoursesFilters | TaskData | SubmissionData
+    dto: (
+            CourseData | GetFullCourseOutputData | GetManyCoursesFilters |
+            TaskData |
+            SubmissionData | GetManySubmissionsFilters
+    )
 
 
 class DTOJSONEncoder(json.JSONEncoder):

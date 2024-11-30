@@ -99,14 +99,18 @@ async def get_course_photo(
     photo_id: str = msg.photo[-1].file_id
     data: dict[str, Any] = await state.get_data()
 
-    photo = await bot.download(file=photo_id)
-
     file_path = f'{COURSES_DEFAULT_DIRECTORY}/{photo_id}'
-    file_manager.save(file_path=file_path, payload=photo.read())
 
+    obj = file_manager.get_by_file_path(file_path=file_path)
+    if obj:
+        return await msg.answer(
+            text='Такое фото уже существует'
+        )
+
+    photo = await bot.download(file=photo_id)
     await state.update_data(
         photo_id=photo_id,
-        photo=None,
+        photo=photo,
     )
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])

@@ -2,7 +2,7 @@ import os.path
 from urllib3.response import BaseHTTPResponse
 from io import BytesIO
 
-from minio import Minio
+from minio import Minio, S3Error
 
 from learn_anything.application.ports.data.file_manager import FileManager
 from learn_anything.adapters.s3.config import S3Config
@@ -47,12 +47,10 @@ class S3FileManager(FileManager):
 
     def get_by_file_path(self, file_path: str) -> BaseHTTPResponse | None:
         bucket_name, file_id = self._parse_path(path=file_path)
-
-        print('File stats:',bucket_name, file_id)
-        obj = self._client.get_object(bucket_name=bucket_name, object_name=file_id)
-
-        if not obj:
-            return None
+        try:
+            obj = self._client.get_object(bucket_name=bucket_name, object_name=file_id)
+        except S3Error:
+            obj = None
         return obj
 
     def delete_folder(self, name: str) -> None:
