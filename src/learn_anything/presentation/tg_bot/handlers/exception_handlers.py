@@ -45,10 +45,18 @@ async def load_media_if_not_exists(
     )
 
     new_photo_id = msg.photo[-1].file_id
-    new_photo = await bot.download(new_photo_id)
+
+    # if media in default we just need to update its tag in storage
+    if 'defaults' in exc.media_path:
+        file_manager.update(
+            old_file_path=exc.media_path,
+            payload=None,
+            new_file_path=file_manager.generate_path(('defaults',), new_photo_id)
+        )
+        return
 
     input_data.photo_id = new_photo_id
-    input_data.photo = new_photo
+    input_data.photo = media_buffer
     await update_interactor.execute(
         data=input_data
     )
