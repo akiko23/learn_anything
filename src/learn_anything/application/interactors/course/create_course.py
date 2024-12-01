@@ -4,7 +4,7 @@ from typing import BinaryIO
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway
-from learn_anything.application.ports.data.file_manager import FileManager
+from learn_anything.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import create_course
@@ -36,11 +36,11 @@ class CreateCourseInteractor:
     async def execute(self, data: CreateCourseInputData) -> CreateCourseOutputData:
         actor_id = await self._id_provider.get_current_user_id()
         if data.photo:
-            file_path = file_manager.generate_path(
+            file_path = await self._file_manager.generate_path(
                 directories=(COURSES_DEFAULT_DIRECTORY,),
-                filename=photo_id,
+                filename=data.photo_id,
             )
-            self._file_manager.save(data.photo.read(), file_path=file_path)
+            await self._file_manager.save(data.photo.read(), file_path=file_path)
 
         course = create_course(
             id_=None,

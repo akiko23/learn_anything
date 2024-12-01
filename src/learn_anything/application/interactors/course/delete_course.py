@@ -40,6 +40,6 @@ class DeleteCourseInteractor:
         await self._course_gateway.delete(course_id=course.id)
 
         if course.photo_id:
-            self._file_manager.delete(file_path=str(Path('courses') / course.photo_id))
+            await self._file_manager.delete(file_path=str(Path('courses') / course.photo_id))
 
         await self._commiter.commit()

@@ -104,7 +104,7 @@ async def get_course_photo(
         filename=photo_id,
     )
 
-    obj = file_manager.get_by_file_path(file_path=file_path)
+    obj = await file_manager.get_by_file_path(file_path=file_path)
     if obj:
         return await msg.answer(
             text='Такое фото уже существует'
@@ -115,7 +115,7 @@ async def get_course_photo(
         directories=(COURSES_DEFAULT_DIRECTORY,),
         filename=photo_id,
     )
-    file_manager.save(payload=photo.read(), file_path=file_path)
+    await file_manager.save(payload=photo.read(), file_path=file_path)
 
     await state.update_data(
         photo_id=photo_id,
@@ -259,7 +259,7 @@ async def cancel_course_creation(
         directories=(COURSES_DEFAULT_DIRECTORY,),
         filename=photo_id,
     )
-    file_manager.delete(file_path=file_path)
+    await file_manager.delete(file_path=file_path)
 
     await state.set_state(state=None)
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)

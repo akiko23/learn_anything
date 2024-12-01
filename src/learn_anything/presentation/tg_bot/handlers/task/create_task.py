@@ -371,8 +371,6 @@ async def finish_task_creation(
         bot: Bot,
         interactor: FromDishka[CreateCodeTaskInteractor],
 ):
-    await state.set_state(state=None)
-
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -386,24 +384,63 @@ async def finish_task_creation(
     prepared_code = data['prepared_code']
     index_in_course = int(data[f'course_{course_id}_tasks_total'])
 
-    await interactor.execute(
-        CreateCodeTaskInputData(
-            course_id=CourseID(int(course_id)),
-            task_type=TaskType.CODE,
-            title=title,
-            body=body,
-            topic=topic,
-            index_in_course=index_in_course,
-            prepared_code=prepared_code,
-            code_duration_timeout=data['code_duration_timeout'],
-            attempts_limit=data['attempts_limit'],
-            tests=data['tests'],
+    try:
+        await interactor.execute(
+            CreateCodeTaskInputData(
+                course_id=CourseID(int(course_id)),
+                task_type=TaskType.CODE,
+                title=title,
+                body=body,
+                topic=topic,
+                index_in_course=index_in_course,
+                prepared_code=prepared_code,
+                code_duration_timeout=data['code_duration_timeout'],
+                attempts_limit=data['attempts_limit'],
+                tests=data['tests'],
+            )
         )
-    )
+    except TaskTestCodeIsInvalidError as e:
+        tests = []
+        await state.update_data(tests=tests)
+
+        msg = await bot.send_message(
+            chat_id=user_id,
+            text=f'Отловлена ошибка в коде тестов. Все тесты сброшены:\n'
+                 f'\n{e.message}\n'
+                 f'\nПопробуйте снова\n'
+                 f'Введите код для {len(tests) + 1}-го теста\n'
+                 ''
+                 'Учтите:\n'
+                 ' - Stdout и stderr пользовательского кода можно получить из переменных stdout и stderr соответственно\n'
+                 ' - Для кодовой задачи должен быть по крайней мере один тест.\n'
+                 ' - Лучше заранее протестируйте код, который скинете сюда, потому что создание задания происходит атомарно\n',
+            reply_markup=get_code_task_tests_kb(current_tests=tests),
+            parse_mode='markdown'
+        )
+        return await state.update_data(
+            msg_on_delete=msg.message_id
+        )
+
+    except TaskPreparedCodeIsInvalidError as e:
+        await state.set_state(CreateCodeTaskForm.get_prepared_code)
+
+        msg = await bot.send_message(
+            chat_id=user_id,
+            text=f'Отловлена ошибка в коде инициализации задания. Все, что вы выставили до этого, сброшено:\n'
+                 f'\n{e.message}\n'
+                 f'\nПопробуйте снова\n',
+            reply_markup=get_code_task_prepared_code_kb(),
+            parse_mode='markdown'
+        )
+        return await state.update_data(
+            msg_on_delete=msg.message_id
+        )
+
+    await state.set_state(state=None)
 
     del data['course_id']
     del data['msg_on_delete']
-    # with suppress(KeyError):
+
     del (
         data['title'],
         data['body'],
@@ -428,9 +465,7 @@ async def finish_task_creation(
 Название: {title}
 
 Тело: {body}
-
 {prepared_code}
-
 Порядковый номер в курсе: {index_in_course}
 ''',
         reply_markup=after_course_task_creation_menu(

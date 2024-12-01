@@ -36,7 +36,7 @@ def get_task_text(task_data: TaskData):
                 attempts_left_text = f'Осталось попыток: {attempts_left_text}\n\n'
 
             correct_submissions_percentage = (
-                round(task_data.total_correct_submissions / task_data.total_submissions * 100)
+                round(task_data.total_correct_submissions / max(task_data.total_submissions * 100, 1))
             )
             text = (
                 f'{task_data.title}\n'

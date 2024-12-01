@@ -15,9 +15,13 @@ def get_course_tasks_keyboard(
         course_is_published: bool | None = None,
         user_is_registered: bool | None = None,
 ):
+    back_btn_callback_data = f'course-{back_to}-{course_id}'
+    if user_has_write_access:
+        back_btn_callback_data = f'edit_course-{back_to}-{course_id}'
+
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Назад', callback_data=f'course-{back_to}-{course_id}')],
+            [InlineKeyboardButton(text='Назад', callback_data=back_btn_callback_data)],
         ]
     )
 

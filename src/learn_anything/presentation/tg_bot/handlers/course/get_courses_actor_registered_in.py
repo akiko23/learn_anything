@@ -82,7 +82,7 @@ async def get_actor_registered_courses(
     text = get_many_courses_text(current_course)
 
     photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
-    _, photo_id = file_manager.get_props_by_path(path=photo_path)
+    _, photo_id = await file_manager.get_props_by_path(path=photo_path)
     if current_course.photo_id:
         photo_id = current_course.photo_id
         photo_path = current_course.photo_path
@@ -282,7 +282,7 @@ async def apply_courses_actor_registered_filters(
     text = get_many_courses_text(current_course)
 
     photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
-    _, photo_id = file_manager.get_props_by_path(path=photo_path)
+    _, photo_id = await file_manager.get_props_by_path(path=photo_path)
     if current_course.photo_id:
         photo_id = current_course.photo_id
         photo_path = current_course.photo_path
@@ -359,7 +359,7 @@ async def actor_registered_courses_filters_back(
     text = get_many_courses_text(current_course)
 
     photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
-    _, photo_id = file_manager.get_props_by_path(path=photo_path)
+    _, photo_id = await file_manager.get_props_by_path(path=photo_path)
     if current_course.photo_id:
         photo_id = current_course.photo_id
         photo_path = current_course.photo_path
@@ -442,7 +442,7 @@ async def watch_actor_registered_courses_prev_or_next(
     text = get_many_courses_text(current_course)
 
     photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
-    _, photo_id = file_manager.get_props_by_path(path=photo_path)
+    _, photo_id = await file_manager.get_props_by_path(path=photo_path)
     if current_course.photo_id:
         photo_id = current_course.photo_id
         photo_path = current_course.photo_path

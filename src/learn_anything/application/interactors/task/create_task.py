@@ -160,7 +160,7 @@ class CreateCodeTaskInteractor:
                     f'from contextlib import suppress\n'
                     '\n'
                     'stdout, stderr = "stub", "stub"\n'
-                    f'with suppress(AssertionError, NameError):\n'
+                    f'with suppress(AssertionError):\n'
                     f'    {code}'
                 )
 
@@ -173,8 +173,6 @@ class CreateCodeTaskInteractor:
                 code_index_mapping[code] = index
 
             done, pending = await asyncio.wait(check_tests_tasks, return_when=asyncio.FIRST_EXCEPTION)
-            if not pending:
-                return
 
             for task in pending:
                 task.cancel()

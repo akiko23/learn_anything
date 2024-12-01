@@ -53,7 +53,7 @@ class TaskTestCodeIsInvalidError(ApplicationError):
 
     @property
     def message(self):
-        return f"Invalid code for the test #{self.index}. Stderr: {self.err}"
+        return f"Invalid code for the test #{self.index}. Stderr:\n\n```{self.err}```"
 
 
 InvalidTaskCodeError = Union[TaskTestCodeIsInvalidError, TaskPreparedCodeIsInvalidError]

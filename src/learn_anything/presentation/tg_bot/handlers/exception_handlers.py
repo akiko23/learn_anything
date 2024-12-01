@@ -36,7 +36,7 @@ async def load_media_if_not_exists(
     except TelegramBadRequest:
         pass
 
-    media_buffer = file_manager.get_by_file_path(file_path=exc.media_path)
+    media_buffer = await file_manager.get_by_file_path(file_path=exc.media_path)
     msg = await bot.send_photo(
         chat_id=user_id,
         photo=BufferedInputFile(media_buffer.read(), 'stub'),
@@ -48,7 +48,7 @@ async def load_media_if_not_exists(
 
     # if media in default we just need to update its tag in storage
     if 'defaults' in exc.media_path:
-        file_manager.update(
+        await file_manager.update(
             old_file_path=exc.media_path,
             payload=None,
             new_file_path=file_manager.generate_path(('defaults',), new_photo_id)

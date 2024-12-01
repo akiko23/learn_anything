@@ -63,7 +63,7 @@ async def get_course_tasks(
 
     current_course = data['target_course']
     if total == 0:
-        msg_text = 'Вы еще не создали ни одного задания'
+        msg_text = 'Тут еще нет ни одного задания'
         await bot.send_message(
             chat_id=user_id,
             text=msg_text,
@@ -133,15 +133,8 @@ async def watch_course_tasks_prev_or_next(
             )
 
         pointer += 1
-
     else:
         pointer -= 1
-
-    await state.update_data(
-        **{
-            f'course_{course_id}_tasks_pointer': pointer,
-        }
-    )
 
     current_task = tasks[pointer]
     current_course = data['target_course']
@@ -162,3 +155,10 @@ async def watch_course_tasks_prev_or_next(
             user_is_registered=current_course.user_is_registered,
         ),
     )
+
+    await state.update_data(
+        **{
+            f'course_{course_id}_tasks_pointer': pointer,
+        }
+    )
+

@@ -9,10 +9,10 @@ from aiogram.fsm.storage.redis import RedisStorage
 from dishka.integrations.aiogram import setup_dishka
 
 from learn_anything.adapters.bootstrap.tg_bot_di import setup_di
+from learn_anything.adapters.json_serializers import DTOJSONEncoder, dto_obj_hook
 from learn_anything.adapters.persistence.tables.map import map_tables
 from learn_anything.adapters.redis.config import RedisConfig
-from learn_anything.adapters.json_serializers import DTOJSONEncoder, dto_obj_hook
-from learn_anything.presentation.tg_bot.config import load_bot_config, BotConfig
+from learn_anything.presentation.tg_bot.config import BotConfig
 from learn_anything.presentation.tg_bot.handlers import register_handlers
 from learn_anything.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
 from learn_anything.presentation.tg_bot.middlewares.auth import AuthMiddleware
@@ -35,7 +35,7 @@ async def main():
     )
     dp = Dispatcher(
         events_isolation=SimpleEventIsolation(),
-        storage=storage
+        storage=storage,
     )
 
     dp.message.middleware.register(AuthMiddleware(container))
@@ -50,7 +50,9 @@ async def main():
 
     bot_cfg = await container.get(BotConfig)
 
-    await dp.start_polling(Bot(token=bot_cfg.token))
+    await dp.start_polling(Bot(
+        token=bot_cfg.token,
+    ))
 
 
 if __name__ == "__main__":

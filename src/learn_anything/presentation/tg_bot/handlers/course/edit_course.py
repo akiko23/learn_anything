@@ -1,6 +1,7 @@
 from typing import Any
 
 from aiogram import Bot, Router, F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, InputMediaPhoto
@@ -8,7 +9,9 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
+from learn_anything.application.ports.data.file_manager import FileManager
 from learn_anything.entities.course.models import CourseID
+from learn_anything.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
 from learn_anything.presentation.tg_bot.states.course import EditCourseForm
 from learn_anything.presentors.tg_bot.keyboards.course.edit_course import get_course_edit_menu_kb, \
     get_course_after_edit_menu_kb, CANCEL_EDITING_KB
@@ -23,6 +26,8 @@ async def get_course_edit_menu(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[GetCourseInteractor],
+        update_course_interactor: FromDishka[UpdateCourseInteractor],
+        file_manager: FromDishka[FileManager],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
@@ -38,36 +43,37 @@ async def get_course_edit_menu(
     text = get_single_course_text(course_data=target_course)
     text += '\n\nВыберите, что хотите изменить'
 
-    if callback_query.message.text:
-        await bot.edit_message_text(
-            chat_id=user_id,
-            message_id=callback_query.message.message_id,
-            text=text,
-            reply_markup=get_course_edit_menu_kb(
-                course=target_course,
-                back_to=back_to
-            ),
-        )
-    else:
-        await bot.edit_message_caption(
-            chat_id=user_id,
-            message_id=callback_query.message.message_id,
-            caption=text,
-            reply_markup=get_course_edit_menu_kb(
-                course=target_course,
-                back_to=back_to,
-            ),
-        )
+    kb = get_course_edit_menu_kb(
+        course=target_course,
+        back_to=back_to,
+    )
 
-    if not callback_query.message.photo and target_course.photo_id:
-        await bot.edit_message_media(
+    photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
+    _, photo_id = await file_manager.get_props_by_path(path=photo_path)
+    if target_course.photo_id:
+        photo_id = target_course.photo_id
+        photo_path = target_course.photo_path
+
+    try:
+        return await bot.edit_message_media(
             chat_id=user_id,
             message_id=callback_query.message.message_id,
-            media=InputMediaPhoto(media=target_course.photo_id, caption=text),
-            reply_markup=get_course_edit_menu_kb(
-                course=target_course,
-                back_to=back_to
+            media=InputMediaPhoto(
+                media=photo_id,
+                caption=text
             ),
+            reply_markup=kb,
+        )
+    except TelegramBadRequest:
+        raise NoMediaOnTelegramServersException(
+            media_path=photo_path,
+            text_to_send=text,
+            keyboard=kb,
+            update_interactor=update_course_interactor,
+            interactor_input_data=UpdateCourseInputData(
+                course_id=target_course.id
+            ),
+            collection_key=back_to,
         )
 
 
