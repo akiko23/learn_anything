@@ -117,7 +117,7 @@ class S3FileManager(FileManager):
 
                 await loop.run_in_executor(
                     executor,
-                    self._create_bucket,
+                    self._client.put_object,
                     bucket_name,
                     file_name,
                     file_obj,
@@ -146,4 +146,4 @@ class S3FileManager(FileManager):
 
         loop = asyncio.get_running_loop()
         with ThreadPoolExecutor(max_workers=2) as executor:
-            await loop.run_in_executor(self._client.remove_object, bucket_name, file_id)
+            await loop.run_in_executor(executor, self._client.remove_object, bucket_name, file_id)
