@@ -1,25 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum, auto
-
 from typing import NewType, Sequence
 
 from learn_anything.entities.course.models import CourseID
+from learn_anything.entities.task.enums import TaskType
 
 TaskID = NewType("TaskID", int)
-
-
-class TaskType(StrEnum):
-    THEORY = auto()
-    CODE = auto()
-    POLL = auto()
-    TEXT_INPUT = auto()
-
-
-class TaskDifficultyLevel(StrEnum):
-    EASY = auto()
-    MIDDLE = auto()
-    HARD = auto()
 
 
 @dataclass
@@ -33,6 +19,7 @@ class Task:
     # creator_id: UserID
     index_in_course: int
     created_at: datetime
+
 
 @dataclass
 class PracticeTask(Task):

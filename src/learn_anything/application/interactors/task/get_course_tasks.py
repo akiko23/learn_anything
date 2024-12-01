@@ -11,7 +11,8 @@ from learn_anything.application.ports.data.task_gateway import TaskGateway, GetT
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import ensure_actor_has_read_access
-from learn_anything.entities.task.models import TaskID, TaskType, CodeTask
+from learn_anything.entities.task.enums import TaskType
+from learn_anything.entities.task.models import TaskID, CodeTask
 from learn_anything.entities.task.rules import is_task_solved_by_actor
 
 

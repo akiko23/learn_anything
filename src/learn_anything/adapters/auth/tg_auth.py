@@ -1,4 +1,3 @@
-from typing import Literal
 from uuid import UUID
 
 from aiogram.utils.deep_linking import encode_payload, decode_payload
@@ -10,7 +9,6 @@ from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGate
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.user.errors import InvalidAuthLinkError
 from learn_anything.entities.user.models import UserID, UserRole
-from learn_anything.entities.user.value_objects import AvailableForAuthRole
 
 THE_ONLY_OWNER_ID = 818525681
 

@@ -1,19 +1,8 @@
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
 
 from learn_anything.entities.error import ApplicationError
 from learn_anything.entities.user.models import UserRole
-
-
-@dataclass
-class UsernameToShortError(ApplicationError):
-    username: str
-
-    @property
-    def message(self):
-        return f"""Username={self.username} is too short.
-                Username length must be at least 5 characters"""
 
 
 @dataclass
@@ -23,24 +12,6 @@ class AuthLinkCreationForbiddenError(ApplicationError):
     @property
     def message(self) -> str:
         return f"Only bot owner can create auth links. Your role: {self.role}."
-
-
-@dataclass
-class RoleIsUnavailableForAuthError(ApplicationError):
-    role: UserRole
-
-    @property
-    def message(self) -> str:
-        return f"Role '{self.role}' is unavailable for auth."
-
-
-@dataclass
-class InvalidExpiresAtError(ApplicationError):
-    expires_at: datetime
-
-    @property
-    def message(self) -> str:
-        return f"Expires_at={self.expires_at} can not be earlier than now."
 
 
 @dataclass

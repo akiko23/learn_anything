@@ -1,5 +1,5 @@
 from learn_anything.application.interactors.task.get_course_tasks import TaskData
-from learn_anything.entities.task.models import TaskType
+from learn_anything.entities.task.enums import TaskType
 from learn_anything.presentors.tg_bot.texts.formatters import format_date
 
 

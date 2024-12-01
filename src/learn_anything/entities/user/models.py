@@ -1,11 +1,9 @@
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum, auto
-from typing import NewType, Optional
+from typing import NewType
 
 from learn_anything.entities.user.enums import UserRole
-from learn_anything.entities.user.value_objects import AvailableForAuthRole, ExpiresAt
 
 UserID = NewType('UserID', int)
 
@@ -15,7 +13,7 @@ class User:
     id: UserID
     role: UserRole
     fullname: str | None
-    username: Optional[str] = None
+    username: str | None
 
 
 @dataclass

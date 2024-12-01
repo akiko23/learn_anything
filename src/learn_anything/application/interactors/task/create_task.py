@@ -11,8 +11,9 @@ from learn_anything.application.ports.playground import PlaygroundFactory, CodeI
 from learn_anything.entities.course.errors import CourseDoesNotExistError
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import ensure_actor_has_write_access
+from learn_anything.entities.task.enums import TaskType
 from learn_anything.entities.task.errors import TaskTestCodeIsInvalidError, TaskPreparedCodeIsInvalidError
-from learn_anything.entities.task.models import TaskType, TaskID, PollTask, PollTaskOption, Task
+from learn_anything.entities.task.models import TaskID, PollTask, PollTaskOption, Task
 from learn_anything.entities.task.rules import create_code_task
 from learn_anything.entities.user.models import UserID
 

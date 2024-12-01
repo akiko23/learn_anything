@@ -18,7 +18,7 @@ from learn_anything.application.interactors.task.create_task import CreateTaskIn
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.errors import TaskPreparedCodeIsInvalidError, TaskTestCodeIsInvalidError, \
     InvalidTaskCodeError
-from learn_anything.entities.task.models import TaskType
+from learn_anything.entities.task.enums import TaskType
 from learn_anything.presentation.tg_bot.states.task import CreateTaskForm, CreateCodeTaskForm, CreateTextInputTaskForm
 from learn_anything.presentors.tg_bot.keyboards.course.edit_course import get_course_edit_menu_kb
 from learn_anything.presentors.tg_bot.keyboards.task.create_task import get_course_task_type_kb, \

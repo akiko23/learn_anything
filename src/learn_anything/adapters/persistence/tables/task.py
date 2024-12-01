@@ -1,6 +1,7 @@
 import sqlalchemy as sa
 
-from learn_anything.entities.task.models import Task, TaskType, CodeTask, PollTask, PollTaskOption, TextInputTask, \
+from learn_anything.entities.task.enums import TaskType
+from learn_anything.entities.task.models import Task, CodeTask, PollTask, PollTaskOption, TextInputTask, \
     TextInputTaskAnswer, CodeTaskTest
 from learn_anything.adapters.persistence.tables.base import mapper_registry
 
