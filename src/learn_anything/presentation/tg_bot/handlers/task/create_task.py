@@ -12,9 +12,12 @@ from aiogram.types import CallbackQuery
 from aiogram.types import Message, ErrorEvent
 from dishka import FromDishka
 
+from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
 from learn_anything.application.interactors.task.create_task import CreateTaskInteractor, CreateTaskInputData, \
     CreateCodeTaskInteractor, CreateCodeTaskInputData
+from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
+    GetCourseTasksInputData
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.errors import TaskPreparedCodeIsInvalidError, TaskTestCodeIsInvalidError, \
     InvalidTaskCodeError
@@ -34,16 +37,23 @@ logger = logging.getLogger(__name__)
 async def start_course_task_creation(
         callback_query: CallbackQuery,
         state: FSMContext,
-        bot: Bot
+        bot: Bot,
+        interactor: FromDishka[GetCourseTasksInteractor]
 ):
     user_id: int = callback_query.from_user.id
 
     back_to, course_id = callback_query.data.split('-')[1:]
 
+    output_data = await interactor.execute(data=GetCourseTasksInputData(
+        course_id=CourseID(int(course_id)),
+        pagination=Pagination(offset=0, limit=0),
+    ))
+
     await state.set_state(CreateTaskForm.get_title)
     await state.update_data(
         back_to=back_to,
         course_id=course_id,
+        **{f'course_{course_id}_tasks_total': output_data.total}
     )
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
@@ -195,7 +205,7 @@ async def get_course_task_type(
 
 Тело: {body}
 
-Порядковый номер в курсе: {index_in_course}
+Порядковый номер в курсе: {index_in_course + 1}
 ''',
                 reply_markup=after_course_task_creation_menu(
                     course_id=course_id,
@@ -466,7 +476,7 @@ async def finish_task_creation(
 
 Тело: {body}
 {prepared_code}
-Порядковый номер в курсе: {index_in_course}
+Порядковый номер в курсе: {index_in_course + 1}
 ''',
         reply_markup=after_course_task_creation_menu(
             course_id=course_id,
