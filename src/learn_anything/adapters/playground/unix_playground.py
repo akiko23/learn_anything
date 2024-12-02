@@ -115,11 +115,19 @@ class UnixPlayground(Playground):
         return self._playground_base_path / Path(str(playground_id))
 
 
+ADDRESS_SPACE_LIMITS = (1024 * 1024 * 500, 1024 * 1024 * 500)
+NPROC_LIMITS = (50, 50)
+
 def _demote():
     resource.prlimit(
         os.getpid(),
         resource.RLIMIT_NPROC,
-        (50, 50)
+        NPROC_LIMITS
+    )
+
+    resource.setrlimit(
+        resource.RLIMIT_AS,
+        ADDRESS_SPACE_LIMITS
     )
 
 
