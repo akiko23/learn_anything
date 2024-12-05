@@ -44,7 +44,6 @@ async def process_code_task_submission(
         return await msg.answer(
             text=text,
             reply_markup=get_do_task_kb(),
-            parse_mode='markdown',
         )
 
     await state.set_state(state=None)

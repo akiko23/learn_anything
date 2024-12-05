@@ -1,5 +1,5 @@
 import logging
-from typing import cast
+from typing import cast, Any
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
@@ -79,5 +79,23 @@ async def handle_user_error(
     await msg.answer(err.message)
 
 
-async def exception_handler(event: ErrorEvent):
+async def exception_handler(
+        event: ErrorEvent,
+        state: FSMContext,
+        bot: Bot,
+):
+    update: Message | CallbackQuery = event.update.message or event.update.callback_query
+
+    user_id: int = update.from_user.id
+    user_message: str = event.data if isinstance(event, CallbackQuery) else event.text
+    state_data: dict[str, Any] = await state.get_data()
+
     logger.critical("Critical error caused by %s", event.exception, exc_info=True)
+    logger.critical(
+        '{ "user": %s, message: "%s", "state": { "context" : %s, data: %s }',
+        user_id,
+        user_message,
+        await state.get_state(),
+        state_data
+    )
+

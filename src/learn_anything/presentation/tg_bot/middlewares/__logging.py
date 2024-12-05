@@ -23,7 +23,7 @@ class LoggingMiddleware(BaseMiddleware):
         state_data: dict[str, Any] = await state.get_data()
 
         logger.info(
-            '{ "user": %s, message: "%s", "state": { "context" : %s, "data": %s }',
+            '{ "user": %s, message: "%s", "state": { "context" : %s }',
             user_id,
             user_message,
             await state.get_state(),

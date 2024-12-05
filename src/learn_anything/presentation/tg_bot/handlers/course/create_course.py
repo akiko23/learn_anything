@@ -254,12 +254,13 @@ async def cancel_course_creation(
     user_id: int = callback_query.from_user.id
     data = await state.get_data()
 
-    photo_id = data['photo_id']
-    file_path = file_manager.generate_path(
-        directories=(COURSES_DEFAULT_DIRECTORY,),
-        filename=photo_id,
-    )
-    await file_manager.delete(file_path=file_path)
+    photo_id = data.get('photo_id', None)
+    if photo_id:
+        file_path = file_manager.generate_path(
+            directories=(COURSES_DEFAULT_DIRECTORY,),
+            filename=photo_id,
+        )
+        await file_manager.delete(file_path=file_path)
 
     await state.set_state(state=None)
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)

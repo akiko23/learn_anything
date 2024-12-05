@@ -19,9 +19,9 @@ from learn_anything.application.interactors.task.create_task import CreateTaskIn
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
     GetCourseTasksInputData
 from learn_anything.entities.course.models import CourseID
+from learn_anything.entities.task.enums import TaskType
 from learn_anything.entities.task.errors import TaskPreparedCodeIsInvalidError, TaskTestCodeIsInvalidError, \
     InvalidTaskCodeError
-from learn_anything.entities.task.enums import TaskType
 from learn_anything.presentation.tg_bot.states.task import CreateTaskForm, CreateCodeTaskForm, CreateTextInputTaskForm
 from learn_anything.presentors.tg_bot.keyboards.course.edit_course import get_course_edit_menu_kb
 from learn_anything.presentors.tg_bot.keyboards.task.create_task import get_course_task_type_kb, \
@@ -233,11 +233,12 @@ async def get_course_task_type(
 
 @router.message(
     StateFilter(CreateCodeTaskForm.get_attempts_limit),
-    F.text
+    F.text,
+    (F.text & F.text.cast(int))
 )
 @router.callback_query(
     StateFilter(CreateCodeTaskForm.get_attempts_limit),
-    F.data == 'create_course_task_skip_attempts_limit'
+    F.data == 'create_course_task_skip_attempts_limit',
 )
 async def get_or_skip_course_task_attempts_limit(
         update: Message | CallbackQuery,
@@ -263,6 +264,15 @@ async def get_or_skip_course_task_attempts_limit(
     await state.update_data(
         msg_on_delete=msg.message_id
     )
+
+@router.message(
+    StateFilter(CreateCodeTaskForm.get_attempts_limit),
+)
+async def invalid_attempts_limit(
+        msg: Message,
+):
+    await msg.answer('Ожидалось целое число')
+
 
 
 @router.message(
@@ -440,7 +450,6 @@ async def finish_task_creation(
                  f'\n{e.message}\n'
                  f'\nПопробуйте снова\n',
             reply_markup=get_code_task_prepared_code_kb(),
-            parse_mode='markdown'
         )
         return await state.update_data(
             msg_on_delete=msg.message_id
