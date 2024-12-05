@@ -82,7 +82,6 @@ async def handle_user_error(
 async def exception_handler(
         event: ErrorEvent,
         state: FSMContext,
-        bot: Bot,
 ):
     update: Message | CallbackQuery = event.update.message or event.update.callback_query
 

@@ -20,14 +20,12 @@ class LoggingMiddleware(BaseMiddleware):
         user_id: int = event.from_user.id
         user_message = event.data if isinstance(event, CallbackQuery) else event.text
         state: FSMContext = data['state']
-        state_data: dict[str, Any] = await state.get_data()
 
         logger.info(
             '{ "user": %s, message: "%s", "state": { "context" : %s }',
             user_id,
             user_message,
             await state.get_state(),
-            state_data
         )
 
         await handler(event, data)

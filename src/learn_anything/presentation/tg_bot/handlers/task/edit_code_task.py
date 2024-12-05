@@ -82,7 +82,7 @@ async def edit_task_code_duration_timeout(
 async def handle_wrong_timeout_entry(
         msg: Message,
 ):
-    await msg.answer('Неверный тип. Ожидалось число от 0 до 100')
+    await msg.answer('❗️Неверный формат данных. Ожидалось целое число от 1 до 100')
 
 
 @router.callback_query(F.data.startswith('edit_task_prepared_code'))

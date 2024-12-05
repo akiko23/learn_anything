@@ -233,8 +233,7 @@ async def get_course_task_type(
 
 @router.message(
     StateFilter(CreateCodeTaskForm.get_attempts_limit),
-    F.text,
-    (F.text & F.text.cast(int))
+    (F.text.isdigit()) & (F.text.cast(int) > 0) & (F.text.cast(int) <= 100)
 )
 @router.callback_query(
     StateFilter(CreateCodeTaskForm.get_attempts_limit),
@@ -271,7 +270,7 @@ async def get_or_skip_course_task_attempts_limit(
 async def invalid_attempts_limit(
         msg: Message,
 ):
-    await msg.answer('Ожидалось целое число')
+    await msg.answer('❗️Неверный формат данных. Ожидалось целое число от 1 до 100')
 
 
 
@@ -301,7 +300,7 @@ async def get_or_skip_code_task_prepared_code(
 
     msg = await bot.send_message(
         chat_id=user_id,
-        text='Введите таймаут для исполняемого кода в секундах (По умолчачнию - 2)',
+        text='Введите таймаут для исполняемого кода в секундах (По умолчачнию - 10)',
         reply_markup=get_code_duration_timeout_kb()
     )
     await state.update_data(
@@ -311,7 +310,8 @@ async def get_or_skip_code_task_prepared_code(
 
 @router.message(
     StateFilter(CreateCodeTaskForm.get_code_duration_timeout),
-    F.text
+    F.text,
+    (F.text.isdigit()) & (F.text.cast(int) > 0) & (F.text.cast(int) <= 100)
 )
 @router.callback_query(
     StateFilter(CreateCodeTaskForm.get_code_duration_timeout),
@@ -328,7 +328,7 @@ async def get_or_skip_task_code_duration_timeout(
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await state.update_data(
-        code_duration_timeout=int(update.text) if isinstance(update, Message) else 2,
+        code_duration_timeout=int(update.text) if isinstance(update, Message) else 10,
         tests=[],
     )
 
@@ -348,6 +348,15 @@ async def get_or_skip_task_code_duration_timeout(
     await state.update_data(
         msg_on_delete=msg.message_id,
     )
+
+
+@router.message(
+    StateFilter(CreateCodeTaskForm.get_code_duration_timeout),
+)
+async def invalid_code_duration_timeout(
+        msg: Message,
+):
+    await msg.answer('❗️Неверный формат данных. Ожидалось целое число от 1 до 100')
 
 
 @router.message(
