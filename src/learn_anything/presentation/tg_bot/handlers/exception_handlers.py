@@ -86,7 +86,7 @@ async def exception_handler(
     update: Message | CallbackQuery = event.update.message or event.update.callback_query
 
     user_id: int = update.from_user.id
-    user_message: str = event.data if isinstance(event, CallbackQuery) else event.text
+    user_message: str = update.data if isinstance(update, CallbackQuery) else update.text
     state_data: dict[str, Any] = await state.get_data()
 
     logger.critical("Critical error caused by %s", event.exception, exc_info=True)

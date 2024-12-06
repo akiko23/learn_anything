@@ -1,7 +1,6 @@
 from typing import Awaitable, Any, Callable
 
 from aiogram import BaseMiddleware
-from aiogram.enums.message_entity_type import MessageEntityType
 from aiogram.filters import CommandObject
 from aiogram.types import Message, CallbackQuery, TelegramObject
 from dishka import AsyncContainer

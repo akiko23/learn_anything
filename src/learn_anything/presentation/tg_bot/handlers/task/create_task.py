@@ -351,9 +351,9 @@ async def get_or_skip_task_code_duration_timeout(
 
 
 @router.message(
-    StateFilter(CreateCodeTaskForm.get_code_duration_timeout),
+    StateFilter(CreateCodeTaskForm.get_code_duration_timeout, CreateCodeTaskForm.get_attempts_limit),
 )
-async def invalid_code_duration_timeout(
+async def handle_invalid_code_duration_timeout_or_attempts_limit(
         msg: Message,
 ):
     await msg.answer('❗️Неверный формат данных. Ожидалось целое число от 1 до 100')

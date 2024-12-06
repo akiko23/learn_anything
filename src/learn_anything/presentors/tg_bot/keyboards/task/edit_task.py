@@ -39,7 +39,7 @@ def get_task_edit_menu_kb(
             )
 
         builder.row(
-            InlineKeyboardButton(text="Изменить количество попыток", callback_data=f'edit_task_body-{task.id}'),
+            InlineKeyboardButton(text="Изменить количество попыток", callback_data=f'edit_task_attempts_limit-{task.id}'),
         )
 
     builder.row(InlineKeyboardButton(text="Удалить", callback_data=f'delete_task-{task.id}'))

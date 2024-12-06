@@ -15,6 +15,66 @@ from learn_anything.presentors.tg_bot.keyboards.task.edit_task import CANCEL_EDI
 
 router = Router()
 
+@router.callback_query(F.data.startswith('edit_task_attempts_limit'))
+async def start_editing_task_attempts_limit(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        bot: Bot,
+):
+    user_id: int = callback_query.from_user.id
+    data: dict[str, Any] = await state.get_data()
+
+    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+
+    await callback_query.answer()
+
+    await state.set_state(state=EditCodeTaskForm.get_new_attempts_limit)
+
+    msg = await bot.send_message(chat_id=user_id, text='Отправьте новый лимит на количество попыток',
+                                 reply_markup=CANCEL_EDITING_KB)
+    await state.update_data(
+        msg_on_delete=msg.message_id
+    )
+
+
+@router.message(
+    StateFilter(EditCodeTaskForm.get_new_attempts_limit),
+    (F.text.isdigit()) & (F.text.cast(int) > 0) & (F.text.cast(int) <= 1000)
+)
+async def edit_task_attempts_limit(
+        msg: Message,
+        state: FSMContext,
+        bot: Bot,
+        interactor: FromDishka[UpdateCodeTaskInteractor],
+):
+    user_id: int = msg.from_user.id
+    data: dict[str, Any] = await state.get_data()
+
+    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
+
+    course_id, back_to, task_id = data['course_id'], data['back_to'], data['task_id']
+    new_attempts_limit = int(msg.text)
+
+    await interactor.execute(
+        data=UpdateCodeTaskInputData(
+            task_id=TaskID(int(task_id)),
+            attempts_limit=new_attempts_limit
+        )
+    )
+    await state.set_state(state=None)
+
+    tasks = data[f'course_{course_id}_tasks']
+    tasks[data[f'course_{course_id}_tasks_pointer']].attempts_limit = new_attempts_limit
+
+    await state.update_data(
+        **{f'course_{course_id}_tasks': tasks}
+    )
+
+    await bot.send_message(
+        chat_id=user_id,
+        text='Лимит на кол-во попыток успешно обновлен',
+        reply_markup=get_task_after_edit_menu_kb(back_to=back_to, course_id=course_id)
+    )
 
 @router.callback_query(F.data.startswith('edit_task_timeout'))
 async def start_editing_task_code_duration_timeout(
@@ -78,8 +138,8 @@ async def edit_task_code_duration_timeout(
     )
 
 
-@router.message(StateFilter(EditCodeTaskForm.get_new_timeout))
-async def handle_wrong_timeout_entry(
+@router.message(StateFilter(EditCodeTaskForm.get_new_timeout, EditCodeTaskForm.get_new_attempts_limit))
+async def handle_wrong_timeout_or_attempts_limit_entry(
         msg: Message,
 ):
     await msg.answer('❗️Неверный формат данных. Ожидалось целое число от 1 до 100')
