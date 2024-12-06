@@ -4,6 +4,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from learn_anything.application.interactors.task.get_course_tasks import TaskData
 from learn_anything.entities.task.enums import TaskType
+from learn_anything.entities.task.models import TaskID
 
 
 def get_task_edit_menu_kb(
@@ -27,7 +28,7 @@ def get_task_edit_menu_kb(
     if task.type != TaskType.THEORY:
         if task.type == TaskType.CODE:
             builder.row(
-                InlineKeyboardButton(text="Тесты", callback_data=f'get_task_tests-{task.id}'),
+                InlineKeyboardButton(text="Тесты", callback_data=f'get_code_task_tests-{task.id}'),
             )
             builder.row(
                 InlineKeyboardButton(text="Решения пользователей", callback_data=f'get_all_task_submissions-{task.id}'),
@@ -70,3 +71,42 @@ def get_task_after_edit_menu_kb(
     )
 
     return kb
+
+
+
+def watch_code_task_tests_kb(pointer: int, total: int, task_id: TaskID):
+    kb = InlineKeyboardMarkup(inline_keyboard=[])
+
+    if 0 < pointer < (total - 1):
+        kb.inline_keyboard.insert(0, [
+            InlineKeyboardButton(text='⬅️', callback_data=f'code_task_tests-prev-{task_id}'),
+            InlineKeyboardButton(text='➡️', callback_data=f'code_task_tests-next-{task_id}'),
+        ])
+
+    if pointer == 0 and total > 1:
+        kb.inline_keyboard.insert(0, [
+            InlineKeyboardButton(text='➡️', callback_data=f'code_task_tests-next-{task_id}'),
+        ])
+
+    if (pointer + 1) == total and (total > 1):
+        kb.inline_keyboard.insert(0, [
+            InlineKeyboardButton(text='⬅️', callback_data=f'code_task_tests-prev-{task_id}'),
+        ])
+
+
+    kb.inline_keyboard.insert(0, [
+        InlineKeyboardButton(text='Добавить тест', callback_data=f'add_code_task_test-{task_id}'),
+        InlineKeyboardButton(text='Изменить код', callback_data=f'edit_code_task_test-{task_id}'),
+    ])
+
+    if total > 1:
+        kb.inline_keyboard[0].insert(
+            0,
+            InlineKeyboardButton(text='Удалить', callback_data=f'delete_code_task_test-{task_id}'),
+        )
+    kb.inline_keyboard.append([
+        InlineKeyboardButton(text='Назад', callback_data=f'edit_task-{task_id}'),
+    ])
+
+    return kb
+

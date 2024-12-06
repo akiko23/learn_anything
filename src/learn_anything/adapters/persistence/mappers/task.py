@@ -1,4 +1,3 @@
-import asyncio
 from collections.abc import Sequence
 
 from sqlalchemy import select, func, delete
@@ -184,10 +183,21 @@ class TaskMapper(TaskGateway):
                 ]
             )
         )
-        insert_code_task_tests_stmt = insert_code_task_tests_stmt.on_conflict_do_update(
-            constraint='code_task_tests_pkey',
-            set_=dict(code=insert_code_task_tests_stmt.excluded.code),
-        )
+
+        if task.tests[0].id:
+            insert_code_task_tests_stmt = (
+                insert(CodeTaskTest).
+                values(
+                    [
+                        {'id': test.id, "code": test.code, "task_id": task_id}
+                        for test in task.tests
+                    ]
+                )
+            )
+            insert_code_task_tests_stmt = insert_code_task_tests_stmt.on_conflict_do_update(
+                constraint='code_task_tests_pkey',
+                set_=dict(code=insert_code_task_tests_stmt.excluded.code),
+            )
 
         await self._session.execute(insert_code_task_tests_stmt)
         return task_id

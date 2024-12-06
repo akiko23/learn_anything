@@ -6,7 +6,7 @@ from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.submission.models import Submission
 from learn_anything.entities.task.enums import TaskType
 from learn_anything.entities.task.models import PollTask, PollTaskOptionID, TextInputTask, TextInputTaskAnswer, \
-    CodeTask, CodeTaskTest
+    CodeTask, CodeTaskTest, Task, CodeTaskTestID
 
 
 def find_task_option_by_id(task: PollTask, target_option_id: PollTaskOptionID):
@@ -53,3 +53,12 @@ def is_task_solved_by_actor(actor_submissions: Iterable[Submission]) -> bool:
         if submission.is_correct:
             return True
     return False
+
+
+
+def update_code_task_test(task: CodeTask, target_test_id: CodeTaskTestID, new_code: str):
+    for i, test in enumerate(task.tests):
+        if test.id == target_test_id:
+            task.tests[i].code = new_code
+
+    return task

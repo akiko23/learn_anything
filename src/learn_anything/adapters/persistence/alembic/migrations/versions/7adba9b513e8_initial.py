@@ -1,7 +1,7 @@
 """initial
 
 Revision ID: b639b08e3589
-Revises: 
+Revises:
 Create Date: 2024-11-22 11:23:22.487568
 
 """
@@ -86,10 +86,11 @@ def upgrade() -> None:
     sa.UniqueConstraint('id')
     )
     op.create_table('code_task_tests',
+    sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
     sa.Column('code', sa.Text(), nullable=False),
     sa.Column('task_id', sa.BigInteger(), nullable=False),
     sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('code', 'task_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('poll_task_options',
     sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),

@@ -32,4 +32,5 @@ class EditCodeTaskForm(StatesGroup):
     get_new_prepared_code = State()
     get_new_timeout = State()
     get_new_attempts_limit = State()
+    get_new_test_code = State()
 

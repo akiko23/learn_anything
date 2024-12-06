@@ -69,10 +69,9 @@ async def cancel_doing_task(
             total=total,
             back_to=back_to,
             course_id=course_id,
-            task_id=task_data.id,
+            task_data=task_data,
             user_has_write_access=current_course.user_has_write_access,
             user_is_registered=current_course.user_is_registered,
             course_is_published=current_course.is_published,
-            task_is_practice=task_data.type != TaskType.THEORY
         ),
     )

@@ -40,7 +40,9 @@ from learn_anything.application.interactors.task.create_task import CreateCodeTa
     CreateTaskInteractor
 from learn_anything.application.interactors.task.delete_task import DeleteTaskInteractor
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor
-from learn_anything.application.interactors.task.update_task import UpdateTaskInteractor, UpdateCodeTaskInteractor
+from learn_anything.application.interactors.task.update_task import UpdateTaskInteractor
+from learn_anything.application.interactors.task.update_code_task import UpdateCodeTaskInteractor, \
+    UpdateCodeTaskTestInteractor
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
 from learn_anything.application.ports.committer import Commiter
@@ -103,6 +105,7 @@ def interactors_provider() -> Provider:
     provider.provide(CreatePollTaskInteractor, scope=Scope.REQUEST)
     provider.provide(UpdateTaskInteractor, scope=Scope.REQUEST)
     provider.provide(UpdateCodeTaskInteractor, scope=Scope.REQUEST)
+    provider.provide(UpdateCodeTaskTestInteractor, scope=Scope.REQUEST)
     provider.provide(DeleteTaskInteractor, scope=Scope.REQUEST)
 
     provider.provide(CreateCodeTaskSubmissionInteractor, scope=Scope.REQUEST)

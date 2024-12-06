@@ -9,7 +9,6 @@ from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
     GetCourseTasksInputData, TaskData
 from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.task.enums import TaskType
 from learn_anything.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
 from learn_anything.presentors.tg_bot.texts.get_task import get_task_text
 
@@ -88,9 +87,8 @@ async def get_course_tasks(
             total=total,
             back_to=back_to,
             course_id=course_id,
-            task_id=current_task.id,
+            task_data=current_task,
             user_has_write_access=current_course.user_has_write_access,
-            task_is_practice=current_task.type != TaskType.THEORY,
             course_is_published=current_course.is_published,
             user_is_registered=current_course.user_is_registered,
         ),
@@ -148,9 +146,8 @@ async def watch_course_tasks_prev_or_next(
             total=total,
             back_to=back_to,
             course_id=course_id,
-            task_id=current_task.id,
+            task_data=current_task,
             user_has_write_access=current_course.user_has_write_access,
-            task_is_practice=current_task.type != TaskType.THEORY,
             course_is_published=current_course.is_published,
             user_is_registered=current_course.user_is_registered,
         ),

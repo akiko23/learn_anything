@@ -32,8 +32,9 @@ def get_task_text(task_data: TaskData):
                 solved_text = '✅Решено\n\n'
 
             attempts_left_text = ''
-            if task_data.attempts_left:
-                attempts_left_text = f'Осталось попыток: {attempts_left_text}\n\n'
+            if task_data.attempts_limit is not None:
+                attempts_left = max(task_data.attempts_limit - task_data.total_actor_submissions, 0)
+                attempts_left_text = f'Осталось попыток: {attempts_left}\n\n'
 
             correct_submissions_percentage = (
                 round(task_data.total_correct_submissions / max(task_data.total_submissions * 100, 1))

@@ -12,7 +12,7 @@ from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.course.rules import ensure_actor_has_read_access
 from learn_anything.entities.task.enums import TaskType
-from learn_anything.entities.task.models import TaskID, CodeTask
+from learn_anything.entities.task.models import TaskID, CodeTask, CodeTaskTestID
 from learn_anything.entities.task.rules import is_task_solved_by_actor
 
 
@@ -21,6 +21,12 @@ class GetCourseTasksInputData:
     course_id: CourseID
     pagination: Pagination
     filters: GetTasksFilters | None = None
+
+
+@dataclass
+class CodeTaskTestData:
+    id: CodeTaskTestID
+    code: str
 
 
 @dataclass
@@ -34,12 +40,16 @@ class TaskData:
     created_at: datetime
     updated_at: datetime
 
+    # any practice task fields
     total_submissions: int | None = None
     total_correct_submissions: int | None = None
     solved_by_actor: bool | None = None
-    attempts_left: int | None = None
+    attempts_limit: int | None = None
+    total_actor_submissions: int | None = None
 
+    # code task fields
     code_duration_timeout: int | None = None
+    tests: Sequence[CodeTaskTestData] | None = None
 
 
 @dataclass
@@ -94,7 +104,7 @@ class GetCourseTasksInteractor:
             )
 
             if task.type == TaskType.CODE:
-                task: CodeTask
+                task: CodeTask = await self._task_gateway.get_code_task_with_id(task_id=task.id)
 
                 total_submissions = await self._submission_gateway.total_with_task_id(task_id=task.id)
                 total_correct_submissions = await self._submission_gateway.total_correct_with_task_id(task_id=task.id)
@@ -103,11 +113,20 @@ class GetCourseTasksInteractor:
                     user_id=actor_id, task_id=task.id
                 )
 
+                task_data.attempts_limit = task.attempts_limit
+                task_data.total_actor_submissions = len(user_submissions)
                 task_data.total_submissions = total_submissions
                 task_data.total_correct_submissions = total_correct_submissions
                 task_data.solved_by_actor = is_task_solved_by_actor(actor_submissions=user_submissions)
                 task_data.code_duration_timeout = task.code_duration_timeout
-                task_data.attempts_left = task.attempts_limit
+
+                task_data.tests = [
+                    CodeTaskTestData(
+                        id=test.id,
+                        code=test.code
+                    )
+                    for test in task.tests
+                ]
 
             tasks_output_data.append(task_data)
 

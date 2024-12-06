@@ -61,6 +61,7 @@ async def get_task_edit_menu(
         back_to=back_to,
         course_id=course_id,
         task_id=target_task.id,
+        target_task=target_task,
     )
 
 

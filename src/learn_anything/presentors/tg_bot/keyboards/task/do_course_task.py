@@ -12,3 +12,12 @@ def get_do_task_kb():
         ]
     )
     return kb
+
+
+def no_attempts_left_kb(back_to, course_id):
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='К заданию', callback_data=f'get_course_tasks-{back_to}-{course_id}')]
+        ]
+    )
+    return kb
