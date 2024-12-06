@@ -297,8 +297,6 @@ async def start_editing_code_task_test(
     task_id = callback_query.data.split('-')[1]
     pointer = data[f'code_task_{task_id}_tests_pointer']
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
-
     await callback_query.answer()
 
     await state.set_state(state=EditCodeTaskForm.get_new_test_code)
