@@ -73,6 +73,14 @@ def get_task_after_edit_menu_kb(
     return kb
 
 
+def get_attempts_limit_kb():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Убрать", callback_data='task_attempts_limit_set_null')],
+            [InlineKeyboardButton(text="Отмена", callback_data='cancel_task_editing')],
+        ]
+    )
+
 
 def watch_code_task_tests_kb(pointer: int, total: int, task_id: TaskID):
     kb = InlineKeyboardMarkup(inline_keyboard=[])

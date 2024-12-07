@@ -42,7 +42,7 @@ def create_code_task(
         index_in_course=index_in_course,
         prepared_code=prepared_code,
         code_duration_timeout=code_duration_timeout,
-        tests=[CodeTaskTest(code=code) for code in tests],
+        tests=[CodeTaskTest(id=None, code=code) for code in tests],
         attempts_limit=attempts_limit,
         created_at=datetime.now()
     )

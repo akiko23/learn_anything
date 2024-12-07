@@ -92,6 +92,7 @@ async def get_course_tasks(
             course_is_published=current_course.is_published,
             user_is_registered=current_course.user_is_registered,
         ),
+        parse_mode='HTML'
     )
 
 
@@ -151,6 +152,7 @@ async def watch_course_tasks_prev_or_next(
             course_is_published=current_course.is_published,
             user_is_registered=current_course.user_is_registered,
         ),
+        parse_mode='HTML'
     )
 
     await state.update_data(

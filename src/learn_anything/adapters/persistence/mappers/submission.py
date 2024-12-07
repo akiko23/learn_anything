@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from sqlalchemy import select, func, and_, insert
+from sqlalchemy import select, func, and_, insert, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Bundle
 
@@ -37,7 +37,7 @@ class SubmissionMapper(SubmissionGateway):
             where(
                 submissions_table.c.task_id == task_id
             ).
-            order_by(submissions_table.c.created_at)
+            order_by(desc(submissions_table.c.created_at))
         )
 
         if filters.with_actor_id:

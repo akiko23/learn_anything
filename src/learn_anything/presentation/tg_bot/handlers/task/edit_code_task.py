@@ -6,14 +6,16 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
+from learn_anything.application.input_data import UNSET
 from learn_anything.application.interactors.task.get_course_tasks import TaskData, CodeTaskTestData
 from learn_anything.application.interactors.task.update_code_task import UpdateCodeTaskInputData, \
     UpdateCodeTaskInteractor, UpdateCodeTaskTestInputData, UpdateCodeTaskTestInteractor
 from learn_anything.entities.task.models import TaskID
 from learn_anything.presentation.tg_bot.states.task import EditCodeTaskForm
 from learn_anything.presentors.tg_bot.keyboards.task.edit_task import CANCEL_EDITING_KB, \
-    get_task_after_edit_menu_kb
+    get_task_after_edit_menu_kb, get_attempts_limit_kb
 from learn_anything.presentors.tg_bot.keyboards.task.edit_task import watch_code_task_tests_kb
+from learn_anything.presentors.tg_bot.templates import python_code_tm, pre_tm
 
 router = Router()
 
@@ -33,8 +35,8 @@ async def start_editing_task_attempts_limit(
 
     await state.set_state(state=EditCodeTaskForm.get_new_attempts_limit)
 
-    msg = await bot.send_message(chat_id=user_id, text='Отправьте новый лимит на количество попыток (null если хотите его удалить)',
-                                 reply_markup=CANCEL_EDITING_KB)
+    msg = await bot.send_message(chat_id=user_id, text='Отправьте новый лимит на количество попыток',
+                                 reply_markup=get_attempts_limit_kb())
     await state.update_data(
         msg_on_delete=msg.message_id
     )
@@ -44,24 +46,25 @@ async def start_editing_task_attempts_limit(
     StateFilter(EditCodeTaskForm.get_new_attempts_limit),
     (F.text.isdigit()) & (F.text.cast(int) > 0) & (F.text.cast(int) <= 1000)
 )
+@router.callback_query(StateFilter(EditCodeTaskForm.get_new_attempts_limit), F.data == 'task_attempts_limit_set_null')
 async def edit_task_attempts_limit(
-        msg: Message,
+        update: Message | CallbackQuery,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[UpdateCodeTaskInteractor],
 ):
-    user_id: int = msg.from_user.id
+    user_id: int = update.from_user.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     course_id, back_to, task_id = data['course_id'], data['back_to'], data['task_id']
-    new_attempts_limit = int(msg.text) if msg.text != 'null' else None
+    new_attempts_limit = int(update.text) if isinstance(update, Message) else None
 
     await interactor.execute(
         data=UpdateCodeTaskInputData(
             task_id=TaskID(int(task_id)),
-            attempts_limit=new_attempts_limit
+            attempts_limit=new_attempts_limit if new_attempts_limit else UNSET
         )
     )
     await state.set_state(state=None)
@@ -191,12 +194,26 @@ async def edit_task_prepared_code(
     course_id, back_to, task_id = data['course_id'], data['back_to'], data['task_id']
     new_code = None if new_code.lower() == 'null' else new_code
 
-    await interactor.execute(
+    output_data = await interactor.execute(
         data=UpdateCodeTaskInputData(
             task_id=TaskID(int(task_id)),
-            prepared_code=new_code
+            prepared_code=new_code if new_code else UNSET
         )
     )
+
+    if output_data.err:
+        msg = await bot.send_message(
+            chat_id=user_id,
+            text=f'Отловлена ошибка в коде инициализации задания. Все, что вы выставили после этого, сброшено:\n'
+                 f'\n{pre_tm.render(content=output_data.err)}\n'
+                 f'\nПопробуйте снова\n',
+            reply_markup=CANCEL_EDITING_KB,
+            parse_mode='HTML'
+        )
+        return await state.update_data(
+            msg_on_delete=msg.message_id
+        )
+
     await state.set_state(state=None)
 
     tasks = data[f'course_{course_id}_tasks']
@@ -236,9 +253,7 @@ async def get_code_task_tests(
         text=f"""
 Тест #{pointer + 1}:
 
-```python
-{current_test.code}
-```
+{python_code_tm.render(code=current_test.code)}
 """,
         reply_markup=watch_code_task_tests_kb(pointer=pointer, total=len(target_task.tests), task_id=target_task.id),
         parse_mode='markdown',
@@ -340,8 +355,7 @@ async def edit_code_task_test_code(
     await state.set_state(state=None)
 
     tasks = data[f'course_{course_id}_tasks']
-    target_test.code = output_data.new_code
-    tasks[data[f'course_{course_id}_tasks_pointer']].tests = target_task.tests
+    tasks[data[f'course_{course_id}_tasks_pointer']].tests[pointer].code = output_data.new_code
 
     await state.update_data(
         **{f'course_{course_id}_tasks': tasks},

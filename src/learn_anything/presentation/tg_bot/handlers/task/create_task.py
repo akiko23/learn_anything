@@ -12,12 +12,9 @@ from aiogram.types import CallbackQuery
 from aiogram.types import Message, ErrorEvent
 from dishka import FromDishka
 
-from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
 from learn_anything.application.interactors.task.create_task import CreateTaskInteractor, CreateTaskInputData, \
     CreateCodeTaskInteractor, CreateCodeTaskInputData
-from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
-    GetCourseTasksInputData
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.enums import TaskType
 from learn_anything.entities.task.errors import TaskPreparedCodeIsInvalidError, TaskTestCodeIsInvalidError, \
@@ -27,6 +24,7 @@ from learn_anything.presentors.tg_bot.keyboards.course.edit_course import get_co
 from learn_anything.presentors.tg_bot.keyboards.task.create_task import get_course_task_type_kb, \
     cancel_course_task_creation_kb, after_course_task_creation_menu, get_course_task_attempts_limit_kb, \
     get_code_task_tests_kb, get_code_duration_timeout_kb, get_code_task_prepared_code_kb, get_course_task_topic_kb
+from learn_anything.presentors.tg_bot.templates import python_code_tm, pre_tm
 
 router = Router()
 
@@ -38,22 +36,15 @@ async def start_course_task_creation(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-        interactor: FromDishka[GetCourseTasksInteractor]
 ):
     user_id: int = callback_query.from_user.id
 
     back_to, course_id = callback_query.data.split('-')[1:]
 
-    output_data = await interactor.execute(data=GetCourseTasksInputData(
-        course_id=CourseID(int(course_id)),
-        pagination=Pagination(offset=0, limit=0),
-    ))
-
     await state.set_state(CreateTaskForm.get_title)
     await state.update_data(
         back_to=back_to,
         course_id=course_id,
-        **{f'course_{course_id}_tasks_total': output_data.total}
     )
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
@@ -184,7 +175,6 @@ async def get_course_task_type(
                     task_type=TaskType.THEORY,
                     course_id=course_id,
                     index_in_course=index_in_course,
-
                 )
             )
 
@@ -264,6 +254,7 @@ async def get_or_skip_course_task_attempts_limit(
         msg_on_delete=msg.message_id
     )
 
+
 @router.message(
     StateFilter(CreateCodeTaskForm.get_attempts_limit),
 )
@@ -271,7 +262,6 @@ async def invalid_attempts_limit(
         msg: Message,
 ):
     await msg.answer('❗️Неверный формат данных. Ожидалось целое число от 1 до 100')
-
 
 
 @router.message(
@@ -435,7 +425,7 @@ async def finish_task_creation(
         msg = await bot.send_message(
             chat_id=user_id,
             text=f'Отловлена ошибка в коде тестов. Все тесты сброшены:\n'
-                 f'\n{e.message}\n'
+                 f'\n{pre_tm.render(content=e.err)}\n'
                  f'\nПопробуйте снова\n'
                  f'Введите код для {len(tests) + 1}-го теста\n'
                  ''
@@ -444,7 +434,7 @@ async def finish_task_creation(
                  ' - Для кодовой задачи должен быть по крайней мере один тест.\n'
                  ' - Лучше заранее протестируйте код, который скинете сюда, потому что создание задания происходит атомарно\n',
             reply_markup=get_code_task_tests_kb(current_tests=tests),
-            parse_mode='markdown'
+            parse_mode='HTML'
         )
         return await state.update_data(
             msg_on_delete=msg.message_id
@@ -455,10 +445,11 @@ async def finish_task_creation(
 
         msg = await bot.send_message(
             chat_id=user_id,
-            text=f'Отловлена ошибка в коде инициализации задания. Все, что вы выставили до этого, сброшено:\n'
-                 f'\n{e.message}\n'
+            text=f'Отловлена ошибка в коде инициализации задания. Все, что вы выставили после этого, сброшено:\n'
+                 f'\n{pre_tm.render(content=e.err)}\n'
                  f'\nПопробуйте снова\n',
             reply_markup=get_code_task_prepared_code_kb(),
+            parse_mode='HTML'
         )
         return await state.update_data(
             msg_on_delete=msg.message_id
@@ -500,7 +491,7 @@ async def finish_task_creation(
             course_id=course_id,
             back_to=back_to
         ),
-        parse_mode='markdown'
+        parse_mode='HTML'
     )
 
 

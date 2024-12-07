@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from typing import Literal
+
+from learn_anything.application.input_data import UNSET
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway
@@ -17,9 +20,9 @@ from learn_anything.entities.task.rules import update_code_task_test
 @dataclass
 class UpdateCodeTaskInputData:
     task_id: TaskID
-    prepared_code: str | None = None
+    prepared_code: str | Literal['UNSET'] = None
     code_duration_timeout: int | None = None
-    attempts_limit: int | None = None
+    attempts_limit: int | Literal['UNSET'] = None
 
 
 @dataclass
@@ -59,17 +62,20 @@ class UpdateCodeTaskInteractor:
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
         if data.prepared_code:
-            async with self._playground_factory.create(
-                    code_duration_timeout=task.code_duration_timeout,
-            ) as pl:
-                out, err = await pl.execute_code(code=data.prepared_code)
-                if err:
-                    return UpdateCodeTaskOutputData(err=err)
+            if data.prepared_code != UNSET:
+                async with self._playground_factory.create(
+                        code_duration_timeout=task.code_duration_timeout,
+                ) as pl:
+                    out, err = await pl.execute_code(code=data.prepared_code)
+                    if err:
+                        return UpdateCodeTaskOutputData(err=err)
 
-            task.prepared_code = data.prepared_code
+                task.prepared_code = data.prepared_code
+            else:
+                task.prepared_code = None
 
         if data.attempts_limit:
-            task.attempts_limit = data.attempts_limit
+            task.attempts_limit = None if data.attempts_limit == UNSET else data.attempts_limit
 
         if data.code_duration_timeout:
             task.code_duration_timeout = data.code_duration_timeout

@@ -58,13 +58,17 @@ class TaskMapper(TaskGateway):
                 Task
             ).
             where(tasks_table.c.course_id == course_id).
-            order_by(tasks_table.c.index_in_course).
-            offset(pagination.offset).
-            limit(pagination.limit)
+            order_by(tasks_table.c.index_in_course)
         )
 
         total_res = await self._session.execute(
             select(func.count()).select_from(stmt)
+        )
+
+        stmt = (
+            stmt.
+            offset(pagination.offset).
+            limit(pagination.limit)
         )
 
         result = await self._session.scalars(stmt)

@@ -44,6 +44,7 @@ async def get_task_edit_menu(
                 course_id=course_id,
                 back_to=back_to,
             ),
+            parse_mode='HTML'
         )
     else:
         await bot.edit_message_caption(
@@ -55,6 +56,7 @@ async def get_task_edit_menu(
                 course_id=course_id,
                 back_to=back_to,
             ),
+            parse_mode='HTML'
         )
 
     await state.update_data(
@@ -121,6 +123,7 @@ async def edit_task_title(
         text='Заголовок успешно обновлен',
         reply_markup=get_task_after_edit_menu_kb(back_to=back_to, course_id=course_id)
     )
+
 
 
 @router.callback_query(F.data.startswith('edit_task_body'))

@@ -32,6 +32,7 @@ class CreateTaskInputData:
 class CreateTaskOutputData:
     task_id: TaskID
     created_at: datetime
+    updated_at: datetime
 
 
 class CreateTaskInteractor:
@@ -66,7 +67,7 @@ class CreateTaskInteractor:
 
         await self._commiter.commit()
 
-        return CreateTaskOutputData(task_id=new_task_id, created_at=task.created_at)
+        return CreateTaskOutputData(task_id=new_task_id, created_at=task.created_at, updated_at=course.updated_at)
 
 
 @dataclass

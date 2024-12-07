@@ -85,7 +85,7 @@ async def get_my_submissions(
             back_to=back_to,
             course_id=course_id
         ),
-        parse_mode='markdown'
+        parse_mode='HTML'
     )
 
 
@@ -153,5 +153,5 @@ async def watch_actor_submissions_prev_or_next(
             back_to=back_to,
             course_id=course_id
         ),
-        parse_mode='markdown'
+        parse_mode='HTML'
     )

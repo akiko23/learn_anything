@@ -49,7 +49,10 @@ async def process_code_task_submission(
         target_task.total_submissions += 1
         target_task.total_actor_submissions += 1
 
-        attempts_left = max(target_task.attempts_limit - target_task.total_actor_submissions, 0)
+        attempts_left = None
+        if target_task.attempts_limit:
+            attempts_left = max(target_task.attempts_limit - target_task.total_actor_submissions, 0)
+
         if output_data.failed_output:
             text = get_on_failed_code_submission_text(output_data, attempts_left=attempts_left)
             if attempts_left == 0:
@@ -60,13 +63,13 @@ async def process_code_task_submission(
                         back_to=back_to,
                         course_id=course_id,
                     ),
-                    parse_mode='markdown'
+                    parse_mode='HTML'
                 )
 
             return await msg.answer(
                 text=text,
                 reply_markup=get_do_task_kb(),
-                parse_mode='markdown'
+                parse_mode='HTML'
             )
 
         await state.set_state(state=None)

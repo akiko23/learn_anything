@@ -162,7 +162,6 @@ class GetTaskSubmissionsInteractor:
                         is_correct=submission.is_correct,
                         created_at=submission.created_at,
                     )
-
                     submissions_output_data.append(submission_data)
 
             case TaskType.POLL:

@@ -1,13 +1,23 @@
+from jinja2 import Template
+
 from learn_anything.application.interactors.task.get_course_tasks import TaskData
 from learn_anything.entities.task.enums import TaskType
 from learn_anything.presentors.tg_bot.texts.formatters import format_date
+
+prepared_code_tm = Template(
+    (
+        'Предварительный код:\n'
+        '<pre><code class="language-python">'
+        '{{ prepared_code }}'
+        '</code></pre>\n\n\n'
+    )
+)
 
 
 def get_task_text(task_data: TaskData):
     task_topic = 'Без темы'
     if task_data.topic:
         task_topic = f'Тема: {task_data.topic}'
-
 
     creation_date_text = format_date(task_data.created_at)
     last_update_date_text = format_date(task_data.updated_at)
@@ -36,8 +46,12 @@ def get_task_text(task_data: TaskData):
                 attempts_left = max(task_data.attempts_limit - task_data.total_actor_submissions, 0)
                 attempts_left_text = f'Осталось попыток: {attempts_left}\n\n'
 
+            prepared_code_text = ''
+            if task_data.actor_has_write_access and task_data.prepared_code is not None:
+                prepared_code_text = prepared_code_tm.render(prepared_code=task_data.prepared_code)
+
             correct_submissions_percentage = (
-                round(task_data.total_correct_submissions / max(task_data.total_submissions * 100, 1))
+                round(task_data.total_correct_submissions / max(task_data.total_submissions, 1) * 100)
             )
             text = (
                 f'{task_data.title}\n'
@@ -50,6 +64,7 @@ def get_task_text(task_data: TaskData):
                 f'\n'
                 f'Макс. время выполнения: {task_data.code_duration_timeout} с.\n'
                 f'\n'
+                f'{prepared_code_text}'
                 f'{solved_text}'
                 f'{attempts_left_text}'
                 f'Всего решений отправлено: {task_data.total_submissions}\n'

@@ -10,7 +10,7 @@ from learn_anything.application.ports.data.submission_gateway import SubmissionG
 from learn_anything.application.ports.data.task_gateway import TaskGateway, GetTasksFilters
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.course.rules import ensure_actor_has_read_access
+from learn_anything.entities.course.rules import ensure_actor_has_read_access, actor_has_write_access
 from learn_anything.entities.task.enums import TaskType
 from learn_anything.entities.task.models import TaskID, CodeTask, CodeTaskTestID
 from learn_anything.entities.task.rules import is_task_solved_by_actor
@@ -39,6 +39,7 @@ class TaskData:
     # creator: str
     created_at: datetime
     updated_at: datetime
+    actor_has_write_access: bool
 
     # any practice task fields
     total_submissions: int | None = None
@@ -48,6 +49,7 @@ class TaskData:
     total_actor_submissions: int | None = None
 
     # code task fields
+    prepared_code: str | None = None
     code_duration_timeout: int | None = None
     tests: Sequence[CodeTaskTestData] | None = None
 
@@ -101,6 +103,7 @@ class GetCourseTasksInteractor:
                 created_at=task.created_at,
                 # creator=creator.fullname,
                 updated_at=course.updated_at,
+                actor_has_write_access=actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
             )
 
             if task.type == TaskType.CODE:
@@ -119,6 +122,7 @@ class GetCourseTasksInteractor:
                 task_data.total_correct_submissions = total_correct_submissions
                 task_data.solved_by_actor = is_task_solved_by_actor(actor_submissions=user_submissions)
                 task_data.code_duration_timeout = task.code_duration_timeout
+                task_data.prepared_code = task.prepared_code
 
                 task_data.tests = [
                     CodeTaskTestData(

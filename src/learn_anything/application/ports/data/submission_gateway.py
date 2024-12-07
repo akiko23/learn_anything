@@ -18,7 +18,7 @@ class GetManySubmissionsFilters:
     sort_by: SortBy = SortBy.DATE
     ###
 
-    # if you want to get only submission which certain actor has created
+    # if you want to get only submissions which certain actor has created
     with_actor_id: UserID | None = None
 
 
