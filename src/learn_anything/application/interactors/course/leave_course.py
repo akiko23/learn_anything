@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
-from learn_anything.entities.course.errors import CourseDoesNotExistError, RegistrationForCourseDoesNotExistError
-from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.course.rules import decrement_course_registrations_number
+from learn_anything.domain.course.errors import CourseDoesNotExistError, RegistrationForCourseDoesNotExistError
+from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.course.rules import decrement_course_registrations_number
 
 
 @dataclass

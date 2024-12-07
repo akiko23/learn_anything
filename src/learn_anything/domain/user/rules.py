@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime
 
-from learn_anything.entities.user.models import User, UserID, UserRole, AuthLink
-from learn_anything.entities.value_objects.expires_at import ExpiresAt
+from learn_anything.domain.user.models import User, UserID, UserRole, AuthLink
+from learn_anything.domain.value_objects.expires_at import ExpiresAt
 
 
 def create_user(user_id: int, fullname: str, username: str | None, role: UserRole) -> User:

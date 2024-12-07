@@ -9,7 +9,7 @@ from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.submission.get_many_submissions import GetActorSubmissionsInteractor, \
     GetManySubmissionsInputData, SubmissionData
 from learn_anything.application.ports.data.submission_gateway import GetManySubmissionsFilters, SortBy
-from learn_anything.entities.task.models import TaskID
+from learn_anything.domain.task.models import TaskID
 from learn_anything.presentors.tg_bot.keyboards.submission.many_submissions import get_many_submissions_keyboard
 from learn_anything.presentors.tg_bot.texts.get_many_submissions import get_actor_submissions_text
 

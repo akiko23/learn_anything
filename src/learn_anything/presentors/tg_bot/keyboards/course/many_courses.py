@@ -2,7 +2,7 @@ from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
-from learn_anything.entities.course.models import CourseID
+from learn_anything.domain.course.models import CourseID
 
 
 def get_all_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None):

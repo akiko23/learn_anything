@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import NewType
 
-from learn_anything.entities.user.enums import UserRole
+from learn_anything.domain.user.enums import UserRole
 
 UserID = NewType('UserID', int)
 

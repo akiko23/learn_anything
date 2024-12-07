@@ -1,8 +1,8 @@
 import uuid
 from dataclasses import dataclass
 
-from learn_anything.entities.error import ApplicationError
-from learn_anything.entities.user.models import UserRole
+from learn_anything.domain.error import ApplicationError
+from learn_anything.domain.user.models import UserRole
 
 
 @dataclass

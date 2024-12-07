@@ -1,10 +1,13 @@
 from typing import Protocol
 
-from learn_anything.entities.user.models import User, UserID, AuthLink
+from learn_anything.domain.user.models import User, UserID, AuthLink
 
 
 class UserGateway(Protocol):
-    async def with_id(self, user_id: UserID) -> User:
+    async def with_id(self, user_id: UserID) -> User | None:
+        raise NotImplementedError
+
+    async def with_username(self, username: str) -> User | None:
         raise NotImplementedError
 
     async def save(self, user: User) -> None:

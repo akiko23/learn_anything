@@ -9,7 +9,8 @@ from dishka import (
     provide,
 )
 
-from learn_anything.adapters.auth.tg_auth import TgIdentityProvider, TgB64TokenProcessor
+from learn_anything.adapters.auth.tg_auth_manager import TelegramAuthManager
+from learn_anything.adapters.auth.tg_identity_provider import TgIdentityProvider, TgB64TokenProcessor
 from learn_anything.adapters.persistence.commiter import SACommiter
 from learn_anything.adapters.persistence.config import load_db_config, DatabaseConfig
 from learn_anything.adapters.persistence.mappers.course import CourseMapper, RegistrationForCourseMapper
@@ -21,9 +22,11 @@ from learn_anything.adapters.playground.unix_playground import UnixPlaygroundFac
 from learn_anything.adapters.redis.config import load_redis_config, RedisConfig
 from learn_anything.adapters.s3.config import load_s3_config, S3Config
 from learn_anything.adapters.s3.s3_file_manager import S3FileManager
-from learn_anything.application.interactors.auth.authenticate import Authenticate
-from learn_anything.application.interactors.auth.create_auth_link import CreateAuthLinkInteractor
-from learn_anything.application.interactors.auth.invalidate_auth_link import InvalidateAuthLinkInteractor
+from learn_anything.application.interactors.auth.authenticate import AuthenticateInteractor
+from learn_anything.application.interactors.auth.register import RegisterInteractor
+from learn_anything.application.interactors.auth_link.login_with_auth_link import LoginWithAuthLinkInteractor
+from learn_anything.application.interactors.auth_link.create_auth_link import CreateAuthLinkInteractor
+from learn_anything.application.interactors.auth_link.invalidate_auth_link import InvalidateAuthLinkInteractor
 from learn_anything.application.interactors.course.create_course import CreateCourseInteractor
 from learn_anything.application.interactors.course.delete_course import DeleteCourseInteractor
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor
@@ -44,6 +47,7 @@ from learn_anything.application.interactors.task.get_course_tasks import GetCour
 from learn_anything.application.interactors.task.update_task import UpdateTaskInteractor
 from learn_anything.application.interactors.task.update_code_task import UpdateCodeTaskInteractor, \
     UpdateCodeTaskTestInteractor
+from learn_anything.application.ports.auth.auth_manager import AuthManager
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
 from learn_anything.application.ports.committer import Commiter
@@ -78,6 +82,7 @@ def infrastructure_provider() -> Provider:
     provider.provide(TgB64TokenProcessor, scope=Scope.REQUEST, provides=TokenProcessor)
     provider.provide(S3FileManager, scope=Scope.REQUEST, provides=FileManager)
     provider.provide(UnixPlaygroundFactory, scope=Scope.REQUEST, provides=PlaygroundFactory)
+    provider.provide(TelegramAuthManager, scope=Scope.REQUEST, provides=AuthManager)
 
     return provider
 
@@ -85,9 +90,11 @@ def infrastructure_provider() -> Provider:
 def interactors_provider() -> Provider:
     provider = Provider()
 
-    provider.provide(Authenticate, scope=Scope.REQUEST)
+    provider.provide(LoginWithAuthLinkInteractor, scope=Scope.REQUEST)
     provider.provide(CreateAuthLinkInteractor, scope=Scope.REQUEST)
     provider.provide(InvalidateAuthLinkInteractor, scope=Scope.REQUEST)
+    provider.provide(AuthenticateInteractor, scope=Scope.REQUEST)
+    provider.provide(RegisterInteractor, scope=Scope.REQUEST)
 
     provider.provide(CreateCourseInteractor, scope=Scope.REQUEST)
     provider.provide(UpdateCourseInteractor, scope=Scope.REQUEST)
@@ -148,17 +155,11 @@ class TgProvider(Provider):
     async def get_identity_provider(
             self,
             user_id: int,
-            command: str | None,
             user_gateway: UserGateway,
-            auth_link_gateway: AuthLinkGateway,
-            token_processor: TokenProcessor,
     ) -> IdentityProvider:
         identity_provider = TgIdentityProvider(
             user_id=user_id,
             user_gateway=user_gateway,
-            auth_link_gateway=auth_link_gateway,
-            token_processor=token_processor,
-            command=command,
         )
 
         return identity_provider

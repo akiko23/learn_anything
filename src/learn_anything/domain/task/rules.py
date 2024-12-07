@@ -2,10 +2,10 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import Sequence
 
-from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.submission.models import Submission
-from learn_anything.entities.task.enums import TaskType
-from learn_anything.entities.task.models import PollTask, PollTaskOptionID, TextInputTask, TextInputTaskAnswer, \
+from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.submission.models import Submission
+from learn_anything.domain.task.enums import TaskType
+from learn_anything.domain.task.models import PollTask, PollTaskOptionID, TextInputTask, TextInputTaskAnswer, \
     CodeTask, CodeTaskTest, Task, CodeTaskTestID
 
 

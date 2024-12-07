@@ -8,15 +8,15 @@ from learn_anything.application.ports.data.course_gateway import CourseGateway, 
 from learn_anything.application.ports.data.submission_gateway import SubmissionGateway
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.playground import PlaygroundFactory
-from learn_anything.entities.course.errors import CourseDoesNotExistError
-from learn_anything.entities.submission.models import PollSubmission, TextInputSubmission
-from learn_anything.entities.submission.rules import create_code_submission
-from learn_anything.entities.task.errors import TaskDoesNotExistError, ActorIsNotRegisteredOnCourseError, \
+from learn_anything.domain.course.errors import CourseDoesNotExistError
+from learn_anything.domain.submission.models import PollSubmission, TextInputSubmission
+from learn_anything.domain.submission.rules import create_code_submission
+from learn_anything.domain.task.errors import TaskDoesNotExistError, ActorIsNotRegisteredOnCourseError, \
     AttemptsLimitReachedForTaskError, PollTaskOptionDoesNotExistError
-from learn_anything.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, CodeTask, \
+from learn_anything.domain.task.models import TaskID, TextInputTaskAnswer, PracticeTask, CodeTask, \
     CodeTaskTest, PollTaskOptionID
-from learn_anything.entities.task.rules import answer_is_correct, find_task_option_by_id
-from learn_anything.entities.user.models import UserID
+from learn_anything.domain.task.rules import answer_is_correct, find_task_option_by_id
+from learn_anything.domain.user.models import UserID
 
 
 class CreateTaskSubmissionBaseInteractor(abc.ABC):

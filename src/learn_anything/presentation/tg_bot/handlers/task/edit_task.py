@@ -9,7 +9,7 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.task.get_course_tasks import TaskData
 from learn_anything.application.interactors.task.update_task import UpdateTaskInteractor, UpdateTaskInputData
-from learn_anything.entities.task.models import TaskID
+from learn_anything.domain.task.models import TaskID
 from learn_anything.presentation.tg_bot.states.task import EditTaskForm, EditCodeTaskForm
 from learn_anything.presentors.tg_bot.keyboards.task.edit_task import get_task_edit_menu_kb, CANCEL_EDITING_KB, \
     get_task_after_edit_menu_kb

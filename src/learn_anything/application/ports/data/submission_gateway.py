@@ -3,9 +3,9 @@ from enum import StrEnum, auto
 from typing import Protocol, Sequence
 
 from learn_anything.application.input_data import Pagination
-from learn_anything.entities.submission.models import PollSubmission, CodeSubmission, TextInputSubmission, Submission
-from learn_anything.entities.task.models import TaskID
-from learn_anything.entities.user.models import UserID
+from learn_anything.domain.submission.models import PollSubmission, CodeSubmission, TextInputSubmission, Submission
+from learn_anything.domain.task.models import TaskID
+from learn_anything.domain.user.models import UserID
 
 
 class SortBy(StrEnum):

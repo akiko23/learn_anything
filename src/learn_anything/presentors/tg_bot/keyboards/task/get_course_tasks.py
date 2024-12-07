@@ -2,7 +2,7 @@ from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 from learn_anything.application.interactors.task.get_course_tasks import TaskData
-from learn_anything.entities.task.enums import TaskType
+from learn_anything.domain.task.enums import TaskType
 
 
 def get_course_tasks_keyboard(

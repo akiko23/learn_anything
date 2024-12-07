@@ -5,9 +5,9 @@ from learn_anything.application.ports.auth.identity_provider import IdentityProv
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway
 from learn_anything.application.ports.data.file_manager import FileManager
-from learn_anything.entities.course.errors import CourseDoesNotExistError
-from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.course.rules import ensure_actor_has_write_access
+from learn_anything.domain.course.errors import CourseDoesNotExistError
+from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.course.rules import ensure_actor_has_write_access
 
 
 @dataclass

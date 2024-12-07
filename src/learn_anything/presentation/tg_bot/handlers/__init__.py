@@ -2,7 +2,7 @@ from aiogram import Dispatcher
 from aiogram import F
 from aiogram.filters import ExceptionTypeFilter
 
-from learn_anything.entities.error import ApplicationError
+from learn_anything.domain.error import ApplicationError
 from .auth_link import router as auth_link_router
 from .course.create_course import router as create_course_router
 from .course.delete_course import router as delete_course_router

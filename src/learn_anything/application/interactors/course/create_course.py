@@ -6,8 +6,8 @@ from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway
 from learn_anything.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.course.rules import create_course
+from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.course.rules import create_course
 
 
 @dataclass

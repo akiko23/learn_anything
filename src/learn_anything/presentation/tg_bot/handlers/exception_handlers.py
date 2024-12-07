@@ -8,7 +8,7 @@ from aiogram.types import Message, ErrorEvent, BufferedInputFile, CallbackQuery
 from dishka import FromDishka
 
 from learn_anything.application.ports.data.file_manager import FileManager
-from learn_anything.entities.error import ApplicationError
+from learn_anything.domain.error import ApplicationError
 from learn_anything.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
 
 logger = logging.getLogger(__name__)

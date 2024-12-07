@@ -1,7 +1,7 @@
 import uuid
 from typing import Protocol
 
-from learn_anything.entities.user.models import AuthLink
+from learn_anything.domain.user.models import AuthLink
 
 
 class AuthLinkGateway(Protocol):

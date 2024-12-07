@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from learn_anything.adapters.persistence.tables.user import users_table, auth_links_table
 from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.entities.user.models import UserID, User, AuthLink
+from learn_anything.domain.user.models import UserID, User, AuthLink
 
 
 class UserMapper(UserGateway):
@@ -38,6 +38,12 @@ class UserMapper(UserGateway):
 
     async def with_id(self, user_id: UserID) -> User | None:
         stmt = select(User).where(users_table.c.id == user_id)
+        result = await self._session.execute(stmt)
+
+        return result.scalar_one_or_none()
+
+    async def with_username(self, username: str) -> User | None:
+        stmt = select(User).where(users_table.c.username == username)
         result = await self._session.execute(stmt)
 
         return result.scalar_one_or_none()

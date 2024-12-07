@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from learn_anything.entities.submission.models import CodeSubmission
-from learn_anything.entities.task.models import TaskID
-from learn_anything.entities.user.models import UserID
+from learn_anything.domain.submission.models import CodeSubmission
+from learn_anything.domain.task.models import TaskID
+from learn_anything.domain.user.models import UserID
 
 
 def create_code_submission(

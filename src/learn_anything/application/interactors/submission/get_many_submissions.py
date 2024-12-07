@@ -9,11 +9,11 @@ from learn_anything.application.ports.data.file_manager import FileManager
 from learn_anything.application.ports.data.submission_gateway import SubmissionGateway, GetManySubmissionsFilters
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.entities.course.rules import ensure_actor_has_write_access
-from learn_anything.entities.submission.models import CodeSubmission, PollSubmission
-from learn_anything.entities.task.enums import TaskType
-from learn_anything.entities.task.errors import TaskDoesNotExistError, TheoryTaskHasNoSubmissionsError
-from learn_anything.entities.task.models import TaskID
+from learn_anything.domain.course.rules import ensure_actor_has_write_access
+from learn_anything.domain.submission.models import CodeSubmission, PollSubmission
+from learn_anything.domain.task.enums import TaskType
+from learn_anything.domain.task.errors import TaskDoesNotExistError, TheoryTaskHasNoSubmissionsError
+from learn_anything.domain.task.models import TaskID
 
 
 

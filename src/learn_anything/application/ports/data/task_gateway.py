@@ -3,8 +3,8 @@ from enum import StrEnum, auto
 from typing import Protocol, Sequence
 
 from learn_anything.application.input_data import Pagination
-from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.task.models import TaskID, Task, CodeTask, PollTask, TextInputTask
+from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.task.models import TaskID, Task, CodeTask, PollTask, TextInputTask
 
 
 class SortBy(StrEnum):

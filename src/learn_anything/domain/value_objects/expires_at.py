@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from learn_anything.entities.error import ApplicationError
+from learn_anything.domain.error import ApplicationError
 
 
 @dataclass

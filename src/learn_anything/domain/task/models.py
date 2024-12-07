@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import NewType, Sequence
 
-from learn_anything.entities.course.models import CourseID
-from learn_anything.entities.task.enums import TaskType
+from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.task.enums import TaskType
 
 TaskID = NewType("TaskID", int)
 

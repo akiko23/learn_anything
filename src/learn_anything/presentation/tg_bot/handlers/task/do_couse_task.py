@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from learn_anything.application.interactors.course.get_course import GetFullCourseOutputData
-from learn_anything.entities.task.enums import TaskType
+from learn_anything.domain.task.enums import TaskType
 from learn_anything.presentors.tg_bot.texts.get_task import get_task_text
 from learn_anything.presentors.tg_bot.keyboards.task.do_course_task import get_do_task_kb
 from learn_anything.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard

@@ -3,8 +3,8 @@ from enum import StrEnum, auto
 from typing import Protocol, Sequence
 
 from learn_anything.application.input_data import Pagination
-from learn_anything.entities.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
-from learn_anything.entities.user.models import UserID
+from learn_anything.domain.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
+from learn_anything.domain.user.models import UserID
 
 
 class SortBy(StrEnum):

@@ -5,7 +5,6 @@ from aiogram.filters import CommandObject
 from aiogram.types import Message, CallbackQuery, TelegramObject
 from dishka import AsyncContainer
 
-from learn_anything.adapters.auth.errors import UserNotAuthenticatedError
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 
 
@@ -29,9 +28,10 @@ class AuthMiddleware(BaseMiddleware):
             id_provider = await request_container.get(IdentityProvider)
 
             if not data.get('user_role'):
-                try:
-                    user_role = await id_provider.get_current_user_role()
-                    data['user_role'] = user_role
-                except UserNotAuthenticatedError:
-                    return await msg.answer('Вы не авторизованы. Введите /start для корректной работы с ботом')
+                user_role = await id_provider.get_current_user_role()
+                if user_role is None:
+                    await msg.answer('Вы не авторизованы. Введите /start для корректной работы с ботом')
+                    return
+
+                data['user_role'] = user_role
             return await handler(event, data)

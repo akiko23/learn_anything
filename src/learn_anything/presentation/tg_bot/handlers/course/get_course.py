@@ -10,7 +10,7 @@ from dishka import FromDishka
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
 from learn_anything.application.interactors.course.update_course import UpdateCourseInputData, UpdateCourseInteractor
 from learn_anything.application.ports.data.file_manager import FileManager
-from learn_anything.entities.course.models import CourseID
+from learn_anything.domain.course.models import CourseID
 from learn_anything.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
 from learn_anything.presentors.tg_bot.keyboards.course.get_course import get_course_kb
 from learn_anything.presentors.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \

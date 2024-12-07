@@ -7,9 +7,9 @@ from learn_anything.application.ports.data.course_gateway import CourseGateway
 from learn_anything.application.ports.data.file_manager import FileManager
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.entities.course.errors import CourseDoesNotExistError
-from learn_anything.entities.course.rules import ensure_actor_has_write_access
-from learn_anything.entities.task.models import TaskID
+from learn_anything.domain.course.errors import CourseDoesNotExistError
+from learn_anything.domain.course.rules import ensure_actor_has_write_access
+from learn_anything.domain.task.models import TaskID
 
 
 @dataclass
