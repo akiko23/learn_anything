@@ -9,7 +9,7 @@ def get_many_submissions_keyboard(
 ):
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Назад', callback_data=f'get_course_tasks-{back_to}-{course_id}')],
+            [InlineKeyboardButton(text='Назад', callback_data=f'actor_submissions_back_to_task')],
             [InlineKeyboardButton(text='В главное меню', callback_data='all_courses-to_main_menu')],
         ]
     )

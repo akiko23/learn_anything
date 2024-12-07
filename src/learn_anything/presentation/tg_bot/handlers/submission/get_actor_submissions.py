@@ -57,7 +57,6 @@ async def get_my_submissions(
     )
 
     total = output_data.total
-
     if total == 0:
         msg_text = 'Вы еще ни разу не решали эту задачу'
 
@@ -155,3 +154,8 @@ async def watch_actor_submissions_prev_or_next(
         ),
         parse_mode='HTML'
     )
+
+
+@router.callback_query(F.data == 'actor_submissions_back_to_task')
+async def actor_submissions_back_to_task(callback_query: CallbackQuery):
+    await callback_query.message.delete()

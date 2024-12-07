@@ -410,7 +410,7 @@ async def finish_task_creation(
     body = data['body']
     topic = data['topic']
     prepared_code = data['prepared_code']
-    index_in_course = int(data[f'course_{course_id}_tasks_total'])
+    index_in_course = int(data.get(f'course_{course_id}_tasks_total', 0))
 
     try:
         await interactor.execute(
