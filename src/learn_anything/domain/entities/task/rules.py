@@ -2,11 +2,11 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import Sequence
 
-from learn_anything.domain.course.models import CourseID
-from learn_anything.domain.submission.models import Submission
-from learn_anything.domain.task.enums import TaskType
-from learn_anything.domain.task.models import PollTask, PollTaskOptionID, TextInputTask, TextInputTaskAnswer, \
-    CodeTask, CodeTaskTest, Task, CodeTaskTestID
+from learn_anything.domain.entities.course.models import CourseID
+from learn_anything.domain.entities.submission.models import Submission
+from learn_anything.domain.entities.task.enums import TaskType
+from learn_anything.domain.entities.task.models import PollTask, PollTaskOptionID, TextInputTask, TextInputTaskAnswer, \
+    CodeTask, CodeTaskTest, CodeTaskTestID
 
 
 def find_task_option_by_id(task: PollTask, target_option_id: PollTaskOptionID):

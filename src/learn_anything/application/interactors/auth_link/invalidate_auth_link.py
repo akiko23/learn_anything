@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGateway
-from learn_anything.domain.user.errors import AuthLinkCreationForbiddenError, AuthLinkDoesNotExist
-from learn_anything.domain.user.models import UserRole
+from learn_anything.domain.entities.user.errors import AuthLinkCreationForbiddenError, AuthLinkDoesNotExist
+from learn_anything.domain.entities.user.models import UserRole
 
 
 @dataclass

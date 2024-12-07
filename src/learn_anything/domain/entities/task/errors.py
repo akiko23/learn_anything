@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Union
 
-from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.entities.course.models import CourseID
 from learn_anything.domain.error import ApplicationError
-from learn_anything.domain.task.models import TaskID, PollTaskOptionID
-from learn_anything.domain.user.models import UserID
+from learn_anything.domain.entities.task.models import TaskID, PollTaskOptionID
+from learn_anything.domain.entities.user.models import UserID
 
 
 @dataclass

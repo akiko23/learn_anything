@@ -10,7 +10,7 @@ from learn_anything.application.input_data import UNSET
 from learn_anything.application.interactors.task.get_course_tasks import TaskData, CodeTaskTestData
 from learn_anything.application.interactors.task.update_code_task import UpdateCodeTaskInputData, \
     UpdateCodeTaskInteractor, UpdateCodeTaskTestInputData, UpdateCodeTaskTestInteractor
-from learn_anything.domain.task.models import TaskID
+from learn_anything.domain.entities.task.models import TaskID
 from learn_anything.presentation.tg_bot.states.task import EditCodeTaskForm
 from learn_anything.presentors.tg_bot.keyboards.task.edit_task import CANCEL_EDITING_KB, \
     get_task_after_edit_menu_kb, get_attempts_limit_kb

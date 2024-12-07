@@ -12,8 +12,8 @@ from learn_anything.adapters.persistence.tables.user import users_table
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway, \
     GetManyCoursesFilters, SortBy
-from learn_anything.domain.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
-from learn_anything.domain.user.models import UserID
+from learn_anything.domain.entities.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
+from learn_anything.domain.entities.user.models import UserID
 
 
 class CourseMapper(CourseGateway):

@@ -8,7 +8,7 @@ from dishka import FromDishka
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
     GetCourseTasksInputData, TaskData
-from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.entities.course.models import CourseID
 from learn_anything.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
 from learn_anything.presentors.tg_bot.texts.get_task import get_task_text
 

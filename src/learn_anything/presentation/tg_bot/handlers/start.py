@@ -9,7 +9,7 @@ from learn_anything.application.interactors.auth.authenticate import Authenticat
 from learn_anything.application.interactors.auth.register import RegisterInteractor, RegisterInputData
 from learn_anything.application.interactors.auth_link.login_with_auth_link import LoginWithAuthLinkInteractor, \
     LoginWithAuthLinkInputData
-from learn_anything.domain.user.models import UserID
+from learn_anything.domain.entities.user.models import UserID
 from learn_anything.presentors.tg_bot.keyboards.main_menu import get_main_menu_keyboard
 
 router = Router()

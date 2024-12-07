@@ -3,15 +3,14 @@ import logging
 from dataclasses import dataclass
 from uuid import UUID
 
-from learn_anything.adapters.auth.errors import UserNotAuthenticatedError
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.domain.user.errors import InvalidAuthLinkError
-from learn_anything.domain.user.models import UserRole, UserID
-from learn_anything.domain.user.rules import create_user
+from learn_anything.domain.entities.user.errors import InvalidAuthLinkError
+from learn_anything.domain.entities.user.models import UserRole, UserID
+from learn_anything.domain.entities.user.rules import create_user
 
 
 @dataclass

@@ -8,9 +8,9 @@ from learn_anything.adapters.persistence.tables import poll_task_options_table
 from learn_anything.adapters.persistence.tables.submission import submissions_table
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.ports.data.submission_gateway import SubmissionGateway, GetManySubmissionsFilters
-from learn_anything.domain.submission.models import CodeSubmission, PollSubmission, TextInputSubmission, Submission
-from learn_anything.domain.task.models import TaskID, PollTaskOption
-from learn_anything.domain.user.models import UserID
+from learn_anything.domain.entities.submission.models import CodeSubmission, PollSubmission, TextInputSubmission, Submission
+from learn_anything.domain.entities.task.models import TaskID, PollTaskOption
+from learn_anything.domain.entities.user.models import UserID
 
 
 class SubmissionMapper(SubmissionGateway):

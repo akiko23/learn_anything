@@ -1,7 +1,7 @@
 from typing import Protocol
 
-from learn_anything.domain.user.enums import UserRole
-from learn_anything.domain.user.models import UserID
+from learn_anything.domain.entities.user.enums import UserRole
+from learn_anything.domain.entities.user.models import UserID
 
 
 class AuthManager(Protocol):

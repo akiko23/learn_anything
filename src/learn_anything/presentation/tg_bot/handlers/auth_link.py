@@ -10,7 +10,7 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.auth_link.create_auth_link import CreateAuthLinkInteractor, \
     CreateAuthLinkInputData
-from learn_anything.domain.user.models import UserRole
+from learn_anything.domain.entities.user.models import UserRole
 from learn_anything.presentation.tg_bot.states.auth_link import CreateAuthLinkForm
 from learn_anything.presentors.tg_bot.keyboards.create_auth_link import CANCEL_AUTH_LINK_CREATION_KB
 from learn_anything.presentors.tg_bot.keyboards.main_menu import get_main_menu_keyboard

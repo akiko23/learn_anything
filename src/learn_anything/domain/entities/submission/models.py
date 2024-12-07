@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from learn_anything.domain.task.models import TaskID, PollTaskOption
-from learn_anything.domain.user.models import UserID
+from learn_anything.domain.entities.task.models import TaskID, PollTaskOption
+from learn_anything.domain.entities.user.models import UserID
 
 
 @dataclass

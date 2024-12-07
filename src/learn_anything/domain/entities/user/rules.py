@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from learn_anything.domain.user.models import User, UserID, UserRole, AuthLink
+from learn_anything.domain.entities.user.models import User, UserID, UserRole, AuthLink
 from learn_anything.domain.value_objects.expires_at import ExpiresAt
 
 

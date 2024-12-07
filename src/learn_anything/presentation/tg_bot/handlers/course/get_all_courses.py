@@ -15,7 +15,7 @@ from learn_anything.application.interactors.course.get_many_courses import GetAl
 from learn_anything.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
 from learn_anything.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
 from learn_anything.application.ports.data.file_manager import FileManager
-from learn_anything.domain.user.models import UserRole
+from learn_anything.domain.entities.user.models import UserRole
 from learn_anything.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
 from learn_anything.presentation.tg_bot.states.course import SearchAllByForm
 from learn_anything.presentors.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \

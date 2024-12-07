@@ -3,8 +3,8 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from learn_anything.application.interactors.task.get_course_tasks import TaskData
-from learn_anything.domain.task.enums import TaskType
-from learn_anything.domain.task.models import TaskID
+from learn_anything.domain.entities.task.enums import TaskType
+from learn_anything.domain.entities.task.models import TaskID
 
 
 def get_task_edit_menu_kb(

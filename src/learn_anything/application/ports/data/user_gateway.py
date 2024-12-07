@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from learn_anything.domain.user.models import User, UserID, AuthLink
+from learn_anything.domain.entities.user.models import User, UserID
 
 
 class UserGateway(Protocol):

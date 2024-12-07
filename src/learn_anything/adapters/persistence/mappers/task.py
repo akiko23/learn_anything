@@ -8,8 +8,8 @@ from learn_anything.adapters.persistence.tables import code_task_tests_table
 from learn_anything.adapters.persistence.tables.task import tasks_table, poll_task_options_table
 from learn_anything.application.input_data import Pagination
 from learn_anything.application.ports.data.task_gateway import TaskGateway, GetTasksFilters
-from learn_anything.domain.course.models import CourseID
-from learn_anything.domain.task.models import Task, TaskID, CodeTask, PollTask, PollTaskOption, CodeTaskTest
+from learn_anything.domain.entities.course.models import CourseID
+from learn_anything.domain.entities.task.models import Task, TaskID, CodeTask, PollTask, PollTaskOption, CodeTaskTest
 
 
 class TaskMapper(TaskGateway):

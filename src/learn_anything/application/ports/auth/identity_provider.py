@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from learn_anything.domain.user.models import UserRole, UserID
+from learn_anything.domain.entities.user.models import UserRole, UserID
 
 
 class IdentityProvider(Protocol):

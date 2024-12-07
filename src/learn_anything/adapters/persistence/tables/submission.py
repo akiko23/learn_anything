@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 
-from learn_anything.domain.submission.models import Submission, PollSubmission, CodeSubmission
+from learn_anything.domain.entities.submission.models import Submission, PollSubmission, CodeSubmission
 from learn_anything.adapters.persistence.tables.base import mapper_registry
 
 submissions_table = sa.Table(

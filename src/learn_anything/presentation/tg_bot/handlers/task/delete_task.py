@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery
 from dishka import FromDishka
 
 from learn_anything.application.interactors.task.delete_task import DeleteTaskInteractor, DeleteTaskInputData
-from learn_anything.domain.task.models import TaskID
+from learn_anything.domain.entities.task.models import TaskID
 from learn_anything.presentors.tg_bot.keyboards.task.delete_task import get_task_after_deletion_menu_kb
 
 router = Router()

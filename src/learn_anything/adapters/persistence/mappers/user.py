@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from learn_anything.adapters.persistence.tables.user import users_table, auth_links_table
 from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.domain.user.models import UserID, User, AuthLink
+from learn_anything.domain.entities.user.models import UserID, User, AuthLink
 
 
 class UserMapper(UserGateway):

@@ -2,8 +2,8 @@ from learn_anything.adapters.auth.errors import UserDoesNotExistError
 from learn_anything.application.ports.auth.auth_manager import AuthManager
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.domain.user.enums import UserRole
-from learn_anything.domain.user.models import UserID, User
+from learn_anything.domain.entities.user.enums import UserRole
+from learn_anything.domain.entities.user.models import UserID, User
 
 
 class TelegramAuthManager(AuthManager):

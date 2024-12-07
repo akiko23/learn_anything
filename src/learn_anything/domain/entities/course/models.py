@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import NewType
 
-from learn_anything.domain.user.models import UserID
+from learn_anything.domain.entities.user.models import UserID
 
 CourseID = NewType("CourseID", int)
 

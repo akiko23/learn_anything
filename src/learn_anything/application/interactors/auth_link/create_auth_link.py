@@ -5,9 +5,9 @@ from learn_anything.application.ports.auth.identity_provider import IdentityProv
 from learn_anything.application.ports.auth.token import TokenProcessor
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.auth_link_gateway import AuthLinkGateway
-from learn_anything.domain.user.errors import AuthLinkCreationForbiddenError
-from learn_anything.domain.user.models import UserRole
-from learn_anything.domain.user.rules import create_auth_link
+from learn_anything.domain.entities.user.errors import AuthLinkCreationForbiddenError
+from learn_anything.domain.entities.user.models import UserRole
+from learn_anything.domain.entities.user.rules import create_auth_link
 
 
 @dataclass

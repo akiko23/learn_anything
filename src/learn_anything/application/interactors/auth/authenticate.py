@@ -5,7 +5,7 @@ from learn_anything.application.ports.auth.auth_manager import AuthManager
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.domain.user.models import UserRole, UserID
+from learn_anything.domain.entities.user.models import UserRole, UserID
 
 
 @dataclass

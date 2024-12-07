@@ -1,9 +1,9 @@
 from collections.abc import Sequence
 from datetime import datetime
 
-from learn_anything.domain.course.errors import RegistrationsLimitExceededError, CoursePermissionError
-from learn_anything.domain.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
-from learn_anything.domain.user.models import UserID
+from learn_anything.domain.entities.course.errors import RegistrationsLimitExceededError, CoursePermissionError
+from learn_anything.domain.entities.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
+from learn_anything.domain.entities.user.models import UserID
 
 
 def create_course(

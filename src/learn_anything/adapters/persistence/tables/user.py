@@ -4,7 +4,7 @@ import uuid
 import sqlalchemy as sa
 # from sqlalchemy.orm import relationship
 
-from learn_anything.domain.user.models import User, UserRole, AuthLink
+from learn_anything.domain.entities.user.models import User, UserRole, AuthLink
 from learn_anything.adapters.persistence.tables.base import mapper_registry
 
 users_table = sa.Table(

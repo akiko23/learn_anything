@@ -9,7 +9,7 @@ from learn_anything.application.ports.data.course_gateway import CourseGateway, 
     RegistrationForCourseGateway
 from learn_anything.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.entities.course.models import CourseID
 
 
 @dataclass

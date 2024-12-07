@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.entities.course.models import CourseID
 from learn_anything.domain.error import ApplicationError
 
 

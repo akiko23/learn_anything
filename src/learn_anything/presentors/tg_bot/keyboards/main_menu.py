@@ -1,7 +1,7 @@
 from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from learn_anything.domain.user.models import UserRole, UserID
+from learn_anything.domain.entities.user.models import UserRole
 
 
 def get_main_menu_keyboard(user_role: UserRole):

@@ -1,7 +1,7 @@
 from jinja2 import Template
 
 from learn_anything.application.interactors.task.get_course_tasks import TaskData
-from learn_anything.domain.task.enums import TaskType
+from learn_anything.domain.entities.task.enums import TaskType
 from learn_anything.presentors.tg_bot.texts.formatters import format_date
 
 prepared_code_tm = Template(

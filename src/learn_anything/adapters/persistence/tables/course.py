@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 
-from learn_anything.domain.course.models import Course, RegistrationForCourse, CourseShareRule
+from learn_anything.domain.entities.course.models import Course, RegistrationForCourse, CourseShareRule
 from learn_anything.adapters.persistence.tables.base import mapper_registry
 
 courses_table = sa.Table(

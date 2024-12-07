@@ -4,7 +4,7 @@ from learn_anything.adapters.auth.errors import TokenDecodeError
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
 from learn_anything.application.ports.data.user_gateway import UserGateway
-from learn_anything.domain.user.models import UserID, UserRole
+from learn_anything.domain.entities.user.models import UserID, UserRole
 
 THE_ONLY_OWNER_ID = 818525681
 

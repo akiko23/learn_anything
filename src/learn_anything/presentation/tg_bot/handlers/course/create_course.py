@@ -8,7 +8,7 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.course.create_course import CreateCourseInteractor, CreateCourseInputData
 from learn_anything.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
-from learn_anything.domain.user.models import UserRole
+from learn_anything.domain.entities.user.models import UserRole
 from learn_anything.presentation.tg_bot.states.course import CreateCourseForm
 from learn_anything.presentors.tg_bot.keyboards.course.create_course import CANCEL_COURSE_CREATION_KB, \
     GET_COURSE_PHOTO_KB, \

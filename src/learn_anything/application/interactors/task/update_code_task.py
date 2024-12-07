@@ -11,10 +11,10 @@ from learn_anything.application.ports.data.file_manager import FileManager
 from learn_anything.application.ports.data.task_gateway import TaskGateway
 from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.application.ports.playground import PlaygroundFactory
-from learn_anything.domain.course.errors import CourseDoesNotExistError
-from learn_anything.domain.course.rules import ensure_actor_has_write_access
-from learn_anything.domain.task.models import TaskID, CodeTaskTestID
-from learn_anything.domain.task.rules import update_code_task_test
+from learn_anything.domain.entities.course.errors import CourseDoesNotExistError
+from learn_anything.domain.entities.course.rules import ensure_actor_has_write_access
+from learn_anything.domain.entities.task.models import TaskID, CodeTaskTestID
+from learn_anything.domain.entities.task.rules import update_code_task_test
 
 
 @dataclass

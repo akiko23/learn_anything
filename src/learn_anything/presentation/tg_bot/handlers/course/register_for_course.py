@@ -7,7 +7,7 @@ from dishka import FromDishka
 
 from learn_anything.application.interactors.course.register_for_course import RegisterForCourseInteractor, \
     RegisterForCourseInputData
-from learn_anything.domain.course.models import CourseID
+from learn_anything.domain.entities.course.models import CourseID
 from learn_anything.presentors.tg_bot.keyboards.course.get_course import get_course_kb
 
 router = Router()
