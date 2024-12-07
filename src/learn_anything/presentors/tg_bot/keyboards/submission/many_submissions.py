@@ -4,8 +4,6 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 def get_many_submissions_keyboard(
         pointer: int,
         total: int,
-        back_to: str,
-        course_id: str
 ):
     kb = InlineKeyboardMarkup(
         inline_keyboard=[

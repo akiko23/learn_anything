@@ -66,8 +66,6 @@ async def get_my_submissions(
             reply_markup=get_many_submissions_keyboard(
                 pointer=pointer,
                 total=total,
-                back_to=back_to,
-                course_id=course_id
             )
         )
 
@@ -81,8 +79,6 @@ async def get_my_submissions(
         reply_markup=get_many_submissions_keyboard(
             pointer=pointer,
             total=total,
-            back_to=back_to,
-            course_id=course_id
         ),
         parse_mode='HTML'
     )
@@ -98,10 +94,7 @@ async def watch_actor_submissions_prev_or_next(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    back_to = data['back_to']
-    course_id = data['course_id']
     task_id: str = data['task_id']
-
     command = callback_query.data.split('-')[1]
 
     pointer = data[f'actor_submissions_{task_id}_pointer']
@@ -149,8 +142,6 @@ async def watch_actor_submissions_prev_or_next(
         reply_markup=get_many_submissions_keyboard(
             pointer=pointer,
             total=total,
-            back_to=back_to,
-            course_id=course_id
         ),
         parse_mode='HTML'
     )
