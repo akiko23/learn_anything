@@ -70,8 +70,7 @@ async def edit_task_attempts_limit(
     await state.set_state(state=None)
 
     tasks = data[f'course_{course_id}_tasks']
-    if new_attempts_limit is not None:
-        tasks[data[f'course_{course_id}_tasks_pointer']].attempts_limit = new_attempts_limit
+    tasks[data[f'course_{course_id}_tasks_pointer']].attempts_limit = new_attempts_limit
 
     await state.update_data(
         **{f'course_{course_id}_tasks': tasks}
@@ -256,7 +255,7 @@ async def get_code_task_tests(
 {python_code_tm.render(code=current_test.code)}
 """,
         reply_markup=watch_code_task_tests_kb(pointer=pointer, total=len(target_task.tests), task_id=target_task.id),
-        parse_mode='markdown',
+        parse_mode='HTML',
     )
 
 
@@ -287,12 +286,10 @@ async def watch_code_task_tests_prev_or_next(
         text=f"""
     Тест #{pointer + 1}:
 
-    ```python
-    {current_test.code}
-    ```
+    {python_code_tm.render(code=current_test.code)}
     """,
         reply_markup=watch_code_task_tests_kb(pointer=pointer, total=len(target_task.tests), task_id=target_task.id),
-        parse_mode='markdown',
+        parse_mode='HTML',
     )
 
     await state.update_data(

@@ -61,7 +61,7 @@ async def get_my_submissions(
     if total == 0:
         msg_text = 'Вы еще ни разу не решали эту задачу'
 
-        await bot.send_message(
+        return await bot.send_message(
             chat_id=user_id,
             text=msg_text,
             reply_markup=get_many_submissions_keyboard(

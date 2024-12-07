@@ -12,9 +12,12 @@ from aiogram.types import CallbackQuery
 from aiogram.types import Message, ErrorEvent
 from dishka import FromDishka
 
+from learn_anything.application.input_data import Pagination
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
 from learn_anything.application.interactors.task.create_task import CreateTaskInteractor, CreateTaskInputData, \
     CreateCodeTaskInteractor, CreateCodeTaskInputData
+from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
+    GetCourseTasksInputData
 from learn_anything.entities.course.models import CourseID
 from learn_anything.entities.task.enums import TaskType
 from learn_anything.entities.task.errors import TaskPreparedCodeIsInvalidError, TaskTestCodeIsInvalidError, \
@@ -147,25 +150,31 @@ async def get_course_task_type(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[CreateTaskInteractor],
+        get_course_tasks_interactor: FromDishka[GetCourseTasksInteractor],
 ):
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
+
+    course_id, back_to = CourseID(int(data['course_id'])), data['back_to']
+    title = data['title']
+    body = data['body']
+    topic = data['topic']
 
     task_type = TaskType(callback_query.data.split('-')[1])
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
+    output_data = await get_course_tasks_interactor.execute(
+        data=GetCourseTasksInputData(
+            course_id=course_id,
+            pagination=Pagination(offset=0, limit=0)
+        )
+    )
+
+    index_in_course = output_data.total
     match task_type:
         case TaskType.THEORY:
             await state.set_state(state=None)
-
-            course_id = CourseID(int(data['course_id']))
-            title = data['title']
-            body = data['body']
-            topic = data['topic']
-
-            index_in_course = int(data[f'course_{course_id}_tasks_total'])
-            back_to = data['back_to']
 
             await interactor.execute(
                 CreateTaskInputData(
@@ -473,9 +482,7 @@ async def finish_task_creation(
 
     prepared_code = (
         f'Предварительный код: \n'
-        f'```python\n'
-        f'{prepared_code}\n'
-        '```'
+        f'{python_code_tm.render(code=prepared_code)}\n'
     ) if prepared_code else ''
 
     await bot.send_message(
