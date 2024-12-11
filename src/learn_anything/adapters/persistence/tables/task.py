@@ -1,9 +1,9 @@
 import sqlalchemy as sa
 
+from learn_anything.adapters.persistence.tables.base import mapper_registry
 from learn_anything.domain.entities.task.enums import TaskType
 from learn_anything.domain.entities.task.models import Task, CodeTask, PollTask, PollTaskOption, TextInputTask, \
     TextInputTaskAnswer, CodeTaskTest
-from learn_anything.adapters.persistence.tables.base import mapper_registry
 
 tasks_table = sa.Table(
     "tasks",
@@ -64,21 +64,21 @@ tasks_table = sa.Table(
 code_task_tests_table = sa.Table(
     "code_task_tests",
     mapper_registry.metadata,
-sa.Column(
-        "id",
+    sa.Column(
+        "index_in_task",
         sa.BigInteger,
-        primary_key=True,
-        unique=True,
-        autoincrement=True,
+        nullable=False,
     ),
     sa.Column(
         "code",
         sa.Text,
         nullable=False,
+        primary_key=True
     ),
     sa.Column(
         "task_id",
         sa.ForeignKey("tasks.id", ondelete="CASCADE"),
+        primary_key=True
     ),
 )
 

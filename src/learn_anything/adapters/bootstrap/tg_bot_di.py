@@ -24,9 +24,9 @@ from learn_anything.adapters.s3.config import load_s3_config, S3Config
 from learn_anything.adapters.s3.s3_file_manager import S3FileManager
 from learn_anything.application.interactors.auth.authenticate import AuthenticateInteractor
 from learn_anything.application.interactors.auth.register import RegisterInteractor
-from learn_anything.application.interactors.auth_link.login_with_auth_link import LoginWithAuthLinkInteractor
 from learn_anything.application.interactors.auth_link.create_auth_link import CreateAuthLinkInteractor
 from learn_anything.application.interactors.auth_link.invalidate_auth_link import InvalidateAuthLinkInteractor
+from learn_anything.application.interactors.auth_link.login_with_auth_link import LoginWithAuthLinkInteractor
 from learn_anything.application.interactors.course.create_course import CreateCourseInteractor
 from learn_anything.application.interactors.course.delete_course import DeleteCourseInteractor
 from learn_anything.application.interactors.course.get_course import GetCourseInteractor
@@ -44,9 +44,9 @@ from learn_anything.application.interactors.task.create_task import CreateCodeTa
     CreateTaskInteractor
 from learn_anything.application.interactors.task.delete_task import DeleteTaskInteractor
 from learn_anything.application.interactors.task.get_course_tasks import GetCourseTasksInteractor
-from learn_anything.application.interactors.task.update_task import UpdateTaskInteractor
 from learn_anything.application.interactors.task.update_code_task import UpdateCodeTaskInteractor, \
-    UpdateCodeTaskTestInteractor
+    UpdateCodeTaskTestInteractor, AddCodeTaskTestInteractor
+from learn_anything.application.interactors.task.update_task import UpdateTaskInteractor
 from learn_anything.application.ports.auth.auth_manager import AuthManager
 from learn_anything.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.application.ports.auth.token import TokenProcessor
@@ -114,6 +114,7 @@ def interactors_provider() -> Provider:
     provider.provide(UpdateTaskInteractor, scope=Scope.REQUEST)
     provider.provide(UpdateCodeTaskInteractor, scope=Scope.REQUEST)
     provider.provide(UpdateCodeTaskTestInteractor, scope=Scope.REQUEST)
+    provider.provide(AddCodeTaskTestInteractor, scope=Scope.REQUEST)
     provider.provide(DeleteTaskInteractor, scope=Scope.REQUEST)
 
     provider.provide(CreateCodeTaskSubmissionInteractor, scope=Scope.REQUEST)

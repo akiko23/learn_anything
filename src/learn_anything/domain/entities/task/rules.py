@@ -6,7 +6,7 @@ from learn_anything.domain.entities.course.models import CourseID
 from learn_anything.domain.entities.submission.models import Submission
 from learn_anything.domain.entities.task.enums import TaskType
 from learn_anything.domain.entities.task.models import PollTask, PollTaskOptionID, TextInputTask, TextInputTaskAnswer, \
-    CodeTask, CodeTaskTest, CodeTaskTestID
+    CodeTask, CodeTaskTest
 
 
 def find_task_option_by_id(task: PollTask, target_option_id: PollTaskOptionID):
@@ -42,7 +42,7 @@ def create_code_task(
         index_in_course=index_in_course,
         prepared_code=prepared_code,
         code_duration_timeout=code_duration_timeout,
-        tests=[CodeTaskTest(id=None, code=code) for code in tests],
+        tests=[CodeTaskTest(code=code) for i, code in enumerate(tests)],
         attempts_limit=attempts_limit,
         created_at=datetime.now()
     )
@@ -55,10 +55,17 @@ def is_task_solved_by_actor(actor_submissions: Iterable[Submission]) -> bool:
     return False
 
 
+def code_task_test_exists(code_task: CodeTask, test_code: str):
+    for code_task_test in code_task.tests:
+        if code_task_test.code == test_code:
+            return True
+    return False
 
-def update_code_task_test(task: CodeTask, target_test_id: CodeTaskTestID, new_code: str):
-    for i, test in enumerate(task.tests):
-        if test.id == target_test_id:
-            task.tests[i].code = new_code
 
+def update_code_task_test(task: CodeTask, index_in_task: int, new_code: str | None):
+    if new_code is None:
+        task.tests[index_in_task].code = None
+        return task
+
+    task.tests[index_in_task].code = new_code
     return task

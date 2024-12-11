@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import select, func, delete
+from sqlalchemy import select, func, delete, and_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,7 +30,7 @@ class TaskMapper(TaskGateway):
         if task is None:
             return task
 
-        get_tests_stmt = select(CodeTaskTest).where(code_task_tests_table.c.task_id == task_id)
+        get_tests_stmt = select(CodeTaskTest).where(code_task_tests_table.c.task_id == task_id).order_by(code_task_tests_table.c.index_in_task)
         get_tests_result = await self._session.execute(get_tests_stmt)
 
         task.tests = get_tests_result.scalars().all()
@@ -147,6 +147,11 @@ class TaskMapper(TaskGateway):
         )
 
         if task.id:
+            for idx, test in enumerate(task.tests):
+                if test.code is None:
+                    await self._session.delete(test)
+                    return task.id
+
             upsert_code_task_stmt = (
                 insert(tasks_table).
                 values(
@@ -178,30 +183,21 @@ class TaskMapper(TaskGateway):
         res = await self._session.execute(upsert_code_task_stmt)
         task_id = res.scalar_one()
 
+        task.tests = list(filter(lambda t: t.code is not None, task.tests))
+
         insert_code_task_tests_stmt = (
             insert(CodeTaskTest).
             values(
                 [
-                    {"code": test.code, "task_id": task_id}
-                    for test in task.tests
+                    {"index_in_task": idx, "code": test.code, "task_id": task_id}
+                    for idx, test in enumerate(task.tests)
                 ]
             )
         )
-
-        if task.tests[0].id:
-            insert_code_task_tests_stmt = (
-                insert(CodeTaskTest).
-                values(
-                    [
-                        {'id': test.id, "code": test.code, "task_id": task_id}
-                        for test in task.tests
-                    ]
-                )
-            )
-            insert_code_task_tests_stmt = insert_code_task_tests_stmt.on_conflict_do_update(
-                constraint='code_task_tests_pkey',
-                set_=dict(code=insert_code_task_tests_stmt.excluded.code),
-            )
+        insert_code_task_tests_stmt = insert_code_task_tests_stmt.on_conflict_do_update(
+            constraint='code_task_tests_pkey',
+            set_=dict(code=insert_code_task_tests_stmt.excluded.code),
+        )
 
         await self._session.execute(insert_code_task_tests_stmt)
         return task_id

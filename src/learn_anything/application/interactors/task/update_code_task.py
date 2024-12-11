@@ -13,8 +13,9 @@ from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.application.ports.playground import PlaygroundFactory
 from learn_anything.domain.entities.course.errors import CourseDoesNotExistError
 from learn_anything.domain.entities.course.rules import ensure_actor_has_write_access
-from learn_anything.domain.entities.task.models import TaskID, CodeTaskTestID
-from learn_anything.domain.entities.task.rules import update_code_task_test
+from learn_anything.domain.entities.task.errors import CodeTaskTestAlreadyExistsError
+from learn_anything.domain.entities.task.models import TaskID, CodeTaskTest
+from learn_anything.domain.entities.task.rules import update_code_task_test, code_task_test_exists
 
 
 @dataclass
@@ -93,9 +94,10 @@ class UpdateCodeTaskInteractor:
 
 @dataclass
 class UpdateCodeTaskTestInputData:
-    id: CodeTaskTestID
     task_id: TaskID
-    code: str | None = None
+    index_in_task: int
+    code: str | None
+
 
 
 @dataclass
@@ -133,8 +135,10 @@ class UpdateCodeTaskTestInteractor:
         share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
-        if data.code:
-            task = update_code_task_test(task=task, new_code=data.code, target_test_id=data.id)
+        if code_task_test_exists(code_task=task, test_code=data.code):
+            raise CodeTaskTestAlreadyExistsError(task_id=task.id, code=data.code)
+
+        task = update_code_task_test(task=task, index_in_task=data.index_in_task, new_code=data.code)
 
         task.updated_at = datetime.now()
         course.updated_at = datetime.now()
@@ -145,3 +149,53 @@ class UpdateCodeTaskTestInteractor:
         await self._commiter.commit()
 
         return UpdateCodeTaskTestOutputData(new_code=data.code)
+
+
+@dataclass
+class AddCodeTaskTestInputData:
+    task_id: TaskID
+    code: str
+
+
+class AddCodeTaskTestInteractor:
+    def __init__(
+            self,
+            task_gateway: TaskGateway,
+            course_gateway: CourseGateway,
+            user_gateway: UserGateway,
+            id_provider: IdentityProvider,
+            playground_factory: PlaygroundFactory,
+            file_manager: FileManager, commiter: Commiter
+    ) -> None:
+        self._task_gateway = task_gateway
+        self._course_gateway = course_gateway
+        self._user_gateway = user_gateway
+        self._commiter = commiter
+        self._id_provider = id_provider
+        self._playground_factory = playground_factory
+        self._file_manager = file_manager
+
+    async def execute(self, data: AddCodeTaskTestInputData) -> None:
+        actor_id = await self._id_provider.get_current_user_id()
+
+        task = await self._task_gateway.get_code_task_with_id(data.task_id)
+        if not task:
+            raise CourseDoesNotExistError
+
+        course = await self._course_gateway.with_id(task.course_id)
+
+        share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
+        ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
+
+        if code_task_test_exists(code_task=task, test_code=data.code):
+            raise CodeTaskTestAlreadyExistsError(task_id=task.id, code=data.code)
+
+        task.tests += [CodeTaskTest(code=data.code)]
+
+        task.updated_at = datetime.now()
+        course.updated_at = datetime.now()
+
+        await self._task_gateway.save_code_task(task=task)
+        await self._course_gateway.save(course=course)
+
+        await self._commiter.commit()

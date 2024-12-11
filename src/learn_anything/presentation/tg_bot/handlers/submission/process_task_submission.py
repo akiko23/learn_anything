@@ -94,6 +94,7 @@ async def process_code_task_submission(
                 user_is_registered=current_course.user_is_registered,
                 course_is_published=current_course.is_published,
             ),
+            parse_mode='HTML'
         )
     finally:
         tasks[pointer] = target_task

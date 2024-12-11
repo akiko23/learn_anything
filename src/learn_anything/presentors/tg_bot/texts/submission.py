@@ -2,8 +2,8 @@ from learn_anything.presentors.tg_bot.templates import pre_tm
 
 
 def get_on_failed_code_submission_text(output_data, attempts_left: int | None):
-    additional_postfix = '...' if len(output_data.failed_output) == 900 else ''
-    output = pre_tm.render(content=output_data.failed_output)[:900] + additional_postfix
+    additional_postfix = '...' if len(output_data.failed_output) > 900 else ''
+    output = pre_tm.render(content=output_data.failed_output[:900]) + additional_postfix
 
     attempts_left_text = ''
     if attempts_left is not None:

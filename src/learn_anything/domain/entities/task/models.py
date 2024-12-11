@@ -26,11 +26,8 @@ class PracticeTask(Task):
     attempts_limit: int | None
 
 
-CodeTaskTestID = NewType('CodeTaskTestID', int)
-
 @dataclass
 class CodeTaskTest:
-    id: CodeTaskTestID | None
     code: str
 
 

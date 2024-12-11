@@ -75,3 +75,14 @@ class TheoryTaskHasNoSubmissionsError(ApplicationError):
     @property
     def message(self) -> str:
         return f"Theory task with id={self.task_id} can't have submissions"
+
+
+@dataclass
+class CodeTaskTestAlreadyExistsError(ApplicationError):
+    task_id: TaskID
+    code: str
+
+    @property
+    def message(self) -> str:
+        return f"Test for task={self.task_id} with code={self.code} already exists"
+

@@ -49,6 +49,9 @@ class RegisterInteractor:
             role=role
         )
 
+        await self._committer.commit()
+
         logging.info("User %s with role '%s' was just registered", user_id, role)
+
 
         return RegisterOutputData(user_id=user_id, role=role)

@@ -162,7 +162,7 @@ class CreateCodeTaskInteractor:
                     f'from contextlib import suppress\n'
                     '\n'
                     'stdout, stderr = "stub", "stub"\n'
-                    f'with suppress(AssertionError):\n'
+                    f'with suppress(AssertionError, NameError):\n'
                     f'    {code}'
                 )
 

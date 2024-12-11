@@ -40,7 +40,8 @@ def get_task_edit_menu_kb(
             )
 
         builder.row(
-            InlineKeyboardButton(text="Изменить количество попыток", callback_data=f'edit_task_attempts_limit-{task.id}'),
+            InlineKeyboardButton(text="Изменить количество попыток",
+                                 callback_data=f'edit_task_attempts_limit-{task.id}'),
         )
 
     builder.row(InlineKeyboardButton(text="Удалить", callback_data=f'delete_task-{task.id}'))
@@ -101,20 +102,22 @@ def watch_code_task_tests_kb(pointer: int, total: int, task_id: TaskID):
             InlineKeyboardButton(text='⬅️', callback_data=f'code_task_tests-prev-{task_id}'),
         ])
 
-
     kb.inline_keyboard.insert(0, [
         InlineKeyboardButton(text='Добавить тест', callback_data=f'add_code_task_test-{task_id}'),
-        InlineKeyboardButton(text='Изменить код', callback_data=f'edit_code_task_test-{task_id}'),
+    ])
+    kb.inline_keyboard.insert(1, [
+        InlineKeyboardButton(text='Изменить', callback_data=f'edit_code_task_test-{task_id}'),
     ])
 
+
     if total > 1:
-        kb.inline_keyboard[0].insert(
-            0,
-            InlineKeyboardButton(text='Удалить', callback_data=f'delete_code_task_test-{task_id}'),
+        kb.inline_keyboard[1].insert(
+            1,
+            InlineKeyboardButton(text='Удалить', callback_data=f'delete_code_task_test-{task_id}')
         )
+
     kb.inline_keyboard.append([
         InlineKeyboardButton(text='Назад', callback_data=f'edit_task-{task_id}'),
     ])
 
     return kb
-

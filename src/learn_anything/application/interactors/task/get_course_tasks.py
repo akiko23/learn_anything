@@ -12,7 +12,7 @@ from learn_anything.application.ports.data.user_gateway import UserGateway
 from learn_anything.domain.entities.course.models import CourseID
 from learn_anything.domain.entities.course.rules import ensure_actor_has_read_access, actor_has_write_access
 from learn_anything.domain.entities.task.enums import TaskType
-from learn_anything.domain.entities.task.models import TaskID, CodeTask, CodeTaskTestID
+from learn_anything.domain.entities.task.models import TaskID, CodeTask
 from learn_anything.domain.entities.task.rules import is_task_solved_by_actor
 
 
@@ -25,7 +25,6 @@ class GetCourseTasksInputData:
 
 @dataclass
 class CodeTaskTestData:
-    id: CodeTaskTestID
     code: str
 
 
@@ -51,7 +50,7 @@ class TaskData:
     # code task fields
     prepared_code: str | None = None
     code_duration_timeout: int | None = None
-    tests: Sequence[CodeTaskTestData] | None = None
+    tests: list[CodeTaskTestData] | None = None
 
 
 @dataclass
@@ -126,7 +125,6 @@ class GetCourseTasksInteractor:
 
                 task_data.tests = [
                     CodeTaskTestData(
-                        id=test.id,
                         code=test.code
                     )
                     for test in task.tests

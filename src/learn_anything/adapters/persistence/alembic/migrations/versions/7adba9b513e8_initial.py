@@ -86,11 +86,11 @@ def upgrade() -> None:
     sa.UniqueConstraint('id')
     )
     op.create_table('code_task_tests',
-    sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
+    sa.Column('index_in_task', sa.BigInteger(), nullable=False),
     sa.Column('code', sa.Text(), nullable=False),
     sa.Column('task_id', sa.BigInteger(), nullable=False),
     sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('code', 'task_id'),
     )
     op.create_table('poll_task_options',
     sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),

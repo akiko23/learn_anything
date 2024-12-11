@@ -129,6 +129,7 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
             for index, test in enumerate(task.tests):
                 output, passed = await self._check_test(
                     test=test,
+                    pre_exec_code=code,
                     user_submission_output=out,
                     user_submission_stderr=err,
                 )
@@ -139,14 +140,17 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
     async def _check_test(
             self,
             test: CodeTaskTest,
+            pre_exec_code: str,
             user_submission_output: str,
             user_submission_stderr: str,
     ) -> (str, bool):
         # you can use 'stdout' variable to retrieve an output from the user's code
         # and 'stderr' variable to retrieve a stderr from the user's code
         test_code = (
+                f'{pre_exec_code}\n'
                 f'stdout = \'\'\'{user_submission_output}\'\'\'\n'
-                f'stderr = \'\'\'{user_submission_stderr}\'\'\'\n' + test.code
+                f'stderr = \'\'\'{user_submission_stderr}\'\'\'\n'
+                + test.code
         )
 
         out, err = await self._pl.execute_code(code=test_code)

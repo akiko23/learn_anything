@@ -1,6 +1,8 @@
+from contextlib import suppress
 from typing import Any
 
 from aiogram import Bot, Router, F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -9,7 +11,8 @@ from dishka import FromDishka
 from learn_anything.application.input_data import UNSET
 from learn_anything.application.interactors.task.get_course_tasks import TaskData, CodeTaskTestData
 from learn_anything.application.interactors.task.update_code_task import UpdateCodeTaskInputData, \
-    UpdateCodeTaskInteractor, UpdateCodeTaskTestInputData, UpdateCodeTaskTestInteractor
+    UpdateCodeTaskInteractor, UpdateCodeTaskTestInteractor, UpdateCodeTaskTestInputData, AddCodeTaskTestInteractor, \
+    AddCodeTaskTestInputData
 from learn_anything.domain.entities.task.models import TaskID
 from learn_anything.presentation.tg_bot.states.task import EditCodeTaskForm
 from learn_anything.presentors.tg_bot.keyboards.task.edit_task import CANCEL_EDITING_KB, \
@@ -167,7 +170,8 @@ async def start_editing_task_prepared_code(
 
     await state.set_state(state=EditCodeTaskForm.get_new_prepared_code)
 
-    msg = await bot.send_message(chat_id=user_id, text='Отправьте новый код инициализации задания (null если хотите его удалить)',
+    msg = await bot.send_message(chat_id=user_id,
+                                 text='Отправьте новый код инициализации задания (null если хотите его удалить)',
                                  reply_markup=CANCEL_EDITING_KB)
     await state.update_data(
         msg_on_delete=msg.message_id
@@ -322,37 +326,38 @@ async def start_editing_code_task_test(
 
 @router.message(
     StateFilter(EditCodeTaskForm.get_new_test_code),
-    F.text.as_("new_test_code")
+    F.text.as_("updated_test_code")
 )
-async def edit_code_task_test_code(
+async def edit_code_task_test(
         msg: Message,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[UpdateCodeTaskTestInteractor],
-        new_test_code: str,
+        updated_test_code: str,
 ):
     user_id: int = msg.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
+    with suppress(TelegramBadRequest):
+        await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     course_id, back_to, target_task = data['course_id'], data['back_to'], data['target_task']
     pointer = data[f'code_task_{target_task.id}_tests_pointer']
 
     target_task: TaskData
-    target_test = target_task.tests[pointer]
 
-    output_data = await interactor.execute(
+    await interactor.execute(
         data=UpdateCodeTaskTestInputData(
-            id=target_test.id,
             task_id=target_task.id,
-            code=new_test_code,
+            index_in_task=pointer,
+            code=updated_test_code,
         )
     )
     await state.set_state(state=None)
 
+    target_task.tests[pointer].code = updated_test_code
     tasks = data[f'course_{course_id}_tasks']
-    tasks[data[f'course_{course_id}_tasks_pointer']].tests[pointer].code = output_data.new_code
+    tasks[data[f'course_{course_id}_tasks_pointer']].tests[pointer].code = updated_test_code
 
     await state.update_data(
         **{f'course_{course_id}_tasks': tasks},
@@ -362,5 +367,108 @@ async def edit_code_task_test_code(
     await bot.send_message(
         chat_id=user_id,
         text=f'Код теста #{pointer + 1} успешно обновлен',
+        reply_markup=get_task_after_edit_menu_kb(back_to=back_to, course_id=course_id)
+    )
+
+
+@router.callback_query(F.data.startswith("add_code_task_test-"))
+async def handle_add_code_task_test_request(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        bot: Bot,
+):
+    await state.set_state(state=EditCodeTaskForm.add_new_test)
+    await callback_query.answer()
+
+    msg = await callback_query.message.answer("Введите код для нового теста", reply_markup=CANCEL_EDITING_KB)
+    await state.update_data(
+        msg_on_delete=msg.message_id
+    )
+
+
+@router.message(
+    StateFilter(EditCodeTaskForm.add_new_test),
+    F.text.as_("new_test_code")
+)
+async def add_code_task_test(
+        msg: Message,
+        state: FSMContext,
+        bot: Bot,
+        interactor: FromDishka[AddCodeTaskTestInteractor],
+        new_test_code: str,
+):
+    user_id: int = msg.from_user.id
+    data: dict[str, Any] = await state.get_data()
+
+    with suppress(TelegramBadRequest):
+        await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
+
+    course_id, back_to, target_task = data['course_id'], data['back_to'], data['target_task']
+    target_task: TaskData
+
+    await interactor.execute(
+        data=AddCodeTaskTestInputData(
+            task_id=target_task.id,
+            code=new_test_code,
+        )
+    )
+    await state.set_state(state=None)
+
+    target_task.tests += [CodeTaskTestData(code=new_test_code)]
+    tasks = data[f'course_{course_id}_tasks']
+    tasks[data[f'course_{course_id}_tasks_pointer']].tests.append(CodeTaskTestData(code=new_test_code))
+
+    await state.update_data(
+        **{f'course_{course_id}_tasks': tasks},
+        target_task=target_task,
+    )
+
+    await bot.send_message(
+        chat_id=user_id,
+        text=f'Тест #{len(target_task.tests)} успешно создан',
+        reply_markup=get_task_after_edit_menu_kb(back_to=back_to, course_id=course_id)
+    )
+
+
+@router.callback_query(F.data.startswith('delete_code_task_test-'))
+async def delete_code_task_test(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        bot: Bot,
+        interactor: FromDishka[UpdateCodeTaskTestInteractor],
+):
+    user_id: int = callback_query.from_user.id
+    data: dict[str, Any] = await state.get_data()
+
+    course_id, back_to, target_task = data['course_id'], data['back_to'], data['target_task']
+    pointer = data[f'code_task_{target_task.id}_tests_pointer']
+    target_task: TaskData
+
+    await callback_query.message.delete()
+
+    await interactor.execute(
+        data=UpdateCodeTaskTestInputData(
+            task_id=TaskID(int(target_task.id)),
+            code=None,
+            index_in_task=pointer
+        )
+    )
+
+
+    target_task.tests.pop(pointer)
+    tasks = data[f'course_{course_id}_tasks']
+    tasks[data[f'course_{course_id}_tasks_pointer']].tests.pop(pointer)
+
+    await state.update_data(
+        **{
+            f'course_{course_id}_tasks': tasks,
+            f'code_task_{target_task.id}_tests_pointer': max(0, pointer - 1)
+        },
+        target_task=target_task,
+    )
+
+    await bot.send_message(
+        chat_id=user_id,
+        text=f'Тест #{pointer + 1} успешно удален',
         reply_markup=get_task_after_edit_menu_kb(back_to=back_to, course_id=course_id)
     )
