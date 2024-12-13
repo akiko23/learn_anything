@@ -7,6 +7,7 @@ from learn_anything.application.ports.committer import Commiter
 from learn_anything.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
 from learn_anything.application.ports.data.submission_gateway import SubmissionGateway
 from learn_anything.application.ports.data.task_gateway import TaskGateway
+from learn_anything.application.ports.event_publisher import EventPublisher
 from learn_anything.application.ports.playground import PlaygroundFactory
 from learn_anything.domain.entities.course.errors import CourseDoesNotExistError
 from learn_anything.domain.entities.submission.models import PollSubmission, TextInputSubmission
@@ -78,6 +79,13 @@ class CreateCodeTaskSubmissionOutputData:
 
 
 class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
+    def __init__(self, id_provider: IdentityProvider, submission_gateway: SubmissionGateway, task_gateway: TaskGateway,
+                 course_gateway: CourseGateway, playground_factory: PlaygroundFactory, commiter: Commiter,
+                 registration_for_course_gateway: RegistrationForCourseGateway):
+        super().__init__(id_provider, submission_gateway, task_gateway, course_gateway, playground_factory, commiter,
+                         registration_for_course_gateway)
+        # self._event_publisher = event_publisher
+
     async def execute(self, data: CreateCodeTaskSubmissionInputData) -> CreateCodeTaskSubmissionOutputData:
         actor_id = await self._id_provider.get_current_user_id()
         task = await self._task_gateway.get_code_task_with_id(data.task_id)
@@ -91,6 +99,14 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
             task=task,
             submission=data.submission,
         )
+        # result_output, failed_test_idx = await self._check_submission(
+        #     type='fsaf',
+        #     Message(
+        #         actor_id=actor_id,
+        #         task=task,
+        #         submission=data.submission
+        #     ),
+        # )
 
         submission = create_code_submission(
             user_id=actor_id,

@@ -1,4 +1,13 @@
+import json
+from functools import partial
+
+from aio_pika import Connection
+from aio_pika.abc import AbstractChannel
+from aio_pika.pool import Pool
+from aiogram import Bot, Dispatcher
 from aiogram.enums import MessageEntityType
+from aiogram.fsm.storage.memory import SimpleEventIsolation
+from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import TelegramObject, Message
 from dishka import (
     AsyncContainer,
@@ -11,6 +20,7 @@ from dishka import (
 
 from learn_anything.adapters.auth.tg_auth_manager import TelegramAuthManager
 from learn_anything.adapters.auth.tg_identity_provider import TgIdentityProvider, TgB64TokenProcessor
+from learn_anything.adapters.json_serializers import DTOJSONEncoder, dto_obj_hook
 from learn_anything.adapters.persistence.commiter import SACommiter
 from learn_anything.adapters.persistence.config import load_db_config, DatabaseConfig
 from learn_anything.adapters.persistence.mappers.course import CourseMapper, RegistrationForCourseMapper
@@ -20,6 +30,8 @@ from learn_anything.adapters.persistence.mappers.user import UserMapper, AuthLin
 from learn_anything.adapters.persistence.providers import get_async_sessionmaker, get_engine, get_async_session
 from learn_anything.adapters.playground.unix_playground import UnixPlaygroundFactory
 from learn_anything.adapters.redis.config import load_redis_config, RedisConfig
+from learn_anything.adapters.rmq.config import load_rmq_config, RMQConfig
+from learn_anything.adapters.rmq.providers import get_channel, get_connection_pool
 from learn_anything.adapters.s3.config import load_s3_config, S3Config
 from learn_anything.adapters.s3.s3_file_manager import S3FileManager
 from learn_anything.application.interactors.auth.authenticate import AuthenticateInteractor
@@ -132,6 +144,7 @@ def configs_provider() -> Provider:
     provider.provide(lambda: load_bot_config(), scope=Scope.APP, provides=BotConfig)
     provider.provide(lambda: load_s3_config(), scope=Scope.APP, provides=S3Config)
     provider.provide(lambda: load_redis_config(), scope=Scope.APP, provides=RedisConfig)
+    provider.provide(lambda: load_rmq_config(), scope=Scope.APP, provides=RMQConfig)
 
     return provider
 
@@ -165,6 +178,38 @@ class TgProvider(Provider):
 
         return identity_provider
 
+    @provide(scope=Scope.APP)
+    async def get_bot(
+            self,
+            bot_cfg: BotConfig,
+    ) -> Bot:
+        return Bot(token=bot_cfg.token)
+
+    @provide(scope=Scope.APP)
+    async def get_bot(
+            self,
+            bot_cfg: BotConfig,
+    ) -> Bot:
+        return Bot(token=bot_cfg.token)
+
+    @provide(scope=Scope.APP)
+    async def get_state_storage(self, redis_cfg: RedisConfig) -> RedisStorage:
+        return RedisStorage.from_url(
+            url=redis_cfg.dsn,
+            json_dumps=partial(json.dumps, cls=DTOJSONEncoder),
+            json_loads=partial(json.loads, object_hook=dto_obj_hook),
+        )
+
+    @provide(scope=Scope.APP)
+    async def get_dp(
+            self,
+            storage: RedisStorage
+    ) -> Dispatcher:
+        return Dispatcher(
+            events_isolation=SimpleEventIsolation(),
+            storage=storage,
+        )
+
 
 def db_provider() -> Provider:
     provider = Provider()
@@ -176,11 +221,21 @@ def db_provider() -> Provider:
     return provider
 
 
+def rmq_provider() -> Provider:
+    provider = Provider()
+
+    provider.provide(get_connection_pool, provides=Pool[Connection], scope=Scope.APP)
+    provider.provide(get_channel, provides=AbstractChannel, scope=Scope.REQUEST)
+
+    return provider
+
+
 def setup_providers() -> list[Provider]:
     providers = [
         gateways_provider(),
         infrastructure_provider(),
         db_provider(),
+        rmq_provider(),
         configs_provider(),
         interactors_provider(),
     ]
