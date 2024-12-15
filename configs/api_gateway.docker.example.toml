@@ -1,0 +1,18 @@
+[web]
+title = "api-gateway"
+description = "A sample api gateway to course platform service (http -> rmq)"
+host = "0.0.0.0"
+port = 8000
+log_level = "info"
+
+
+[bot]
+token = "your bot token here"
+#bot_webhook_url = "your webhook url here"
+
+
+[rmq]
+host = 'localhost'
+port = 5672
+user = 'guest'
+password = 'guest'

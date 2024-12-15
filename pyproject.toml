@@ -1,3 +1,38 @@
+[tool.poetry]
+name = "learn-anything"
+version = "0.1.0"
+description = "A bot for learning anything"
+authors = ["akiko23"]
+readme = "README.md"
+packages = [{include = "learn_anything", from="src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+aiogram = '^3.13.0'
+aio-pika = '^9.5.3'
+alembic = '^1.13.2'
+asyncpg = '^0.30.0'
+dishka = '^1.4.1'
+fastapi = '^0.115.6'
+Jinja2 = '^3.1.4'
+minio = '^7.2.12'
+msgpack = '^1.1.0'
+orjson = '^3.10.12'
+psycopg = '^3.2.1'
+pyyaml = '^6.0.2'
+prometheus-client = '^0.21.1'
+redis = '^5.0.8'
+SQLAlchemy = '^2.0.34'
+starlette-context = '^0.3.6'
+toml = '^0.10.2'
+uvicorn = '^0.34.0'
+
+[tool.poetry.group.dev.dependencies]
+mypy = '^1.11.2'
+ruff = '^0.6.5'
+isort = '^5.13.2'
+
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
@@ -5,33 +40,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 package-dir = { "" = "src" }
 
-[project]
-name = "learn_anything"
-version = "0.1.0"
-description = "A bot for learning anything"
-authors = [ { name = "akiko23", email = "dmvasilenko43@gmail.com" } ]
-readme = "README.md"
-requires-python = ">=3.12"
 
-dependencies = [
-    "aiogram>=3.13.0",
-    "alembic>=1.13.2",
-    "asyncpg>=0.30.0",
-    "dishka>=1.4.1",
-    "Jinja2>=3.1.4",
-    "minio>=7.2.12",
-    "psycopg>=3.2.1",
-    "redis>=5.0.8",
-    "SQLAlchemy>=2.0.34",
-    "toml>=0.10.2"
-]
-
-[project.optional-dependencies]
-lint = [
-    "mypy>=1.11.2",
-    "ruff>=0.6.5",
-    "isort>=5.13.2"
-]
-
-[project.scripts]
+[tool.poetry.scripts]
 learn-anything = "learn_anything.main.cli:main"

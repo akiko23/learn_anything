@@ -1,0 +1,79 @@
+services:
+  s3:
+    image: minio/minio:latest
+    container_name: learn_anything-minio
+    restart: on-failure
+    env_file:
+      - configs/minio.env
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    volumes:
+      - /etc/learn_anything/minio/data:/data
+    command: server /data --console-address ":9090"
+
+  db:
+    image: postgres:16.0-alpine3.18
+    container_name: learn_anything-db
+    env_file:
+      - configs/db.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - "/etc/learn_anything/pgdata:/var/lib/postgresql/data"
+    restart: always
+
+  redis:
+    image: redis:7.2.4-alpine
+    container_name: "redis"
+    ports:
+      - "6379:6379"
+    restart: "unless-stopped"
+    volumes:
+      - "/etc/learn_anything/redis/config:/usr/local/etc/redis"
+      - "/etc/learn_anything/redis/data:/data"
+    command: "redis-server /usr/local/etc/redis/redis.conf"
+
+  rabbitmq:
+    image: rabbitmq:3.13.7-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - "/etc/learn_anything/rmq/data"
+
+  db_migration:
+    image: learn_anything
+    container_name: db_migration
+    restart: "on-failure"
+    depends_on:
+      - db
+    environment:
+      COURSE_PLATFORM_CONFIG_PATH: "/etc/learn_anything/configs/course_platform.docker.toml"
+    volumes:
+      - ./configs/:/etc/learn_anything/configs
+    command: sh -c "learn-anything alembic upgrade head"
+
+  learn_anything:
+    image: learn_anything
+    container_name: learn_anything_service
+    environment:
+        COURSE_PLATFORM_CONFIG_PATH: "/etc/learn_anything/configs/course_platform.docker.toml"
+        API_GATEWAY_CONFIG_PATH: "/etc/learn_anything/configs/api_gateway.docker.toml"
+    command: learn-anything start bot
+    volumes:
+      - ./configs/:/etc/learn_anything/configs
+    ports:
+      - "8001:8001"
+      - "8000:8000"
+    depends_on:
+      - s3
+      - db
+      - db_migration
+      - redis
+      - rabbitmq
