@@ -26,8 +26,6 @@ router = APIRouter()
 async def webhook(request: Request, channel: FromDishka[AbstractChannel]) -> JSONResponse:
     update = await request.json()
 
-    logger.info('AAAAAAAAAAAAAAAAAAAAAAAAAAAaa')
-
     task: Task[TelegramMethod[Any] | None] = asyncio.create_task(_send_update_to_queue(channel, update))
     background_tasks.add(task)
     task.add_done_callback(background_tasks.discard)
@@ -37,8 +35,6 @@ async def webhook(request: Request, channel: FromDishka[AbstractChannel]) -> JSO
 
 async def _send_update_to_queue(channel: AbstractChannel, update: dict[str, Any]):
     queue_name = 'tg_updates'
-
-    logger.info('AAAAAAAAAAAAAAAAAAAAAAAAAAAaa')
 
     exchange = await channel.declare_exchange("tg_updates", ExchangeType.TOPIC, durable=True)
     queue = await channel.declare_queue(name=queue_name, durable=True)

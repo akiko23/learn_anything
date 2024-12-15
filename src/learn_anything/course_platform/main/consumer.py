@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from functools import partial
 from typing import AsyncGenerator
 
 import msgpack
@@ -13,25 +12,28 @@ from aiogram.types import Update
 from dishka.integrations.aiogram import setup_dishka
 from fastapi import FastAPI
 
-from learn_anything.course_platform.presentation.web.config import load_web_config
-from learn_anything.course_platform.adapters.metrics import TOTAL_MESSAGES_CONSUMED
 from learn_anything.course_platform.adapters.bootstrap.tg_bot_di import setup_di
 from learn_anything.course_platform.adapters.consumer.logger import logger, correlation_id_ctx, LOGGING_CONFIG
+from learn_anything.course_platform.adapters.metrics import TOTAL_MESSAGES_CONSUMED
 from learn_anything.course_platform.adapters.persistence.tables.map import map_tables
 from learn_anything.course_platform.presentation.tg_bot.handlers import register_handlers
 from learn_anything.course_platform.presentation.tg_bot.middlewares.auth import AuthMiddleware
+from learn_anything.course_platform.presentation.web.config import load_web_config
 from learn_anything.course_platform.presentation.web.fastapi_routers.tech import router
 
 
-async def callback(dp: Dispatcher, bot: Bot, msg: AbstractIncomingMessage):
+async def callback(msg: AbstractIncomingMessage, dp: Dispatcher, bot: Bot):
     correlation_id_ctx.set(msg.correlation_id)
-    logger.info('Processing msg')
+    logger.info('Processing msg..')
 
     update = Update.model_validate(msgpack.unpackb(msg.body))
-    await dp.feed_update(bot=bot, update=update)
-
-    await msg.ack()
-    TOTAL_MESSAGES_CONSUMED.inc()
+    try:
+        await dp.feed_update(bot=bot, update=update)
+        await msg.ack()
+    except Exception:  # noqa
+        await msg.reject(requeue=True)
+    finally:
+        TOTAL_MESSAGES_CONSUMED.inc()
 
 
 async def start_consumer(channel: AbstractChannel, dp: Dispatcher, bot: Bot) -> None:
@@ -49,7 +51,9 @@ async def start_consumer(channel: AbstractChannel, dp: Dispatcher, bot: Bot) -> 
     )
 
     logger.info('Starting consumer')
-    await queue.consume(callback=partial(callback, dp, bot))
+    async for message in queue.iterator():
+        message: AbstractIncomingMessage
+        await callback(message, dp, bot)
 
 
 @asynccontextmanager

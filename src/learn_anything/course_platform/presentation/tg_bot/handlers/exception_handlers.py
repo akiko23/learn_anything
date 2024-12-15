@@ -97,4 +97,5 @@ async def exception_handler(
         await state.get_state(),
         state_data
     )
+    raise event.exception
 
