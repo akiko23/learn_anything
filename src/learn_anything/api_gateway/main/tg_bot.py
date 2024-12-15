@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -13,6 +14,7 @@ from starlette_context.middleware import RawContextMiddleware
 from learn_anything.api_gateway.adapters.bootstrap.tg_bot_di import setup_di
 from learn_anything.api_gateway.adapters.logger import LOGGING_CONFIG, logger
 from learn_anything.api_gateway.presentation.tg_bot.config import BotConfig
+from learn_anything.api_gateway.presentation.web.config import load_web_config
 from learn_anything.api_gateway.presentation.web.fastapi_routers.tech import router as tech_router
 from learn_anything.api_gateway.presentation.web.fastapi_routers.tg import router as tg_router
 from learn_anything.api_gateway.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
@@ -58,7 +60,15 @@ async def lifespan(
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(docs='/docs', lifespan=lifespan)
+    web_cfg = load_web_config(
+        config_path=os.getenv('API_GATEWAY_CONFIG_PATH') or 'configs/api_gateway.toml'
+    )
+    app = FastAPI(
+        title=web_cfg.title,
+        description=web_cfg.description,
+        docs_url='/docs',
+        lifespan=lifespan
+    )
 
     app.include_router(tg_router, prefix='/tg', tags=['tg'])
     app.include_router(tech_router, prefix='/tech', tags=['tech'])
@@ -75,14 +85,18 @@ def create_app() -> FastAPI:
 async def main():
     logging.config.dictConfig(LOGGING_CONFIG)
 
+    web_cfg = load_web_config(
+        config_path=os.getenv('API_GATEWAY_CONFIG_PATH') or 'configs/api_gateway.toml'
+    )
     uvicorn_config = uvicorn.Config(
-        'api_gateway.main.tg_bot:create_app',
+        'learn_anything.api_gateway.main.tg_bot:create_app',
         factory=True,
-        host='0.0.0.0',
-        port=8080,
+        host=web_cfg.host,
+        port=web_cfg.port,
         workers=1
     )
     server = uvicorn.Server(uvicorn_config)
+
     logger.info('Starting server..')
     await server.serve()
 

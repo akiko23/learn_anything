@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import sys
 from asyncio.exceptions import CancelledError
 from logging import StreamHandler, Formatter
@@ -7,6 +8,7 @@ from logging import StreamHandler, Formatter
 import alembic.config
 import uvicorn
 
+from learn_anything.api_gateway.presentation.web.config import load_web_config
 from learn_anything.course_platform.adapters.persistence.alembic.config import ALEMBIC_CONFIG
 
 handler = StreamHandler()
@@ -60,7 +62,7 @@ def command_start_handler(argv):
         import uvicorn
 
         try:
-            logger.info('Starting consumer from cli..')
+            logger.info('Starting api_gateway from cli..')
             uvicorn_config = uvicorn.Config(
                 'learn_anything.main.consumer:create_app',
                 factory=True,
@@ -71,38 +73,19 @@ def command_start_handler(argv):
             server = uvicorn.Server(uvicorn_config)
             asyncio.run(server.serve())
         except (KeyboardInterrupt, SystemExit, CancelledError):
-            logger.exception("Consumer was interrupted with err!")
+            logger.exception("API gateway was interrupted with err!")
         else:
-            logger.info("Consumer was successfully stopped")
+            logger.info("API gateway was successfully stopped")
 
 
 async def _run_services():
-    api_gateway_uvicorn_config = uvicorn.Config(
-        'learn_anything.api_gateway.main.tg_bot:create_app',
-        factory=True,
-        host='0.0.0.0',
-        port=8080,
-        workers=1
-    )
-    api_gateway_server = uvicorn.Server(api_gateway_uvicorn_config)
-
-    consumer_uvicorn_config = uvicorn.Config(
-        'learn_anything.course_platform.main.consumer:create_app',
-        factory=True,
-        host='0.0.0.0',
-        port=8081,
-        workers=1
-    )
-    consumer_server = uvicorn.Server(consumer_uvicorn_config)
-
-    serve_api_gateway_task = asyncio.create_task(api_gateway_server.serve())
-    serve_consumer_task = asyncio.create_task(consumer_server.serve())
+    from learn_anything.api_gateway.main.tg_bot import main as api_gateway_entry_point
+    from learn_anything.course_platform.main.consumer import main as consumer_entry_point
 
     await asyncio.gather(
-            serve_consumer_task,
-            serve_api_gateway_task,
+        api_gateway_entry_point(),
+        consumer_entry_point(),
     )
-
 
 
 def main():

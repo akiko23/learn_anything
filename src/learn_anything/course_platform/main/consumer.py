@@ -1,16 +1,19 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from functools import partial
 from typing import AsyncGenerator
 
 import msgpack
+import uvicorn
 from aio_pika.abc import AbstractChannel, AbstractIncomingMessage, ExchangeType
 from aiogram import Dispatcher, Bot
 from aiogram.types import Update
 from dishka.integrations.aiogram import setup_dishka
 from fastapi import FastAPI
 
+from learn_anything.course_platform.presentation.web.config import load_web_config
 from learn_anything.course_platform.adapters.metrics import TOTAL_MESSAGES_CONSUMED
 from learn_anything.course_platform.adapters.bootstrap.tg_bot_di import setup_di
 from learn_anything.course_platform.adapters.consumer.logger import logger, correlation_id_ctx, LOGGING_CONFIG
@@ -87,7 +90,34 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 def create_app() -> FastAPI:
     logging.config.dictConfig(LOGGING_CONFIG)
 
-    app = FastAPI(docs_url='/docs', lifespan=lifespan)
+    web_cfg = load_web_config(
+        config_path=os.getenv('COURSE_PLATFORM_CONFIG_PATH') or 'configs/course_platform.toml'
+    )
+    app = FastAPI(
+        title=web_cfg.title,
+        description=web_cfg.description,
+        docs_url='/docs',
+        lifespan=lifespan
+    )
     app.include_router(router, prefix='', tags=['tech'])
 
     return app
+
+
+async def main():
+    logging.config.dictConfig(LOGGING_CONFIG)
+
+    web_cfg = load_web_config(
+        config_path=os.getenv('COURSE_PLATFORM_CONFIG_PATH') or 'configs/course_platform.toml'
+    )
+    uvicorn_config = uvicorn.Config(
+        'learn_anything.course_platform.main.consumer:create_app',
+        factory=True,
+        host=web_cfg.host,
+        port=web_cfg.port,
+        workers=1
+    )
+    server = uvicorn.Server(uvicorn_config)
+
+    logger.info('Starting server..')
+    await server.serve()
