@@ -5,7 +5,8 @@
 
 # configs
 .configs/db.env
-.configs/app.toml
+.configs/course_platform.toml
+.configs/api_gateway.toml.toml
 
 # C extensions
 *.so

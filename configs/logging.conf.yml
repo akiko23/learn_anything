@@ -1,0 +1,31 @@
+version: 1
+disable_existing_loggers: no
+formatters:
+  console_formatter_backend:
+    (): learn_anything.api_gateway.adapters.logger.ConsoleFormatter
+    fmt: '[%(levelname)s] %(name)s %(asctime)s: %(message)s'
+  console_formatter_consumer:
+    (): learn_anything.course_platform.adapters.consumer.logger.ConsoleFormatter
+    fmt: '[%(levelname)s] %(name)s %(asctime)s: %(message)s'
+handlers:
+  console_handler_backend:
+    class: logging.StreamHandler
+    formatter: console_formatter_backend
+  console_handler_consumer:
+    class: logging.StreamHandler
+    formatter: console_formatter_consumer
+root:
+  level: INFO
+  handlers: [console_handler_backend]
+loggers:
+  'api_gateway_logger':
+    level: INFO
+    propagate: no
+    handlers: [console_handler_backend]
+  'course_platform_logger':
+    level: INFO
+    propagate: no
+    handlers: [console_handler_consumer]
+  'uvicorn':
+    level: INFO
+    propagate: yes
