@@ -12,7 +12,7 @@ token = "your bot token here"
 
 
 [rmq]
-host = 'localhost'
+host = 'rabbitmq'
 port = 5672
 user = 'guest'
 password = 'guest'
