@@ -205,10 +205,11 @@ class TgProvider(Provider):
             self,
             storage: RedisStorage
     ) -> Dispatcher:
-        return Dispatcher(
+        dp = Dispatcher(
             events_isolation=SimpleEventIsolation(),
             storage=storage,
         )
+        return dp
 
 
 def db_provider() -> Provider:

@@ -1,0 +1,2 @@
+class RMQManager():
+    pass

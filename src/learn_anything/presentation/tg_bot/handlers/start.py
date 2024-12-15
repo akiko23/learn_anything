@@ -21,8 +21,6 @@ async def cmd_start_with_auth_link(
         state: FSMContext,
         bot: Bot,
         command: CommandObject,
-        register_interactor: FromDishka[RegisterInteractor],
-        authenticate_interactor: FromDishka[AuthenticateInteractor],
         login_with_auth_link_interactor: FromDishka[LoginWithAuthLinkInteractor],
 ):
     user_id: int = msg.from_user.id

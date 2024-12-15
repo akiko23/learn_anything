@@ -1,4 +1,4 @@
-from learn_anything.adapters.metrics import REQUESTS_TOTAL
+from api_gateway.adapters.metrics import REQUESTS_TOTAL
 from fastapi import Request
 
 class RequestCountMiddleware:

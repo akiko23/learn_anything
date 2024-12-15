@@ -18,7 +18,7 @@ from .exception_handlers import handle_user_error, exception_handler, load_media
 from .start import router as start_router
 from .submission.process_task_submission import router as process_task_submission_router
 from .task.create_task import router as create_course_task_router
-from .task.do_couse_task import router as do_course_task_router
+from .task.do_course_task import router as do_course_task_router
 from .task.edit_task import router as edit_task_router
 from .task.edit_code_task import router as edit_code_task_router
 from .task.delete_task import router as delete_task_router

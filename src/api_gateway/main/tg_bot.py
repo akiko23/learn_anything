@@ -5,21 +5,19 @@ from typing import AsyncGenerator
 
 import uvicorn
 from aiogram import Dispatcher, Bot
-from dishka.integrations.aiogram import setup_dishka
 from dishka.integrations.fastapi import setup_dishka as fastapi_setup_dishka
 from fastapi import FastAPI
 from starlette_context import plugins
 from starlette_context.middleware import RawContextMiddleware
 
+from api_gateway.adapters.bootstrap.tg_bot_di import setup_di
 from api_gateway.adapters.logger import LOGGING_CONFIG
-from learn_anything.adapters.bootstrap.tg_bot_di import setup_di
-from learn_anything.adapters.persistence.tables.map import map_tables
-from learn_anything.presentation.bg_tasks import background_tasks
-from learn_anything.presentation.tg_bot.config import BotConfig
-from learn_anything.presentation.web.fastapi_routers.tech import router as tech_router
-from learn_anything.presentation.tg_bot.handlers import register_handlers
-from learn_anything.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
-from learn_anything.presentation.tg_bot.middlewares.auth import AuthMiddleware
+from api_gateway.presentation.tg_bot.config import BotConfig
+from api_gateway.presentation.web.fastapi_routers.tech import router as tech_router
+from api_gateway.presentation.web.fastapi_routers.tg import router as tg_router
+from api_gateway.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
+from api_gateway.presentation.tg_bot.middlewares.count_rps import RequestCountMiddleware
+from api_gateway.presentation.tg_bot.middlewares.send_to_queue import SendToQueueMiddleware
 
 
 @asynccontextmanager
@@ -32,23 +30,16 @@ async def lifespan(
     bot_cfg = await container.get(BotConfig)
     bot = await container.get(Bot)
 
-    dp = await container.get(Dispatcher)
-    dp.message.middleware.register(AuthMiddleware(container))
-    dp.callback_query.outer_middleware.register(AuthMiddleware(container))
+    dp: Dispatcher = await container.get(Dispatcher)
     dp.message.outer_middleware.register(LoggingMiddleware())
     dp.callback_query.outer_middleware.register(LoggingMiddleware())
-
-    logging.info('Setup aiogram dishka')
-    setup_dishka(container=container, router=dp, auto_inject=True)
-
-    map_tables()
-    register_handlers(dp)
 
     polling_task: asyncio.Task[None] | None = None
     if bot_cfg.bot_webhook_url:
         logging.info('Start webhook on %s', bot_cfg.bot_webhook_url)
         await bot.set_webhook(bot_cfg.bot_webhook_url)
     else:
+        dp.update.middleware(SendToQueueMiddleware(container=container))
         polling_task = asyncio.create_task(dp.start_polling(bot, handle_signals=False))
 
     logging.info('Finished start')
@@ -62,15 +53,17 @@ async def lifespan(
         except asyncio.CancelledError:
             logging.info("Polling stopped")
 
-    while background_tasks:
-        await asyncio.sleep(0)
     await bot.delete_webhook()
     logging.info('Ending lifespan')
 
 
 def create_app() -> FastAPI:
     app = FastAPI(docs='/docs', lifespan=lifespan)
+
+    app.include_router(tg_router, prefix='/tg', tags=['tg'])
     app.include_router(tech_router, prefix='/tech', tags=['tech'])
+
+    app.middleware("http")(RequestCountMiddleware())
 
     container = setup_di()
     fastapi_setup_dishka(container=container, app=app)
@@ -83,7 +76,7 @@ async def main():
     logging.config.dictConfig(LOGGING_CONFIG)
 
     uvicorn_config = uvicorn.Config(
-        'learn_anything.main.tg_bot:create_app',
+        'api_gateway.main.tg_bot:create_app',
         factory=True,
         host='0.0.0.0',
         port=8080,
