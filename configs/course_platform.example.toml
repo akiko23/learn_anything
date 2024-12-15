@@ -1,0 +1,37 @@
+[web]
+title = "course-platform"
+description = "A sample learn service developed using FastAPI & aiogram"
+host = "0.0.0.0"
+port = 8001
+log_level = "info"
+
+
+[db]
+user = "postgres"
+password = "postgres"
+db_name = "postgres"
+host = "localhost"
+port = 5432
+
+
+[bot]
+token = "your bot token here"
+#bot_webhook_url = "your webhook url here"
+
+
+[s3]
+endpoint_url = "localhost:9000"
+access_key = "minioadmin"
+secret_key = "minioadmin"
+
+
+[redis]
+port = 6379
+host = 'localhost'
+
+
+[rmq]
+host = 'localhost'
+port = 5672
+user = 'guest'
+password = 'guest'
