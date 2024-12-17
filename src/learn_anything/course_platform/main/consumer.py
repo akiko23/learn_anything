@@ -9,6 +9,7 @@ import uvicorn
 from aio_pika.abc import AbstractChannel, AbstractIncomingMessage, ExchangeType
 from aiogram import Dispatcher, Bot
 from aiogram.types import Update
+from dishka import AsyncContainer
 from dishka.integrations.aiogram import setup_dishka
 from fastapi import FastAPI
 
@@ -24,49 +25,26 @@ from learn_anything.course_platform.presentation.web.fastapi_routers.tech import
 
 async def callback(msg: AbstractIncomingMessage, dp: Dispatcher, bot: Bot):
     correlation_id_ctx.set(msg.correlation_id)
-    logger.info('Processing msg..')
 
-    update = Update.model_validate(msgpack.unpackb(msg.body))
+    update_dct = msgpack.unpackb(msg.body)
+    logger.info('Processing update %s', update_dct)
+    update = Update.model_validate(update_dct)
     try:
         await dp.feed_update(bot=bot, update=update)
         await msg.ack()
-    except Exception:  # noqa
+    except Exception as e:  # noqa
         await msg.reject(requeue=True)
     finally:
         TOTAL_MESSAGES_CONSUMED.inc()
 
 
-async def start_consumer(channel: AbstractChannel, dp: Dispatcher, bot: Bot) -> None:
+async def start_consumer(container: AsyncContainer) -> None:
     queue_name = "tg_updates"
-
-    # Will take no more than 10 messages in advance
-    await channel.set_qos(prefetch_count=10)
-
-    # Declaring queue
-    exchange = await channel.declare_exchange("tg_updates", ExchangeType.TOPIC, durable=True)
-    queue = await channel.declare_queue(name=queue_name, durable=True)
-    await queue.bind(
-        exchange,
-        queue_name,
-    )
-
-    logger.info('Starting consumer')
-    async for message in queue.iterator():
-        message: AbstractIncomingMessage
-        await callback(message, dp, bot)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    logger.info('Starting lifespan')
-
-    container = setup_di()
 
     dp = await container.get(Dispatcher)
     dp.message.middleware.register(AuthMiddleware(container))
     dp.callback_query.outer_middleware.register(AuthMiddleware(container))
 
-    logger.info('Setup ioc')
     setup_dishka(container=container, router=dp, auto_inject=True)
 
     map_tables()
@@ -75,7 +53,32 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     bot = await container.get(Bot)
     async with container() as request_container:
         channel = await request_container.get(AbstractChannel)
-        task = asyncio.create_task(start_consumer(dp=dp, bot=bot, channel=channel))
+
+        # Will take no more than 10 messages in advance
+        await channel.set_qos(prefetch_count=10)
+
+        # Declaring queue
+        exchange = await channel.declare_exchange("tg_updates", ExchangeType.TOPIC, durable=True)
+        queue = await channel.declare_queue(name=queue_name, durable=True)
+        await queue.bind(
+            exchange,
+            queue_name,
+        )
+
+        logger.info('Starting consumer')
+        async for message in queue.iterator():
+            message: AbstractIncomingMessage
+            await callback(message, dp, bot)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    logger.info('Starting lifespan')
+
+    logger.info('Setup ioc')
+    container = setup_di()
+
+    task = asyncio.create_task(start_consumer(container))
 
     logger.info('Started successfully')
     yield

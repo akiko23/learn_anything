@@ -1,0 +1,35 @@
+[web]
+title = "course-platform"
+description = "A sample learn service developed using FastAPI & aiogram"
+host = "0.0.0.0"
+port = 32124
+log_level = "info"
+
+
+[db]
+user = "test"
+password = "test"
+db_name = "test"
+host = "localhost"
+port = 5433
+
+
+[bot]
+token = "6682869876:AAGVys-0JWqq7Ji-KdJ4ru4U8e9MnUI-q1w"
+
+[s3]
+endpoint_url = "localhost:9001"
+access_key = "minioadmin"
+secret_key = "minioadmin"
+
+
+[redis]
+port = 6380
+host = 'localhost'
+
+
+[rmq]
+host = 'localhost'
+port = 5673
+user = 'test'
+password = 'test'
