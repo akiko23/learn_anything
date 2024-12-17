@@ -69,7 +69,7 @@ async def get_all_courses(
     if total == 0:
         msg_text = 'Еще ни один курс не был опубликован :('
         if filters != DEFAULT_FILTERS:
-            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+            msg_text = "Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
             chat_id=user_id,
@@ -328,7 +328,7 @@ async def apply_filters(
     if total == 0:
         msg_text = 'Еще ни один курс не был опубликован :('
         if filters != DEFAULT_FILTERS:
-            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+            msg_text = "Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         return await bot.send_message(
             chat_id=user_id,
@@ -404,7 +404,7 @@ async def filters_back(
     if total == 0:
         msg_text = 'Eще ни один курс не был опубликован :('
         if filters != DEFAULT_FILTERS:
-            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+            msg_text = "Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.edit_message_text(
             chat_id=user_id,

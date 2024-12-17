@@ -65,7 +65,7 @@ async def get_actor_created_courses(
     if total == 0:
         msg_text = 'Вы еще не создали ни одного курса'
         if filters != DEFAULT_FILTERS:
-            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+            msg_text = "Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.send_message(
             chat_id=user_id,
@@ -266,7 +266,7 @@ async def apply_courses_actor_created_filters(
     if total == 0:
         msg_text = 'Вы еще не создали ни одного курса'
         if filters != DEFAULT_FILTERS:
-            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+            msg_text = "Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.edit_message_text(
             chat_id=user_id,
@@ -343,7 +343,7 @@ async def created_courses_filters_back(
     if total == 0:
         msg_text = 'Вы еще не создали ни одного курса'
         if filters != DEFAULT_FILTERS:
-            msg_text = f"Ни одного курса не найдено. Попробуйте сбросить фильтры"
+            msg_text = "Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
         await bot.edit_message_text(
             chat_id=user_id,

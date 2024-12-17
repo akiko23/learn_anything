@@ -1,6 +1,4 @@
 from dataclasses import dataclass
-from typing import Any
-from unittest.mock import sentinel
 
 
 @dataclass(frozen=True)

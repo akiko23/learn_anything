@@ -335,7 +335,7 @@ async def get_or_skip_task_code_duration_timeout(
 
     msg = await bot.send_message(
         chat_id=user_id,
-        text=f'''Введите код для 1-го теста
+        text='''Введите код для 1-го теста
 
 Учтите:
   - Stdout и stderr пользовательского кода можно получить из переменных stdout и stderr соответственно
@@ -545,7 +545,7 @@ async def cancel_course_task_creation(
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
     await bot.send_message(
         chat_id=user_id,
-        text=f"Создание задания отменено. Вы вернулись в панель управления курса",
+        text="Создание задания отменено. Вы вернулись в панель управления курса",
         reply_markup=get_course_edit_menu_kb(
             course=course,
             back_to=back_to

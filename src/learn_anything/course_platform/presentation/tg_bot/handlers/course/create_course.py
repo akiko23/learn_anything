@@ -199,7 +199,7 @@ async def get_course_registrations_limit(
 
     await bot.send_message(
         chat_id=user_id,
-        text=f"Курс успешно создан. Вы вернулись в главное меню",
+        text="Курс успешно создан. Вы вернулись в главное меню",
         reply_markup=get_main_menu_keyboard(user_role=user_role)
     )
 
@@ -238,7 +238,7 @@ async def skip_registrations_limit(
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
     await bot.send_message(
         chat_id=user_id,
-        text=f"Курс успешно создан. Вы вернулись в главное меню",
+        text="Курс успешно создан. Вы вернулись в главное меню",
         reply_markup=get_main_menu_keyboard(user_role=user_role)
     )
 
@@ -266,6 +266,6 @@ async def cancel_course_creation(
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
     await bot.send_message(
         chat_id=user_id,
-        text=f"Создание курса отменено. Вы вернулись в главное меню",
+        text="Создание курса отменено. Вы вернулись в главное меню",
         reply_markup=get_main_menu_keyboard(user_role=user_role),
     )
