@@ -20,7 +20,6 @@ async def pre_deletion_menu(
         bot: Bot,
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     back_to, course_id = callback_query.data.split('-')[1:]
 

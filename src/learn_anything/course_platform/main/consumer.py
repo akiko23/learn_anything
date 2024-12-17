@@ -22,6 +22,8 @@ from learn_anything.course_platform.presentation.tg_bot.middlewares.auth import 
 from learn_anything.course_platform.presentation.web.config import load_web_config
 from learn_anything.course_platform.presentation.web.fastapi_routers.tech import router
 
+DEFAULT_COURSE_PLATFORM_CONFIG_PATH = 'configs/course_platform.toml'
+
 
 async def callback(msg: AbstractIncomingMessage, dp: Dispatcher, bot: Bot):
     correlation_id_ctx.set(msg.correlation_id)
@@ -98,7 +100,7 @@ def create_app() -> FastAPI:
     logging.config.dictConfig(LOGGING_CONFIG)
 
     web_cfg = load_web_config(
-        config_path=os.getenv('COURSE_PLATFORM_CONFIG_PATH') or 'configs/course_platform.toml'
+        config_path=os.getenv('COURSE_PLATFORM_CONFIG_PATH') or DEFAULT_COURSE_PLATFORM_CONFIG_PATH
     )
     app = FastAPI(
         title=web_cfg.title,
@@ -115,7 +117,7 @@ async def main():
     logging.config.dictConfig(LOGGING_CONFIG)
 
     web_cfg = load_web_config(
-        config_path=os.getenv('COURSE_PLATFORM_CONFIG_PATH') or 'configs/course_platform.toml'
+        config_path=os.getenv('COURSE_PLATFORM_CONFIG_PATH') or DEFAULT_COURSE_PLATFORM_CONFIG_PATH
     )
     uvicorn_config = uvicorn.Config(
         'learn_anything.course_platform.main.consumer:create_app',

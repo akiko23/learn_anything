@@ -21,6 +21,7 @@ from learn_anything.api_gateway.presentation.tg_bot.middlewares.__logging import
 from learn_anything.api_gateway.presentation.tg_bot.middlewares.count_rps import RequestCountMiddleware
 from learn_anything.api_gateway.presentation.tg_bot.middlewares.send_to_queue import SendToQueueMiddleware
 
+DEFAULT_API_GATEWAY_CONFIG_PATH = 'configs/api_gateway.toml'
 
 @asynccontextmanager
 async def lifespan(
@@ -61,7 +62,7 @@ async def lifespan(
 
 def create_app() -> FastAPI:
     web_cfg = load_web_config(
-        config_path=os.getenv('API_GATEWAY_CONFIG_PATH') or 'configs/api_gateway.toml'
+        config_path=os.getenv('API_GATEWAY_CONFIG_PATH') or DEFAULT_API_GATEWAY_CONFIG_PATH
     )
     app = FastAPI(
         title=web_cfg.title,
@@ -86,7 +87,7 @@ async def main():
     logging.config.dictConfig(LOGGING_CONFIG)
 
     web_cfg = load_web_config(
-        config_path=os.getenv('API_GATEWAY_CONFIG_PATH') or 'configs/api_gateway.toml'
+        config_path=os.getenv('API_GATEWAY_CONFIG_PATH') or DEFAULT_API_GATEWAY_CONFIG_PATH
     )
     uvicorn_config = uvicorn.Config(
         'learn_anything.api_gateway.main.tg_bot:create_app',

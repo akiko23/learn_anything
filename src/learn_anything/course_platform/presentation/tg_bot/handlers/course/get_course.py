@@ -31,7 +31,6 @@ async def get_single_course(
         file_manager: FromDishka[FileManager],
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     back_to, course_id = callback_query.data.split('-')[1:]
     target_course = await interactor.execute(

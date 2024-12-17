@@ -29,7 +29,7 @@ async def get_my_submissions(
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    task_id, course_id, back_to = callback_query.data.split('-')[1], data['course_id'], data['back_to']
+    task_id = callback_query.data.split('-')[1]
     filters = data.get(f'actor_submissions_{task_id}_filters', DEFAULT_FILTERS)
     pointer: int = data.get(f'actor_submissions_{task_id}_pointer', 0)
     offset: int = data.get(f'actor_submissions_{task_id}_offset', 0)

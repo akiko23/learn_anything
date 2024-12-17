@@ -30,7 +30,6 @@ async def start_editing_task_attempts_limit(
         bot: Bot,
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
@@ -93,7 +92,6 @@ async def start_editing_task_code_duration_timeout(
         bot: Bot,
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
@@ -162,7 +160,6 @@ async def start_editing_task_prepared_code(
         bot: Bot,
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 

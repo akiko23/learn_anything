@@ -30,7 +30,6 @@ async def get_course_edit_menu(
         file_manager: FromDishka[FileManager],
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     back_to, course_id = callback_query.data.split('-')[1:]
 
@@ -84,7 +83,6 @@ async def start_editing_course_title(
         bot: Bot,
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
@@ -141,7 +139,6 @@ async def start_editing_course_description(
         bot: Bot,
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
@@ -220,7 +217,6 @@ async def start_editing_course_photo(
         bot: Bot,
 ):
     user_id: int = callback_query.from_user.id
-    data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 

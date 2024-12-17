@@ -64,13 +64,6 @@ class TgProvider(Provider):
         return Bot(token=bot_cfg.token)
 
     @provide(scope=Scope.APP)
-    async def get_bot(
-            self,
-            bot_cfg: BotConfig,
-    ) -> Bot:
-        return Bot(token=bot_cfg.token)
-
-    @provide(scope=Scope.APP)
     async def get_dp(
             self,
     ) -> Dispatcher:

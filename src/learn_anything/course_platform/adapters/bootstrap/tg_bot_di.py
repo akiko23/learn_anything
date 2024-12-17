@@ -191,13 +191,6 @@ class TgProvider(Provider):
         return Bot(token=bot_cfg.token)
 
     @provide(scope=Scope.APP)
-    async def get_bot(
-            self,
-            bot_cfg: BotConfig,
-    ) -> Bot:
-        return Bot(token=bot_cfg.token)
-
-    @provide(scope=Scope.APP)
     async def get_state_storage(self, redis_cfg: RedisConfig) -> RedisStorage:
         return RedisStorage.from_url(
             url=redis_cfg.dsn,

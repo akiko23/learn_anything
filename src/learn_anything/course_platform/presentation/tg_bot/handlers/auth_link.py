@@ -32,7 +32,7 @@ async def start_auth_link_creation(
 
     msg = await bot.send_message(
         chat_id=user_id,
-        text=f"Введите роль, которую получит пользователь после перехода по ссылке",
+        text="Введите роль, которую получит пользователь после перехода по ссылке",
         reply_markup=CANCEL_AUTH_LINK_CREATION_KB,
     )
     await state.update_data(
@@ -149,6 +149,6 @@ async def cancel_auth_link_creation(
 
     await bot.send_message(
         chat_id=user_id,
-        text=f"Процесс создания ссылки для входа отменен",
+        text="Процесс создания ссылки для входа отменен",
         reply_markup=get_main_menu_keyboard(user_role=user_role),
     )

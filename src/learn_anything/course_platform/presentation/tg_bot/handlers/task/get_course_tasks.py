@@ -15,8 +15,6 @@ from learn_anything.course_platform.presentors.tg_bot.texts.get_task import get_
 router = Router()
 
 DEFAULT_LIMIT = 10
-DEFAULT_FILTERS = lambda: None
-
 
 @router.callback_query(F.data.startswith('get_course_tasks-'))
 async def get_course_tasks(
