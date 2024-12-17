@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import AsyncGenerator, cast
 
 import msgpack
 import uvicorn
@@ -26,7 +26,8 @@ DEFAULT_COURSE_PLATFORM_CONFIG_PATH = 'configs/course_platform.toml'
 
 
 async def callback(msg: AbstractIncomingMessage, dp: Dispatcher, bot: Bot):
-    correlation_id_ctx.set(msg.correlation_id)
+    if msg.correlation_id:
+        correlation_id_ctx.set(msg.correlation_id)
 
     update_dct = msgpack.unpackb(msg.body)
     logger.info('Processing update %s', update_dct)
@@ -69,8 +70,7 @@ async def start_consumer(container: AsyncContainer) -> None:
 
         logger.info('Starting consumer')
         async for message in queue.iterator():
-            message: AbstractIncomingMessage
-            await callback(message, dp, bot)
+            await callback(cast(AbstractIncomingMessage, message), dp, bot)
 
 
 @asynccontextmanager

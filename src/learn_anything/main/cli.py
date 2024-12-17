@@ -9,7 +9,7 @@ import alembic.config
 from learn_anything.course_platform.adapters.persistence.alembic.config import ALEMBIC_CONFIG
 
 from learn_anything.api_gateway.main.tg_bot import main as api_gateway_entry_point
-from learn_anything.course_platform.main.consumer import main as consumer_entry_point
+from learn_anything.course_platform.main.tg_updates_consumer import main as consumer_entry_point
 
 
 handler = StreamHandler()
