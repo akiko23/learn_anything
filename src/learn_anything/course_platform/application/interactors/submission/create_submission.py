@@ -4,16 +4,19 @@ from datetime import datetime
 
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.committer import Commiter
-from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
+from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, \
+    RegistrationForCourseGateway
 from learn_anything.course_platform.application.ports.data.submission_gateway import SubmissionGateway
 from learn_anything.course_platform.application.ports.data.task_gateway import TaskGateway
 from learn_anything.course_platform.application.ports.playground import PlaygroundFactory
 from learn_anything.course_platform.domain.entities.course.errors import CourseDoesNotExistError
 from learn_anything.course_platform.domain.entities.submission.models import PollSubmission, TextInputSubmission
 from learn_anything.course_platform.domain.entities.submission.rules import create_code_submission
-from learn_anything.course_platform.domain.entities.task.errors import TaskDoesNotExistError, ActorIsNotRegisteredOnCourseError, \
+from learn_anything.course_platform.domain.entities.task.errors import TaskDoesNotExistError, \
+    ActorIsNotRegisteredOnCourseError, \
     AttemptsLimitReachedForTaskError, PollTaskOptionDoesNotExistError
-from learn_anything.course_platform.domain.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, CodeTask, \
+from learn_anything.course_platform.domain.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, \
+    CodeTask, \
     CodeTaskTest, PollTaskOptionID
 from learn_anything.course_platform.domain.entities.task.rules import answer_is_correct, find_task_option_by_id
 from learn_anything.course_platform.domain.entities.user.models import UserID
@@ -38,7 +41,7 @@ class CreateTaskSubmissionBaseInteractor(abc.ABC):
         self._playground_factory = playground_factory
         self._commiter = commiter
 
-    async def _ensure_actor_can_create_submission(self, actor_id: UserID, task: PracticeTask):
+    async def _ensure_actor_can_create_submission(self, actor_id: UserID, task: PracticeTask) -> None:
         course = await self._course_gateway.with_id(task.course_id)
         if not course:
             raise CourseDoesNotExistError(task.course_id)
@@ -52,7 +55,7 @@ class CreateTaskSubmissionBaseInteractor(abc.ABC):
 
         return await self._check_attempts_limit(actor_id=actor_id, task=task)
 
-    async def _check_attempts_limit(self, actor_id: UserID, task: PracticeTask):
+    async def _check_attempts_limit(self, actor_id: UserID, task: PracticeTask) -> None:
         self._submissions_number = await self._submission_gateway.get_user_submissions_number_for_task(
             user_id=actor_id,
             task_id=task.id,
@@ -72,19 +75,17 @@ class CreateCodeTaskSubmissionInputData:
 
 
 @dataclass
+class FailedTestData:
+    failed_test_output: str
+    failed_test_idx: int
+
+
+@dataclass
 class CreateCodeTaskSubmissionOutputData:
-    failed_output: str | None = None
-    failed_test_idx: int | None = None
+    failed_test: FailedTestData | None = None
 
 
 class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
-    def __init__(self, id_provider: IdentityProvider, submission_gateway: SubmissionGateway, task_gateway: TaskGateway,
-                 course_gateway: CourseGateway, playground_factory: PlaygroundFactory, commiter: Commiter,
-                 registration_for_course_gateway: RegistrationForCourseGateway):
-        super().__init__(id_provider, submission_gateway, task_gateway, course_gateway, playground_factory, commiter,
-                         registration_for_course_gateway)
-        # self._event_publisher = event_publisher
-
     async def execute(self, data: CreateCodeTaskSubmissionInputData) -> CreateCodeTaskSubmissionOutputData:
         actor_id = await self._id_provider.get_current_user_id()
         task = await self._task_gateway.get_code_task_with_id(data.task_id)
@@ -120,12 +121,14 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
 
         if not submission.is_correct:
             return CreateCodeTaskSubmissionOutputData(
-                failed_output=result_output,
-                failed_test_idx=failed_test_idx,
+                failed_test=FailedTestData(
+                    failed_test_output=result_output,
+                    failed_test_idx=failed_test_idx,
+                )
             )
         return CreateCodeTaskSubmissionOutputData()
 
-    async def _check_submission(self, actor_id: UserID, task: CodeTask, submission: str):
+    async def _check_submission(self, actor_id: UserID, task: CodeTask, submission: str) -> tuple[str, int]:
         async with self._playground_factory.create(
                 identifier=f'{actor_id}_{task.id}',
                 code_duration_timeout=task.code_duration_timeout,
@@ -158,7 +161,7 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
             pre_exec_code: str,
             user_submission_output: str,
             user_submission_stderr: str,
-    ) -> (str, bool):
+    ) -> tuple[str, bool]:
         # you can use 'stdout' variable to retrieve an output from the user's code
         # and 'stderr' variable to retrieve a stderr from the user's code
         test_code = (
@@ -169,9 +172,8 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
         )
 
         out, err = await self._pl.execute_code(code=test_code)
-        test_output = (out + '\n' + err).strip()
         if err:
-            return f"Test Output:\n{test_output}", False
+            return f"Test Output:\n{err.strip()}", False
 
         return out, True
 

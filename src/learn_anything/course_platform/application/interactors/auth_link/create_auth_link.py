@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from learn_anything.course_platform.application.errors import UserNotAuthenticatedError
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.auth.token import TokenProcessor
 from learn_anything.course_platform.application.ports.committer import Commiter
 from learn_anything.course_platform.application.ports.data.auth_link_gateway import AuthLinkGateway
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
 from learn_anything.course_platform.domain.entities.user.errors import AuthLinkCreationForbiddenError
-from learn_anything.course_platform.domain.entities.user.models import UserRole
 from learn_anything.course_platform.domain.entities.user.rules import create_auth_link
 
 
@@ -37,6 +38,9 @@ class CreateAuthLinkInteractor:
 
     async def execute(self, data: CreateAuthLinkInputData) -> CreateAuthLinkOutputData:
         actor_role = await self._id_provider.get_current_user_role()
+        if not actor_role:
+            raise UserNotAuthenticatedError()
+
         if actor_role != UserRole.BOT_OWNER:
             raise AuthLinkCreationForbiddenError(actor_role)
 

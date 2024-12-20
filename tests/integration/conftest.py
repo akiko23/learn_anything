@@ -1,6 +1,7 @@
 import asyncio
 import os
 from asyncio import CancelledError, AbstractEventLoop
+from contextlib import suppress
 from typing import AsyncGenerator, Generator
 
 import pytest
@@ -20,7 +21,7 @@ from learn_anything.course_platform.main.consumer import (
     setup_di, start_consumer
 )
 
-TEST_CONFIG_PATH = "tests/integration/test_consumer.toml"
+TEST_CONFIG_PATH = "configs/test_consumer.toml"
 SETUP_TEST_ENVIRONMENT_SCRIPT_PATH = 'scripts/setup_test_environment.sh'
 RM_TEST_ENVIRONMENT_SCRIPT_PATH = 'scripts/rm_test_environment.sh'
 MIGRATIONS_PATH = "src/greenatom_task/web/migrations"
@@ -93,8 +94,8 @@ async def _init_consumer(request, ioc_container: AsyncContainer) -> AsyncGenerat
     None, None]:
     task = asyncio.create_task(start_consumer(ioc_container))
     yield
-    try:
+    with suppress(CancelledError, RuntimeError):
         task.cancel()
         await task
-    except (CancelledError, RuntimeError) as e:
-        print(e)
+
+

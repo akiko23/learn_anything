@@ -14,11 +14,11 @@ class AuthMiddleware(BaseMiddleware):
 
     async def __call__(
             self,
-            handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],
-            event: Message | CallbackQuery,
+            handler: Callable[[Message | CallbackQuery, dict[str, Any]], Awaitable[Any]],
+            event: Message | CallbackQuery,  # type: ignore[override]
             data: dict[str, Any],
     ) -> Any:
-        msg = event.message if isinstance(event, CallbackQuery) else event
+        msg = event.message if isinstance(event, CallbackQuery) and event.message else event
 
         command_obj: CommandObject | None = data.get('command', None)
         if command_obj and command_obj.command == 'start':

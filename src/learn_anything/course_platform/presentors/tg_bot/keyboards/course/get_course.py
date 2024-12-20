@@ -1,3 +1,4 @@
+from aiogram.types import InlineKeyboardMarkup
 from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -8,7 +9,7 @@ def get_course_kb(
         course_id: int,
         output_data: GetFullCourseOutputData,
         back_to: str,
-):
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
     if output_data.is_published:

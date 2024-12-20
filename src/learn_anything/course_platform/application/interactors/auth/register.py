@@ -6,7 +6,8 @@ from learn_anything.course_platform.application.ports.auth.identity_provider imp
 from learn_anything.course_platform.application.ports.committer import Commiter
 from learn_anything.course_platform.application.ports.data.auth_link_gateway import AuthLinkGateway
 from learn_anything.course_platform.application.ports.data.user_gateway import UserGateway
-from learn_anything.course_platform.domain.entities.user.models import UserRole, UserID
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
+from learn_anything.course_platform.domain.entities.user.models import UserID
 
 logger = logging.getLogger(__name__)
 

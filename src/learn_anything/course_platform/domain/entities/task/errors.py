@@ -30,7 +30,7 @@ class AttemptsLimitReachedForTaskError(ApplicationError):
     task_id: TaskID
 
     @property
-    def message(self):
+    def message(self) -> str:
         return f"Attempts limit for task {self.task_id} was already reached"
 
 
@@ -40,7 +40,7 @@ class TaskPreparedCodeIsInvalidError(ApplicationError):
     err: str
 
     @property
-    def message(self):
+    def message(self) -> str:
         return f"Invalid task prepared code. Stderr: {self.err}"
 
 
@@ -52,7 +52,7 @@ class TaskTestCodeIsInvalidError(ApplicationError):
     err: str
 
     @property
-    def message(self):
+    def message(self) -> str:
         return f"Invalid code for the test #{self.index}. Stderr:\n\n{self.err}"
 
 

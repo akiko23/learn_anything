@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import NewType, Sequence
+from typing import NewType, Sequence, Any
 
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 from learn_anything.course_platform.domain.entities.task.enums import TaskType
@@ -10,7 +10,7 @@ TaskID = NewType("TaskID", int)
 
 @dataclass
 class Task:
-    id: TaskID | None
+    id: TaskID
     type: TaskType
     topic: str | None
     title: str
@@ -19,6 +19,7 @@ class Task:
     # creator_id: UserID
     index_in_course: int
     created_at: datetime
+    updated_at: datetime
 
 
 @dataclass
@@ -35,7 +36,7 @@ class CodeTaskTest:
 class CodeTask(PracticeTask):
     prepared_code: str | None
     code_duration_timeout: int
-    tests: Sequence[CodeTaskTest]
+    tests: list[CodeTaskTest]
 
 
 PollTaskOptionID = NewType('PollTaskOptionID', int)
@@ -47,7 +48,7 @@ class PollTaskOption:
     content: str
     is_correct: bool
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             raise NotImplementedError
         return self.id == other.id
@@ -62,7 +63,7 @@ class PollTask(PracticeTask):
 class TextInputTaskAnswer:
     value: str
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             raise NotImplementedError
         return self.value.lower() == other.value.lower()

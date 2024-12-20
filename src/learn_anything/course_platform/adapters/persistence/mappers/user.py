@@ -1,4 +1,5 @@
 import uuid
+from typing import cast
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -73,7 +74,7 @@ class AuthLinkMapper(AuthLinkGateway):
         )
 
         res = await self._session.execute(upsert_stmt)
-        return res.scalar_one_or_none()
+        return cast(uuid.UUID,res.scalar_one())
 
     async def delete(self, auth_link_id: uuid.UUID) -> None:
         stmt = select(AuthLink).where(auth_links_table.c.id == auth_link_id)

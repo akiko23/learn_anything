@@ -4,7 +4,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 def get_many_submissions_keyboard(
         pointer: int,
         total: int,
-):
+) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Назад', callback_data='actor_submissions_back_to_task')],

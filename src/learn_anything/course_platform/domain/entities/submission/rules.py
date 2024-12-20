@@ -10,7 +10,7 @@ def create_code_submission(
         code: str,
         task_id: TaskID,
         tests_result_output: str,
-):
+) -> CodeSubmission:
     is_correct = False
     if tests_result_output == 'ok':
         is_correct = True

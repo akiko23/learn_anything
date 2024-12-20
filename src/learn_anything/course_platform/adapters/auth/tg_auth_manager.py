@@ -15,7 +15,7 @@ class TelegramAuthManager(AuthManager):
         self._user_gateway = user_gateway
         self._identity_provider = identity_provider
 
-    async def login(self, username: str, password: str) -> (UserID, UserRole):
+    async def login(self, username: str, password: str) -> tuple[UserID, UserRole]:
         user = await self._user_gateway.with_username(username=username)
         if not user:
             raise UserDoesNotExistError

@@ -7,7 +7,8 @@ from learn_anything.course_platform.application.input_data import Pagination
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, GetManyCoursesFilters, \
     RegistrationForCourseGateway
-from learn_anything.course_platform.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
+from learn_anything.course_platform.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY, \
+    FilePath
 from learn_anything.course_platform.application.ports.data.user_gateway import UserGateway
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 
@@ -15,7 +16,7 @@ from learn_anything.course_platform.domain.entities.course.models import CourseI
 @dataclass
 class GetManyCoursesInputData:
     pagination: Pagination
-    filters: GetManyCoursesFilters | None = None
+    filters: GetManyCoursesFilters
 
 
 @dataclass
@@ -27,7 +28,7 @@ class CourseData:
     creator: str
     total_registered: int
     photo_id: str | None
-    photo_path: str | None
+    photo_path: FilePath | None
     user_is_registered: bool
 
 
@@ -67,13 +68,16 @@ class GetAllCoursesInteractor:
                 self._user_gateway.with_id(course.creator_id),
                 self._registration_for_course_gateway.read(user_id=actor_id, course_id=course.id)
             )
+            creator_name = 'undefined'
+            if creator:
+                creator_name = creator.fullname
 
             course_data = CourseData(
                 id=course.id,
                 title=course.title,
                 description=course.description,
                 created_at=course.created_at,
-                creator=creator.fullname,
+                creator=creator_name,
                 total_registered=course.total_registered,
                 user_is_registered=registration is not None,
                 photo_id=None,
@@ -126,13 +130,16 @@ class GetActorCreatedCoursesInteractor:
                 self._user_gateway.with_id(course.creator_id),
                 self._registration_for_course_gateway.read(user_id=actor_id, course_id=course.id)
             )
+            creator_name = 'undefined'
+            if creator:
+                creator_name = creator.fullname
 
             course_data = CourseData(
                 id=course.id,
                 title=course.title,
                 description=course.description,
                 created_at=course.created_at,
-                creator=creator.fullname,
+                creator=creator_name,
                 total_registered=course.total_registered,
                 user_is_registered=registration is not None,
                 photo_id=None,
@@ -185,13 +192,16 @@ class GetActorRegisteredCoursesInteractor:
                 self._user_gateway.with_id(course.creator_id),
                 self._registration_for_course_gateway.read(user_id=actor_id, course_id=course.id)
             )
+            creator_name = 'undefined'
+            if creator:
+                creator_name = creator.fullname
 
             course_data = CourseData(
                 id=course.id,
                 title=course.title,
                 description=course.description,
                 created_at=course.created_at,
-                creator=creator.fullname,
+                creator=creator_name,
                 total_registered=course.total_registered,
                 user_is_registered=registration is not None,
                 photo_id=None,

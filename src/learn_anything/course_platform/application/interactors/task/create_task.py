@@ -12,14 +12,19 @@ from learn_anything.course_platform.domain.entities.course.errors import CourseD
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 from learn_anything.course_platform.domain.entities.course.rules import ensure_actor_has_write_access
 from learn_anything.course_platform.domain.entities.task.enums import TaskType
-from learn_anything.course_platform.domain.entities.task.errors import TaskTestCodeIsInvalidError, TaskPreparedCodeIsInvalidError
-from learn_anything.course_platform.domain.entities.task.models import TaskID, PollTask, PollTaskOption, Task
-from learn_anything.course_platform.domain.entities.task.rules import create_code_task
+from learn_anything.course_platform.domain.entities.task.errors import TaskTestCodeIsInvalidError, \
+    TaskPreparedCodeIsInvalidError
+from learn_anything.course_platform.domain.entities.task.models import TaskID, PollTaskOption
+from learn_anything.course_platform.domain.entities.task.rules import create_code_task, create_theory_task, \
+    create_poll_task
 from learn_anything.course_platform.domain.entities.user.models import UserID
 
+UNSPECIFIED_TASK_ID = TaskID(0)
 
-@dataclass
-class CreateTaskInputData:
+
+@dataclass(kw_only=True)
+class CreateTheoryTaskInputData:
+    id: TaskID = UNSPECIFIED_TASK_ID
     course_id: CourseID
     title: str
     body: str
@@ -29,7 +34,7 @@ class CreateTaskInputData:
 
 
 @dataclass
-class CreateTaskOutputData:
+class CreateTheoryTaskOutputData:
     task_id: TaskID
     created_at: datetime
     updated_at: datetime
@@ -43,7 +48,7 @@ class CreateTaskInteractor:
         self._course_gateway = course_gateway
         self._commiter = commiter
 
-    async def execute(self, data: CreateTaskInputData) -> CreateTaskOutputData:
+    async def execute(self, data: CreateTheoryTaskInputData) -> CreateTheoryTaskOutputData:
         actor_id = await self._id_provider.get_current_user_id()
 
         course = await self._course_gateway.with_id(data.course_id)
@@ -53,25 +58,24 @@ class CreateTaskInteractor:
         share_rules = await self._course_gateway.get_share_rules(course.id)
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
-        task = Task(
-            id=None,
+        task = create_theory_task(
+            id_=data.id,
             title=data.title,
             topic=data.topic,
-            type=data.task_type,
             body=data.body,
             course_id=data.course_id,
             index_in_course=data.index_in_course,
-            created_at=datetime.now()
         )
         new_task_id = await self._task_gateway.save(task=task)
 
         await self._commiter.commit()
 
-        return CreateTaskOutputData(task_id=new_task_id, created_at=task.created_at, updated_at=course.updated_at)
+        return CreateTheoryTaskOutputData(task_id=new_task_id, created_at=task.created_at, updated_at=course.updated_at)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class CreateCodeTaskInputData:
+    id: TaskID = UNSPECIFIED_TASK_ID
     course_id: CourseID
     task_type: TaskType
     title: str
@@ -122,6 +126,7 @@ class CreateCodeTaskInteractor:
         )
 
         task = create_code_task(
+            id_=data.id,
             title=data.title,
             body=data.body,
             topic=data.topic,
@@ -144,7 +149,7 @@ class CreateCodeTaskInteractor:
             task_prepared_code: str | None,
             codes_of_tests: Sequence[str],
             code_duration_timeout: int,
-    ):
+    ) -> None:
         async with self._playground_factory.create(
                 identifier=None,
                 code_duration_timeout=code_duration_timeout,
@@ -166,7 +171,7 @@ class CreateCodeTaskInteractor:
                     f'    {code}'
                 )
 
-                task = asyncio.create_task(pl.execute_code(
+                task: asyncio.Task[tuple[str, str]] = asyncio.create_task(pl.execute_code(
                     code=code,
                     raise_exc_on_err=True
                 ))
@@ -201,8 +206,9 @@ class Option:
     is_correct: bool
 
 
-@dataclass
+@dataclass(kw_only=True)
 class CreatePollTaskInputData:
+    id: TaskID = UNSPECIFIED_TASK_ID
     course_id: CourseID
     task_type: TaskType
     title: str
@@ -236,10 +242,9 @@ class CreatePollTaskInteractor:
         share_rules = await self._course_gateway.get_share_rules(course.id)
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
-        task = PollTask(
-            id=None,
+        task = create_poll_task(
+            id_=data.id,
             title=data.title,
-            type=data.task_type,
             body=data.body,
             topic=data.topic,
             course_id=data.course_id,
@@ -253,7 +258,6 @@ class CreatePollTaskInteractor:
                 )
                 for option in data.options
             ],
-            created_at=datetime.now()
         )
         new_task_id = await self._task_gateway.save_poll_task(task=task)
 

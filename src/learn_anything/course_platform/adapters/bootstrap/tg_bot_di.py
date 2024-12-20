@@ -28,7 +28,8 @@ from learn_anything.course_platform.adapters.persistence.mappers.course import C
 from learn_anything.course_platform.adapters.persistence.mappers.submission import SubmissionMapper
 from learn_anything.course_platform.adapters.persistence.mappers.task import TaskMapper
 from learn_anything.course_platform.adapters.persistence.mappers.user import UserMapper, AuthLinkMapper
-from learn_anything.course_platform.adapters.persistence.providers import get_async_sessionmaker, get_engine, get_async_session
+from learn_anything.course_platform.adapters.persistence.providers import get_async_sessionmaker, get_engine, \
+    get_async_session
 from learn_anything.course_platform.adapters.playground.unix_playground import UnixPlaygroundFactory
 from learn_anything.course_platform.adapters.redis.config import load_redis_config, RedisConfig
 from learn_anything.course_platform.adapters.rmq.config import load_rmq_config, RMQConfig
@@ -38,8 +39,10 @@ from learn_anything.course_platform.adapters.s3.s3_file_manager import S3FileMan
 from learn_anything.course_platform.application.interactors.auth.authenticate import AuthenticateInteractor
 from learn_anything.course_platform.application.interactors.auth.register import RegisterInteractor
 from learn_anything.course_platform.application.interactors.auth_link.create_auth_link import CreateAuthLinkInteractor
-from learn_anything.course_platform.application.interactors.auth_link.invalidate_auth_link import InvalidateAuthLinkInteractor
-from learn_anything.course_platform.application.interactors.auth_link.login_with_auth_link import LoginWithAuthLinkInteractor
+from learn_anything.course_platform.application.interactors.auth_link.invalidate_auth_link import \
+    InvalidateAuthLinkInteractor
+from learn_anything.course_platform.application.interactors.auth_link.login_with_auth_link import \
+    LoginWithAuthLinkInteractor
 from learn_anything.course_platform.application.interactors.course.create_course import CreateCourseInteractor
 from learn_anything.course_platform.application.interactors.course.delete_course import DeleteCourseInteractor
 from learn_anything.course_platform.application.interactors.course.get_course import GetCourseInteractor
@@ -47,13 +50,17 @@ from learn_anything.course_platform.application.interactors.course.get_many_cour
     GetActorCreatedCoursesInteractor, GetActorRegisteredCoursesInteractor
 from learn_anything.course_platform.application.interactors.course.leave_course import LeaveCourseInteractor
 from learn_anything.course_platform.application.interactors.course.publish_course import PublishCourseInteractor
-from learn_anything.course_platform.application.interactors.course.register_for_course import RegisterForCourseInteractor
+from learn_anything.course_platform.application.interactors.course.register_for_course import \
+    RegisterForCourseInteractor
 from learn_anything.course_platform.application.interactors.course.update_course import UpdateCourseInteractor
-from learn_anything.course_platform.application.interactors.submission.create_submission import CreateCodeTaskSubmissionInteractor, \
+from learn_anything.course_platform.application.interactors.submission.create_submission import \
+    CreateCodeTaskSubmissionInteractor, \
     CreatePollTaskSubmissionInteractor
-from learn_anything.course_platform.application.interactors.submission.get_many_submissions import GetActorSubmissionsInteractor, \
+from learn_anything.course_platform.application.interactors.submission.get_many_submissions import \
+    GetActorSubmissionsInteractor, \
     GetTaskSubmissionsInteractor
-from learn_anything.course_platform.application.interactors.task.create_task import CreateCodeTaskInteractor, CreatePollTaskInteractor, \
+from learn_anything.course_platform.application.interactors.task.create_task import CreateCodeTaskInteractor, \
+    CreatePollTaskInteractor, \
     CreateTaskInteractor
 from learn_anything.course_platform.application.interactors.task.delete_task import DeleteTaskInteractor
 from learn_anything.course_platform.application.interactors.task.get_course_tasks import GetCourseTasksInteractor
@@ -65,7 +72,8 @@ from learn_anything.course_platform.application.ports.auth.identity_provider imp
 from learn_anything.course_platform.application.ports.auth.token import TokenProcessor
 from learn_anything.course_platform.application.ports.committer import Commiter
 from learn_anything.course_platform.application.ports.data.auth_link_gateway import AuthLinkGateway
-from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
+from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, \
+    RegistrationForCourseGateway
 from learn_anything.course_platform.application.ports.data.file_manager import FileManager
 from learn_anything.course_platform.application.ports.data.submission_gateway import SubmissionGateway
 from learn_anything.course_platform.application.ports.data.task_gateway import TaskGateway
@@ -73,6 +81,9 @@ from learn_anything.course_platform.application.ports.data.user_gateway import U
 from learn_anything.course_platform.application.ports.playground import PlaygroundFactory
 from learn_anything.course_platform.presentation.tg_bot.config import load_bot_config, BotConfig
 from learn_anything.course_platform.presentation.web.config import load_web_config, WebConfig
+
+
+DEFAULT_COURSE_PLATFORM_CONFIG_PATH = 'configs/course_platform.toml'
 
 
 def gateways_provider() -> Provider:
@@ -142,7 +153,7 @@ def interactors_provider() -> Provider:
 def configs_provider() -> Provider:
     provider = Provider()
 
-    cfg_path = os.getenv('COURSE_PLATFORM_CONFIG_PATH') or '.configs/course_platform.toml'
+    cfg_path = os.getenv('COURSE_PLATFORM_CONFIG_PATH') or DEFAULT_COURSE_PLATFORM_CONFIG_PATH
 
     provider.provide(lambda: load_db_config(cfg_path), scope=Scope.APP, provides=DatabaseConfig)
     provider.provide(lambda: load_bot_config(cfg_path), scope=Scope.APP, provides=BotConfig)
@@ -159,7 +170,7 @@ class TgProvider(Provider):
 
     @provide(scope=Scope.REQUEST)
     async def get_user_id(self, obj: TelegramObject) -> int:
-        return obj.from_user.id
+        return obj.from_user.id  # type: ignore[attr-defined, no-any-return, unused-ignore]
 
     @provide(scope=Scope.REQUEST)
     async def get_command(self, obj: TelegramObject) -> str | None:
@@ -169,6 +180,7 @@ class TgProvider(Provider):
         for entity in obj.entities:
             if entity.type == MessageEntityType.BOT_COMMAND:
                 return obj.text
+        return None
 
     @provide(scope=Scope.REQUEST)
     async def get_identity_provider(

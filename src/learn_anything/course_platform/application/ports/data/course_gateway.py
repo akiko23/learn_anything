@@ -44,7 +44,7 @@ class CourseGateway(Protocol):
             user_id: UserID,
             pagination: Pagination,
             filters: GetCoursesActorCreatedFilters,
-    ) -> (Sequence[Course], int):
+    ) -> tuple[Sequence[Course], int]:
         raise NotImplementedError
 
     # todo: rewrite this (srp violation)
@@ -52,7 +52,7 @@ class CourseGateway(Protocol):
             self,
             pagination: Pagination,
             filters: GetManyCoursesFilters,
-    ) -> (Sequence[Course], int):
+    ) -> tuple[Sequence[Course], int]:
         raise NotImplementedError
 
     async def save(self, course: Course) -> CourseID:

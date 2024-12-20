@@ -32,7 +32,7 @@ class SubmissionGateway(Protocol):
             task_id: TaskID,
             filters: GetManySubmissionsFilters,
             pagination: Pagination
-    ) -> (Sequence[CodeSubmission], int):
+    ) -> tuple[Sequence[CodeSubmission], int]:
         raise NotImplementedError
 
     # todo: rewrite this (srp violation)
@@ -41,7 +41,7 @@ class SubmissionGateway(Protocol):
             task_id: TaskID,
             filters: GetManySubmissionsFilters,
             pagination: Pagination
-    ) -> (Sequence[PollSubmission], int):
+    ) -> tuple[Sequence[PollSubmission], int]:
         raise NotImplementedError
 
     async def total_with_task_id(self, task_id: TaskID) -> int:

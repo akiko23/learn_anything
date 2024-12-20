@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Any
 
 from aiogram import Bot, Router, F
@@ -7,23 +8,29 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
-from learn_anything.course_platform.application.interactors.task.get_course_tasks import TaskData
-from learn_anything.course_platform.application.interactors.task.update_task import UpdateTaskInteractor, UpdateTaskInputData
+from learn_anything.course_platform.application.interactors.task.get_course_tasks import BaseTaskData
+from learn_anything.course_platform.application.interactors.task.update_task import UpdateTaskInteractor, \
+    UpdateTaskInputData
 from learn_anything.course_platform.domain.entities.task.models import TaskID
 from learn_anything.course_platform.presentation.tg_bot.states.task import EditTaskForm, EditCodeTaskForm
-from learn_anything.course_platform.presentors.tg_bot.keyboards.task.edit_task import get_task_edit_menu_kb, CANCEL_EDITING_KB, \
+from learn_anything.course_platform.presentors.tg_bot.keyboards.task.edit_task import get_task_edit_menu_kb, \
+    CANCEL_EDITING_KB, \
     get_task_after_edit_menu_kb
 from learn_anything.course_platform.presentors.tg_bot.texts.get_task import get_task_text
 
 router = Router()
 
 
-@router.callback_query(F.data.startswith('edit_task-'))
+@router.callback_query(
+    F.data.startswith('edit_task-'),
+    F.message.as_('callback_query_message')
+)
 async def get_task_edit_menu(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -34,10 +41,10 @@ async def get_task_edit_menu(
 
     text = get_task_text(target_task)
 
-    if callback_query.message.text:
+    if callback_query_message.text:
         await bot.edit_message_text(
             chat_id=user_id,
-            message_id=callback_query.message.message_id,
+            message_id=callback_query_message.message_id,
             text=text,
             reply_markup=get_task_edit_menu_kb(
                 task=target_task,
@@ -49,7 +56,7 @@ async def get_task_edit_menu(
     else:
         await bot.edit_message_caption(
             chat_id=user_id,
-            message_id=callback_query.message.message_id,
+            message_id=callback_query_message.message_id,
             caption=text,
             reply_markup=get_task_edit_menu_kb(
                 task=target_task,
@@ -67,19 +74,21 @@ async def get_task_edit_menu(
     )
 
 
-@router.callback_query(F.data.startswith('edit_task_title'))
+@router.callback_query(
+    F.data.startswith('edit_task_title'),
+    F.message.as_('callback_query_message')
+)
 async def start_editing_task_title(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
-
-    await callback_query.answer()
-
     await state.set_state(state=EditTaskForm.get_new_title)
+
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     msg = await bot.send_message(chat_id=user_id, text='Отправьте новый заголовок', reply_markup=CANCEL_EDITING_KB)
     await state.update_data(
@@ -93,8 +102,8 @@ async def edit_task_title(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[UpdateTaskInteractor],
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
@@ -110,11 +119,12 @@ async def edit_task_title(
     )
     await state.set_state(state=None)
 
-    tasks: Sequence[TaskData] = data[f'course_{course_id}_tasks']
+    tasks: Sequence[BaseTaskData] = data[f'course_{course_id}_tasks']
     tasks[data[f'course_{course_id}_tasks_pointer']].title = value
+    tasks[data[f'course_{course_id}_tasks_pointer']].updated_at = datetime.now()
 
     await state.update_data(
-        **{f'course_{course_id}_tasks': tasks}
+        {f'course_{course_id}_tasks': tasks}
     )
 
     await bot.send_message(
@@ -124,16 +134,19 @@ async def edit_task_title(
     )
 
 
-
-@router.callback_query(F.data.startswith('edit_task_body'))
+@router.callback_query(
+    F.data.startswith('edit_task_body'),
+    F.message.as_('callback_query_message')
+)
 async def start_editing_task_body(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     await callback_query.answer()
 
@@ -151,11 +164,9 @@ async def edit_task_body(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[UpdateTaskInteractor],
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
-
-    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     course_id, back_to, task_id = data['course_id'], data['back_to'], data['task_id']
     value = msg.text
@@ -168,12 +179,14 @@ async def edit_task_body(
     )
     await state.set_state(state=None)
 
-    tasks: Sequence[TaskData] = data[f'course_{course_id}_tasks']
+    tasks: Sequence[BaseTaskData] = data[f'course_{course_id}_tasks']
     tasks[data[f'course_{course_id}_tasks_pointer']].body = value
 
     await state.update_data(
-        **{f'course_{course_id}_tasks': tasks}
+        {f'course_{course_id}_tasks': tasks}
     )
+
+    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await bot.send_message(
         chat_id=user_id,
@@ -182,39 +195,43 @@ async def edit_task_body(
     )
 
 
-@router.callback_query(F.data.startswith('edit_task_topic'))
+@router.callback_query(
+    F.data.startswith('edit_task_topic'),
+    F.message.as_('callback_query_message')
+)
 async def start_editing_task_topic(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
-
-    await callback_query.answer()
-
     await state.set_state(state=EditTaskForm.get_new_topic)
+
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     msg = await bot.send_message(chat_id=user_id, text='Отправьте новую тему', reply_markup=CANCEL_EDITING_KB)
     await state.update_data(
         msg_on_delete=msg.message_id
     )
 
-@router.message(StateFilter(EditTaskForm.get_new_topic), F.text)
+
+@router.message(
+    StateFilter(EditTaskForm.get_new_topic),
+    F.text.as_('value')
+)
 async def edit_task_topic(
         msg: Message,
+        value: str,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[UpdateTaskInteractor],
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
-    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
-
     course_id, back_to, task_id = data['course_id'], data['back_to'], data['task_id']
-    value = msg.text
 
     await interactor.execute(
         data=UpdateTaskInputData(
@@ -222,14 +239,15 @@ async def edit_task_topic(
             topic=value
         )
     )
+
+    tasks: Sequence[BaseTaskData] = data[f'course_{course_id}_tasks']
+    tasks[data[f'course_{course_id}_tasks_pointer']].topic = value
+    await state.update_data(
+        {f'course_{course_id}_tasks': tasks}
+    )
     await state.set_state(state=None)
 
-    tasks: Sequence[TaskData] = data[f'course_{course_id}_tasks']
-    tasks[data[f'course_{course_id}_tasks_pointer']].topic = value
-
-    await state.update_data(
-        **{f'course_{course_id}_tasks': tasks}
-    )
+    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await bot.send_message(
         chat_id=user_id,
@@ -237,20 +255,21 @@ async def edit_task_topic(
         reply_markup=get_task_after_edit_menu_kb(back_to=back_to, course_id=course_id)
     )
 
+
 @router.callback_query(StateFilter(EditTaskForm, EditCodeTaskForm), F.data == 'cancel_task_editing')
 async def cancel_task_editing(
-        msg: Message,
+        callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
+    course_id, back_to = data['course_id'], data['back_to']
 
     await state.set_state(state=None)
 
-    course_id, back_to = data['course_id'], data['back_to']
+    await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await bot.send_message(
         chat_id=user_id,

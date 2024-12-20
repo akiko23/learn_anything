@@ -2,16 +2,17 @@ from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from learn_anything.course_platform.application.interactors.task.get_course_tasks import TaskData
+from learn_anything.course_platform.application.interactors.task.get_course_tasks import TheoryTaskData, \
+    CodeTaskData
 from learn_anything.course_platform.domain.entities.task.enums import TaskType
 from learn_anything.course_platform.domain.entities.task.models import TaskID
 
 
 def get_task_edit_menu_kb(
-        task: TaskData,
+        task: TheoryTaskData | CodeTaskData,
         course_id: str,
         back_to: str
-):
+) -> InlineKeyboardMarkup:
     base_kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -60,7 +61,7 @@ CANCEL_EDITING_KB = InlineKeyboardMarkup(
 def get_task_after_edit_menu_kb(
         back_to: str,
         course_id: str,
-):
+) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Назад', callback_data=f'edit_task-{back_to}-{course_id}')],
@@ -74,7 +75,7 @@ def get_task_after_edit_menu_kb(
     return kb
 
 
-def get_attempts_limit_kb():
+def get_attempts_limit_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="Убрать", callback_data='task_attempts_limit_set_null')],
@@ -83,7 +84,7 @@ def get_attempts_limit_kb():
     )
 
 
-def watch_code_task_tests_kb(pointer: int, total: int, task_id: TaskID):
+def watch_code_task_tests_kb(pointer: int, total: int, task_id: TaskID) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(inline_keyboard=[])
 
     if 0 < pointer < (total - 1):
@@ -108,7 +109,6 @@ def watch_code_task_tests_kb(pointer: int, total: int, task_id: TaskID):
     kb.inline_keyboard.insert(1, [
         InlineKeyboardButton(text='Изменить', callback_data=f'edit_code_task_test-{task_id}'),
     ])
-
 
     if total > 1:
         kb.inline_keyboard[1].insert(

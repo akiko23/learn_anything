@@ -4,14 +4,14 @@ from datetime import datetime
 
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
-from learn_anything.course_platform.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY
+from learn_anything.course_platform.application.ports.data.file_manager import FileManager, COURSES_DEFAULT_DIRECTORY, \
+    FilePath
 from learn_anything.course_platform.application.ports.data.task_gateway import TaskGateway
 from learn_anything.course_platform.application.ports.data.user_gateway import UserGateway
 from learn_anything.course_platform.domain.entities.course.errors import CourseDoesNotExistError
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 from learn_anything.course_platform.domain.entities.course.rules import actor_has_write_access, \
     ensure_actor_has_read_access
-from learn_anything.course_platform.domain.entities.user.models import UserID
 
 
 @dataclass
@@ -25,12 +25,11 @@ class GetFullCourseOutputData:
     title: str
     description: str
     photo_id: str | None
-    photo_path: str | None
+    photo_path: FilePath | None
     is_published: bool
     registrations_limit: int | None
     total_tasks: int
     total_registered: int
-    creator_id: UserID
     creator: str
     created_at: datetime
     updated_at: datetime
@@ -69,6 +68,9 @@ class GetCourseInteractor:
                 course_id=course.id
             )
         )
+        creator_name = 'undefined'
+        if creator:
+            creator_name = creator.fullname
 
         share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
         ensure_actor_has_read_access(actor_id=actor_id, course=course, share_rules=share_rules)
@@ -85,8 +87,7 @@ class GetCourseInteractor:
             total_registered=course.total_registered,
             created_at=course.created_at,
             updated_at=course.updated_at,
-            creator_id=creator.id,
-            creator=creator.fullname.title(),
+            creator=creator_name,
             user_is_registered=registration is not None,
             user_has_write_access=actor_has_write_access(
                 actor_id=actor_id,

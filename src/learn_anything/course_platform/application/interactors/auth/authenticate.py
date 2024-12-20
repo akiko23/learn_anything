@@ -5,13 +5,14 @@ from learn_anything.course_platform.application.ports.auth.auth_manager import A
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.committer import Commiter
 from learn_anything.course_platform.application.ports.data.user_gateway import UserGateway
-from learn_anything.course_platform.domain.entities.user.models import UserRole, UserID
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
+from learn_anything.course_platform.domain.entities.user.models import UserID
 
 logger = logging.getLogger(__name__)
 
 @dataclass
 class AuthInputData:
-    username: str | None
+    username: str
     password: str
 
 
@@ -36,9 +37,9 @@ class AuthenticateInteractor:
 
     async def execute(self, data: AuthInputData) -> AuthOutputData:
         # check the cache
-        user_id = await self._id_provider.get_current_user_id()
         role = await self._id_provider.get_current_user_role()
-        if role and user_id:
+        if role:
+            user_id = await self._id_provider.get_current_user_id()
             return AuthOutputData(user_id=user_id, role=role)
 
         user_id, user_role = await self._auth_manager.login(username=data.username, password=data.password)

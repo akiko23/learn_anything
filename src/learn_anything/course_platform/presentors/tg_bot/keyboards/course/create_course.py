@@ -28,7 +28,7 @@ GET_COURSE_REGISTRATIONS_LIMIT_KB = InlineKeyboardMarkup(
 )
 
 
-def after_course_creation_menu(new_course_id: CourseID):
+def after_course_creation_menu(new_course_id: CourseID) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Перейти к курсу', callback_data=f'course-created_courses-{new_course_id}')],

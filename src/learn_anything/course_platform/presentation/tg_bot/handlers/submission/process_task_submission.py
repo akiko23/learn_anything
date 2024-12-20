@@ -6,26 +6,33 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from dishka import FromDishka
 
-from learn_anything.course_platform.application.interactors.submission.create_submission import CreateCodeTaskSubmissionInteractor, \
+from learn_anything.course_platform.adapters.playground.unix_playground import logger
+from learn_anything.course_platform.application.interactors.submission.create_submission import \
+    CreateCodeTaskSubmissionInteractor, \
     CreateCodeTaskSubmissionInputData
-from learn_anything.course_platform.application.interactors.task.get_course_tasks import TaskData
-from learn_anything.course_platform.presentors.tg_bot.keyboards.task.do_course_task import get_do_task_kb, no_attempts_left_kb
-from learn_anything.course_platform.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
+from learn_anything.course_platform.application.interactors.task.get_course_tasks import CodeTaskData
 from learn_anything.course_platform.presentation.tg_bot.states.submission import SubmissionForm
+from learn_anything.course_platform.presentors.tg_bot.keyboards.task.do_course_task import get_do_task_kb, \
+    no_attempts_left_kb
+from learn_anything.course_platform.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
 from learn_anything.course_platform.presentors.tg_bot.texts.get_task import get_task_text
 from learn_anything.course_platform.presentors.tg_bot.texts.submission import get_on_failed_code_submission_text
 
 router = Router()
 
 
-@router.message(StateFilter(SubmissionForm.get_for_code), F.text)
+@router.message(
+    StateFilter(SubmissionForm.get_for_code),
+    F.text.as_('submission')
+)
 async def process_code_task_submission(
         msg: Message,
+        submission: str,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[CreateCodeTaskSubmissionInteractor],
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     back_to, course_id = data['back_to'], data['course_id']
@@ -35,9 +42,7 @@ async def process_code_task_submission(
     total = data[f'course_{course_id}_tasks_total']
     current_course = data['target_course']
 
-    target_task: TaskData = tasks[pointer]
-    submission = msg.text
-
+    target_task: CodeTaskData = tasks[pointer]
     output_data = await interactor.execute(
         data=CreateCodeTaskSubmissionInputData(
             task_id=target_task.id,
@@ -53,11 +58,16 @@ async def process_code_task_submission(
         if target_task.attempts_limit:
             attempts_left = max(target_task.attempts_limit - target_task.total_actor_submissions, 0)
 
-        if output_data.failed_output:
-            text = get_on_failed_code_submission_text(output_data, attempts_left=attempts_left)
+        failed_test_data = output_data.failed_test
+        if failed_test_data:
+            text = get_on_failed_code_submission_text(
+                failed_test_output=failed_test_data.failed_test_output,
+                failed_test_idx=failed_test_data.failed_test_idx,
+                attempts_left=attempts_left
+            )
             if attempts_left == 0:
                 await state.set_state(state=None)
-                return await msg.answer(
+                await msg.answer(
                     text=text,
                     reply_markup=no_attempts_left_kb(
                         back_to=back_to,
@@ -65,12 +75,14 @@ async def process_code_task_submission(
                     ),
                     parse_mode='HTML'
                 )
+                return
 
-            return await msg.answer(
+            await msg.answer(
                 text=text,
                 reply_markup=get_do_task_kb(),
                 parse_mode='HTML'
             )
+            return
 
         await state.set_state(state=None)
 
@@ -99,6 +111,5 @@ async def process_code_task_submission(
     finally:
         tasks[pointer] = target_task
         await state.update_data(
-            **{f'course_{course_id}_tasks': tasks}
+            {f'course_{course_id}_tasks': tasks}
         )
-

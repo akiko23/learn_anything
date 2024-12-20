@@ -22,6 +22,9 @@ from learn_anything.api_gateway.presentation.tg_bot.config import load_bot_confi
 from learn_anything.api_gateway.presentation.web.config import load_web_config, WebConfig
 
 
+DEFAULT_API_GATEWAY_CONFIG_PATH = 'configs/api_gateway.toml'
+
+
 def infrastructure_provider() -> Provider:
     provider = Provider()
 
@@ -31,7 +34,7 @@ def infrastructure_provider() -> Provider:
 def configs_provider() -> Provider:
     provider = Provider()
 
-    cfg_path = os.getenv('API_GATEWAY_CONFIG_PATH') or '.configs/api_gateway.toml'
+    cfg_path = os.getenv('API_GATEWAY_CONFIG_PATH') or DEFAULT_API_GATEWAY_CONFIG_PATH
 
     provider.provide(lambda: load_bot_config(cfg_path), scope=Scope.APP, provides=BotConfig)
     provider.provide(lambda: load_rmq_config(cfg_path), scope=Scope.APP, provides=RMQConfig)
@@ -45,7 +48,7 @@ class TgProvider(Provider):
 
     @provide(scope=Scope.REQUEST)
     async def get_user_id(self, obj: TelegramObject) -> int:
-        return obj.from_user.id
+        return obj.from_user.id  # type: ignore[attr-defined, no-any-return, unused-ignore]
 
     @provide(scope=Scope.REQUEST)
     async def get_command(self, obj: TelegramObject) -> str | None:
@@ -55,6 +58,8 @@ class TgProvider(Provider):
         for entity in obj.entities:
             if entity.type == MessageEntityType.BOT_COMMAND:
                 return obj.text
+        return None
+
 
     @provide(scope=Scope.APP)
     async def get_bot(

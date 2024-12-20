@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import Protocol, Self
+from typing import Protocol, Self, Any
 
-from typing_extensions import TypeVar
+from typing_extensions import NewType
 
-StdOut = TypeVar('StdOut', bound=str, contravariant=True)
-StdErr = TypeVar('StdErr', bound=str, contravariant=True)
+StdOut = NewType('StdOut', str)
+StdErr = NewType('StdErr', str)
 
 
 @dataclass
@@ -18,10 +18,10 @@ class Playground(Protocol):
     async def __aenter__(self) -> Self:
         raise NotImplementedError
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: type[Exception], exc_val: Any, exc_tb: str) -> None:
         raise NotImplementedError
 
-    async def execute_code(self, code: str, raise_exc_on_err: bool = False) -> (StdOut, StdErr):
+    async def execute_code(self, code: str, raise_exc_on_err: bool = False) -> tuple[StdOut, StdErr]:
         raise NotImplementedError
 
 

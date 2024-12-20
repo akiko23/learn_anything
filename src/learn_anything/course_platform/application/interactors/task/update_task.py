@@ -7,8 +7,8 @@ from learn_anything.course_platform.application.ports.data.course_gateway import
 from learn_anything.course_platform.application.ports.data.file_manager import FileManager
 from learn_anything.course_platform.application.ports.data.task_gateway import TaskGateway
 from learn_anything.course_platform.application.ports.data.user_gateway import UserGateway
-from learn_anything.course_platform.domain.entities.course.errors import CourseDoesNotExistError
 from learn_anything.course_platform.domain.entities.course.rules import ensure_actor_has_write_access
+from learn_anything.course_platform.domain.entities.task.errors import TaskDoesNotExistError
 from learn_anything.course_platform.domain.entities.task.models import TaskID
 
 
@@ -46,7 +46,7 @@ class UpdateTaskInteractor:
 
         task = await self._task_gateway.with_id(data.task_id)
         if not task:
-            raise CourseDoesNotExistError
+            raise TaskDoesNotExistError(data.task_id)
 
         course = await self._course_gateway.with_id(task.course_id)
 

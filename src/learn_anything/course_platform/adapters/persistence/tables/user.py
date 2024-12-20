@@ -2,10 +2,10 @@ import datetime
 import uuid
 
 import sqlalchemy as sa
-# from sqlalchemy.orm import relationship
 
-from learn_anything.course_platform.domain.entities.user.models import User, UserRole, AuthLink
 from learn_anything.course_platform.adapters.persistence.tables.base import mapper_registry
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
+from learn_anything.course_platform.domain.entities.user.models import User, AuthLink
 
 users_table = sa.Table(
     "users",

@@ -1,3 +1,6 @@
 # Application generic error
 class ApplicationError(Exception):
-    message: str
+    @property
+    def message(self) -> str:
+        raise NotImplementedError
+

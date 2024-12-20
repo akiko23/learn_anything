@@ -3,12 +3,14 @@ from typing import Any
 from aiogram import Bot, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram.types import InputMediaPhoto
 from dishka import FromDishka
 
-from learn_anything.course_platform.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
-from learn_anything.course_platform.application.interactors.course.update_course import UpdateCourseInputData, UpdateCourseInteractor
+from learn_anything.course_platform.application.interactors.course.get_course import GetCourseInteractor, \
+    GetCourseInputData
+from learn_anything.course_platform.application.interactors.course.update_course import UpdateCourseInputData, \
+    UpdateCourseInteractor
 from learn_anything.course_platform.application.ports.data.file_manager import FileManager
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 from learn_anything.course_platform.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
@@ -21,18 +23,24 @@ from learn_anything.course_platform.presentors.tg_bot.texts.get_many_courses imp
 router = Router()
 
 
-@router.callback_query(F.data.startswith('course-'))
+@router.callback_query(
+    F.data.startswith('course-'),
+    F.data.as_('callback_query_data'),
+    F.message.as_('callback_query_message')
+)
 async def get_single_course(
         callback_query: CallbackQuery,
+        callback_query_data: str,
+        callback_query_message: Message,
         bot: Bot,
         state: FSMContext,
         interactor: FromDishka[GetCourseInteractor],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
         file_manager: FromDishka[FileManager],
-):
+) -> None:
     user_id: int = callback_query.from_user.id
+    back_to, course_id = callback_query_data.split('-')[1:]
 
-    back_to, course_id = callback_query.data.split('-')[1:]
     target_course = await interactor.execute(
         data=GetCourseInputData(
             course_id=CourseID(int(course_id)),
@@ -40,7 +48,7 @@ async def get_single_course(
     )
 
     await state.update_data(
-        **{
+        {
             f'course_{course_id}_registered': target_course.user_is_registered,
             'target_course': target_course,
         },
@@ -55,14 +63,14 @@ async def get_single_course(
 
     photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
     _, photo_id = await file_manager.get_props_by_path(path=photo_path)
-    if target_course.photo_id:
+    if target_course.photo_id and target_course.photo_path:
         photo_id = target_course.photo_id
         photo_path = target_course.photo_path
 
     try:
-        return await bot.edit_message_media(
+        await bot.edit_message_media(
             chat_id=user_id,
-            message_id=callback_query.message.message_id,
+            message_id=callback_query_message.message_id,
             media=InputMediaPhoto(
                 media=photo_id,
                 caption=text
@@ -82,12 +90,16 @@ async def get_single_course(
         )
 
 
-@router.callback_query(F.data == 'get_course-back_to_all_courses')
+@router.callback_query(
+    F.data == 'get_course-back_to_all_courses',
+    F.message.as_('callback_query_message')
+)
 async def back_to_all_courses(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -100,7 +112,7 @@ async def back_to_all_courses(
 
     await bot.edit_message_caption(
         chat_id=user_id,
-        message_id=callback_query.message.message_id,
+        message_id=callback_query_message.message_id,
         caption=text,
         reply_markup=get_all_courses_keyboard(
             pointer=pointer,
@@ -110,12 +122,16 @@ async def back_to_all_courses(
     )
 
 
-@router.callback_query(F.data == 'get_course-back_to_created_courses')
+@router.callback_query(
+    F.data == 'get_course-back_to_created_courses',
+    F.message.as_('callback_query_message')
+)
 async def back_to_created_courses(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -128,7 +144,7 @@ async def back_to_created_courses(
 
     await bot.edit_message_caption(
         chat_id=user_id,
-        message_id=callback_query.message.message_id,
+        message_id=callback_query_message.message_id,
         caption=text,
         reply_markup=get_actor_created_courses_keyboard(
             pointer=pointer,
@@ -138,12 +154,16 @@ async def back_to_created_courses(
     )
 
 
-@router.callback_query(F.data == 'get_course-back_to_registered_courses')
+@router.callback_query(
+    F.data == 'get_course-back_to_registered_courses',
+    F.message.as_('callback_query_message')
+)
 async def back_to_registered_courses(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -156,7 +176,7 @@ async def back_to_registered_courses(
 
     await bot.edit_message_caption(
         chat_id=user_id,
-        message_id=callback_query.message.message_id,
+        message_id=callback_query_message.message_id,
         caption=text,
         reply_markup=get_actor_registered_courses_keyboard(
             pointer=pointer,

@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import cast
 
 from sqlalchemy import select, func, delete
 from sqlalchemy.dialects.postgresql import insert
@@ -28,12 +29,12 @@ class TaskMapper(TaskGateway):
 
         task: CodeTask | None = result.scalar_one_or_none()
         if task is None:
-            return task
+            return None
 
         get_tests_stmt = select(CodeTaskTest).where(code_task_tests_table.c.task_id == task_id).order_by(code_task_tests_table.c.index_in_task)
         get_tests_result = await self._session.execute(get_tests_stmt)
 
-        task.tests = get_tests_result.scalars().all()
+        task.tests = list(get_tests_result.scalars().all())
         return task
 
     async def get_poll_task_with_id(self, task_id: TaskID) -> PollTask:
@@ -47,12 +48,16 @@ class TaskMapper(TaskGateway):
         )
 
         poll_task_res = await self._session.execute(select_poll_task_stmt)
-        poll_task = poll_task_res.scalar_one()
+        poll_task = cast(PollTask, poll_task_res.scalar_one())
 
         return poll_task
 
-    async def with_course(self, course_id: CourseID, pagination: Pagination, filters: GetTasksFilters | None) -> (
-            Sequence[Task], int):
+    async def with_course(
+            self,
+            course_id: CourseID,
+            pagination: Pagination,
+            filters: GetTasksFilters | None
+    ) -> tuple[Sequence[Task], int]:
         stmt = (
             select(
                 Task
@@ -62,7 +67,7 @@ class TaskMapper(TaskGateway):
         )
 
         total_res = await self._session.execute(
-            select(func.count()).select_from(stmt)
+            select(func.count()).select_from(stmt.subquery())
         )
 
         stmt = (
@@ -84,7 +89,7 @@ class TaskMapper(TaskGateway):
         )
 
         res = await self._session.execute(
-            select(func.count()).select_from(stmt)
+            select(func.count()).select_from(stmt.subquery())
         )
         return res.scalar_one()
 
@@ -98,7 +103,7 @@ class TaskMapper(TaskGateway):
                 type=task.type,
                 course_id=task.course_id,
                 index_in_course=task.index_in_course,
-            )
+            ).returning(tasks_table.c.id)
         )
 
         if task.id:
@@ -122,13 +127,11 @@ class TaskMapper(TaskGateway):
                         index_in_course=task.index_in_course,
                     ),
                     where=(tasks_table.c.id == task.id)
-                )
+                ).returning(tasks_table.c.id)
             )
 
-        stmt = stmt.returning(tasks_table.c.id)
-
         res = await self._session.execute(stmt)
-        return res.scalar_one()
+        return cast(TaskID, res.scalar_one())
 
     async def save_code_task(self, task: CodeTask) -> TaskID:
         upsert_code_task_stmt = (
@@ -181,9 +184,14 @@ class TaskMapper(TaskGateway):
             )
 
         res = await self._session.execute(upsert_code_task_stmt)
-        task_id = res.scalar_one()
+        task_id = cast(TaskID, res.scalar_one())
 
-        task.tests = list(filter(lambda t: t.code is not None, task.tests))
+        # todo: replace boolshit below with uow
+        remove_tests_stmt = delete(code_task_tests_table).where(
+            code_task_tests_table.c.task_id == task_id
+        )
+        await self._session.execute(remove_tests_stmt)
+        await self._session.flush()
 
         insert_code_task_tests_stmt = (
             insert(CodeTaskTest).
@@ -213,7 +221,7 @@ class TaskMapper(TaskGateway):
                 course_id=task.course_id,
                 index_in_course=task.index_in_course
             )
-        )
+        ).returning(tasks_table.c.id)
 
         if task.id:
             task_upsert_stmt = (
@@ -236,9 +244,8 @@ class TaskMapper(TaskGateway):
                     index_in_course=task.index_in_course,
                 ),
                 where=(tasks_table.c.id == task.id)
-            )
+            ).returning(tasks_table.c.id)
 
-        task_upsert_stmt = task_upsert_stmt.returning(tasks_table.c.id)
         insert_options_stmt = (
             insert(poll_task_options_table).
             values([
@@ -254,7 +261,7 @@ class TaskMapper(TaskGateway):
         res, _ = await self._session.execute(task_upsert_stmt)
         await self._session.execute(insert_options_stmt)
 
-        return res.scalar_one()
+        return cast(TaskID, res.scalar_one())
 
     async def delete(self, task_id: TaskID) -> None:
         stmt = (

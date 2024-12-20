@@ -65,6 +65,8 @@ def register_handlers(dp: Dispatcher) -> None:
         (F.update.message.as_("msg") | F.update.callback_query.message.as_("msg"))
     )
     dp.error.register(
-        exception_handler
+        exception_handler,
+        (F.update.message.text.as_('user_message') | F.update.callback_query.data.as_('user_message')),
+        (F.update.message.as_('msg') | F.update.callback_query.message.as_('msg'))
     )
 

@@ -3,7 +3,7 @@ from typing import Any
 from aiogram import Bot, Router, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 
 from learn_anything.course_platform.application.interactors.course.get_course import GetFullCourseOutputData
 from learn_anything.course_platform.domain.entities.task.enums import TaskType
@@ -15,16 +15,19 @@ from learn_anything.course_platform.presentation.tg_bot.states.submission import
 router = Router()
 
 
-@router.callback_query(F.data.startswith('do_course_task-'))
+@router.callback_query(
+    F.data.startswith('do_course_task-'),
+    F.message.as_('callback_query_message')
+)
 async def do_course_task(
         callback_query: CallbackQuery,
         state: FSMContext,
+        callback_query_message: Message,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    # task_id = callback_query.data.split('-')[1]
     course_id = data['course_id']
 
     tasks = data[f'course_{course_id}_tasks']
@@ -32,7 +35,7 @@ async def do_course_task(
 
     await state.update_data(
         target_task=target_task,
-        msg_on_delete=callback_query.message.message_id,
+        msg_on_delete=callback_query_message.message_id,
     )
 
     if target_task.type == TaskType.CODE:
@@ -44,7 +47,7 @@ async def cancel_doing_task(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 

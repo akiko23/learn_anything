@@ -1,10 +1,10 @@
 from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from learn_anything.course_platform.domain.entities.user.models import UserRole
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
 
 
-def get_main_menu_keyboard(user_role: UserRole):
+def get_main_menu_keyboard(user_role: UserRole) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text='Все курсы', callback_data='main_menu-all_courses'),

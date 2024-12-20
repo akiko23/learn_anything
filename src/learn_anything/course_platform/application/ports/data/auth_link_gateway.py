@@ -8,7 +8,7 @@ class AuthLinkGateway(Protocol):
     async def save(self, auth_link: AuthLink) -> uuid.UUID:
         raise NotImplementedError
 
-    async def with_id(self, link_id: uuid.UUID) -> AuthLink:
+    async def with_id(self, link_id: uuid.UUID) -> AuthLink | None:
         raise NotImplementedError
 
     async def delete(self, auth_link_id: uuid.UUID) -> None:

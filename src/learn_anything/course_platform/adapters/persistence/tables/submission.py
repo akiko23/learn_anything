@@ -40,7 +40,7 @@ submissions_table = sa.Table(
 )
 
 
-def map_submissions_table():
+def map_submissions_table() -> None:
     mapper_registry.map_imperatively(
         Submission,
         submissions_table

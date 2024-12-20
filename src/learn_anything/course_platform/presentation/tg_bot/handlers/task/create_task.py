@@ -14,7 +14,7 @@ from dishka import FromDishka
 
 from learn_anything.course_platform.application.input_data import Pagination
 from learn_anything.course_platform.application.interactors.course.get_course import GetCourseInteractor, GetCourseInputData
-from learn_anything.course_platform.application.interactors.task.create_task import CreateTaskInteractor, CreateTaskInputData, \
+from learn_anything.course_platform.application.interactors.task.create_task import CreateTaskInteractor, CreateTheoryTaskInputData, \
     CreateCodeTaskInteractor, CreateCodeTaskInputData
 from learn_anything.course_platform.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
     GetCourseTasksInputData
@@ -34,15 +34,20 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 
-@router.callback_query(F.data.startswith('create_course_task-'))
+@router.callback_query(
+    F.data.startswith('create_course_task-'),
+    F.data.as_('callback_query_data'),
+    F.message.as_('callback_query_message')
+)
 async def start_course_task_creation(
         callback_query: CallbackQuery,
+        callback_query_data: str,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
-
-    back_to, course_id = callback_query.data.split('-')[1:]
+    back_to, course_id = callback_query_data.split('-')[1:]
 
     await state.set_state(CreateTaskForm.get_title)
     await state.update_data(
@@ -50,7 +55,7 @@ async def start_course_task_creation(
         course_id=course_id,
     )
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     msg = await bot.send_message(
         chat_id=user_id,
@@ -67,8 +72,8 @@ async def get_course_task_title(
         msg: Message,
         state: FSMContext,
         bot: Bot,
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await state.update_data(
@@ -93,8 +98,8 @@ async def get_course_task_description(
         msg: Message,
         state: FSMContext,
         bot: Bot,
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await state.update_data(
@@ -123,8 +128,8 @@ async def get_or_skip_course_task_topic(
         update: Message | CallbackQuery,
         state: FSMContext,
         bot: Bot,
-):
-    user_id: int = update.from_user.id
+) -> None:
+    user_id: int = update.from_user.id if isinstance(update, CallbackQuery) else update.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await state.update_data(
@@ -144,14 +149,19 @@ async def get_or_skip_course_task_topic(
     )
 
 
-@router.callback_query(StateFilter(CreateTaskForm.get_type), F.data.startswith('create_course_task_type-'))
+@router.callback_query(
+    StateFilter(CreateTaskForm.get_type),
+    F.data.startswith('create_course_task_type-'),
+    F.data.as_('callback_query_data')
+)
 async def get_course_task_type(
         callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
+        callback_query_data: str,
         interactor: FromDishka[CreateTaskInteractor],
         get_course_tasks_interactor: FromDishka[GetCourseTasksInteractor],
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -160,7 +170,7 @@ async def get_course_task_type(
     body = data['body']
     topic = data['topic']
 
-    task_type = TaskType(callback_query.data.split('-')[1])
+    task_type = TaskType(callback_query_data.split('-')[1])
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
@@ -177,7 +187,7 @@ async def get_course_task_type(
             await state.set_state(state=None)
 
             await interactor.execute(
-                CreateTaskInputData(
+                CreateTheoryTaskInputData(
                     title=title,
                     body=body,
                     topic=topic,
@@ -242,14 +252,14 @@ async def get_or_skip_course_task_attempts_limit(
         update: Message | CallbackQuery,
         state: FSMContext,
         bot: Bot,
-):
-    user_id: int = update.from_user.id
+) -> None:
+    user_id: int = update.from_user.id if isinstance(update, CallbackQuery) else update.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await state.update_data(
-        attempts_limit=int(update.text) if isinstance(update, Message) else None,
+        attempts_limit=int(update.text) if isinstance(update, Message) and update.text else None,
     )
 
     await state.set_state(CreateCodeTaskForm.get_prepared_code)
@@ -269,7 +279,7 @@ async def get_or_skip_course_task_attempts_limit(
 )
 async def invalid_attempts_limit(
         msg: Message,
-):
+) -> None:
     await msg.answer('❗️Неверный формат данных. Ожидалось целое число от 1 до 100')
 
 
@@ -285,8 +295,8 @@ async def get_or_skip_code_task_prepared_code(
         update: Message | CallbackQuery,
         state: FSMContext,
         bot: Bot,
-):
-    user_id: int = update.from_user.id
+) -> None:
+    user_id: int = update.from_user.id if isinstance(update, CallbackQuery) else update.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
@@ -309,7 +319,6 @@ async def get_or_skip_code_task_prepared_code(
 
 @router.message(
     StateFilter(CreateCodeTaskForm.get_code_duration_timeout),
-    F.text,
     (F.text.isdigit()) & (F.text.cast(int) > 0) & (F.text.cast(int) <= 100)
 )
 @router.callback_query(
@@ -320,14 +329,14 @@ async def get_or_skip_task_code_duration_timeout(
         update: Message | CallbackQuery,
         state: FSMContext,
         bot: Bot,
-):
-    user_id: int = update.from_user.id
+) -> None:
+    user_id: int = update.from_user.id if isinstance(update, CallbackQuery) else update.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await state.update_data(
-        code_duration_timeout=int(update.text) if isinstance(update, Message) else 10,
+        code_duration_timeout=int(update.text) if isinstance(update, Message) and update.text else 10,
         tests=[],
     )
 
@@ -354,7 +363,7 @@ async def get_or_skip_task_code_duration_timeout(
 )
 async def handle_invalid_code_duration_timeout_or_attempts_limit(
         msg: Message,
-):
+) -> None:
     await msg.answer('❗️Неверный формат данных. Ожидалось целое число от 1 до 100')
 
 
@@ -366,8 +375,8 @@ async def get_code_task_tests(
         msg: Message,
         state: FSMContext,
         bot: Bot,
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
@@ -398,7 +407,7 @@ async def finish_task_creation(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[CreateCodeTaskInteractor],
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -428,27 +437,26 @@ async def finish_task_creation(
             )
         )
     except TaskTestCodeIsInvalidError as e:
-        tests = []
-        await state.update_data(tests=tests)
+        await state.update_data(tests=[])
 
         msg = await bot.send_message(
             chat_id=user_id,
             text=f'Отловлена ошибка в коде тестов. Все тесты сброшены:\n'
                  f'\n{pre_tm.render(content=e.err)}\n'
                  f'\nПопробуйте снова\n'
-                 f'Введите код для {len(tests) + 1}-го теста\n'
+                 'Введите код для 1-го теста\n'
                  ''
                  'Учтите:\n'
                  ' - Stdout и stderr пользовательского кода можно получить из переменных stdout и stderr соответственно\n'
                  ' - Для кодовой задачи должен быть по крайней мере один тест.\n'
                  ' - Лучше заранее протестируйте код, который скинете сюда, потому что создание задания происходит атомарно\n',
-            reply_markup=get_code_task_tests_kb(current_tests=tests),
+            reply_markup=get_code_task_tests_kb(current_tests=[]),
             parse_mode='HTML'
         )
-        return await state.update_data(
+        await state.update_data(
             msg_on_delete=msg.message_id
         )
-
+        return
     except TaskPreparedCodeIsInvalidError as e:
         await state.set_state(CreateCodeTaskForm.get_prepared_code)
 
@@ -460,9 +468,10 @@ async def finish_task_creation(
             reply_markup=get_code_task_prepared_code_kb(),
             parse_mode='HTML'
         )
-        return await state.update_data(
+        await state.update_data(
             msg_on_delete=msg.message_id
         )
+        return
 
     await state.set_state(state=None)
 
@@ -508,20 +517,28 @@ async def finish_task_creation(
         CreateCodeTaskForm,
         CreateTextInputTaskForm,
     ),
-    F.data == 'create_course_task_cancel'
+    F.data == 'create_course_task_cancel',
+    F.message.as_('callback_query_message')
 )
 async def cancel_course_task_creation(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[GetCourseInteractor]
-):
+) -> None:
     await state.set_state(state=None)
 
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
     back_to, course_id = data['back_to'], data['course_id']
+
+    course = await interactor.execute(
+        GetCourseInputData(
+            course_id=CourseID(int(course_id)),
+        ),
+    )
 
     del data['back_to']
     del data['course_id']
@@ -532,17 +549,11 @@ async def cancel_course_task_creation(
             data['body'],
             data['task_type'],
         )
-
     await state.set_data(data)
-
-    course = await interactor.execute(
-        GetCourseInputData(
-            course_id=CourseID(int(course_id)),
-        ),
-    )
-
     await state.set_state(state=None)
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
+
     await bot.send_message(
         chat_id=user_id,
         text="Создание задания отменено. Вы вернулись в панель управления курса",
@@ -562,8 +573,8 @@ async def cancel_course_task_creation(
 )
 async def handle_invalid_code_error(
         event: ErrorEvent, msg: Message
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     err: InvalidTaskCodeError = cast(InvalidTaskCodeError, event.exception)
 
     logger.warning(

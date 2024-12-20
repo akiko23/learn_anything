@@ -4,17 +4,18 @@ from typing import Sequence
 
 from learn_anything.course_platform.application.input_data import Pagination
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
-from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
+from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, \
+    RegistrationForCourseGateway
 from learn_anything.course_platform.application.ports.data.file_manager import FileManager
-from learn_anything.course_platform.application.ports.data.submission_gateway import SubmissionGateway, GetManySubmissionsFilters
+from learn_anything.course_platform.application.ports.data.submission_gateway import SubmissionGateway, \
+    GetManySubmissionsFilters
 from learn_anything.course_platform.application.ports.data.task_gateway import TaskGateway
 from learn_anything.course_platform.application.ports.data.user_gateway import UserGateway
 from learn_anything.course_platform.domain.entities.course.rules import ensure_actor_has_write_access
-from learn_anything.course_platform.domain.entities.submission.models import CodeSubmission, PollSubmission
 from learn_anything.course_platform.domain.entities.task.enums import TaskType
-from learn_anything.course_platform.domain.entities.task.errors import TaskDoesNotExistError, TheoryTaskHasNoSubmissionsError
+from learn_anything.course_platform.domain.entities.task.errors import TaskDoesNotExistError, \
+    TheoryTaskHasNoSubmissionsError
 from learn_anything.course_platform.domain.entities.task.models import TaskID
-
 
 
 @dataclass
@@ -72,14 +73,13 @@ class GetActorSubmissionsInteractor:
         submissions_output_data, total = [], 0
         match task.type:
             case TaskType.CODE:
-                submissions, total = await self._submission_gateway.many_with_code_task_id(
+                code_submissions, total = await self._submission_gateway.many_with_code_task_id(
                     task_id=task.id,
                     filters=data.filters,
                     pagination=data.pagination,
                 )
-                submissions: Sequence[CodeSubmission]
 
-                for submission in submissions:
+                for submission in code_submissions:
                     submission_data = SubmissionData(
                         solution=submission.code,
                         is_correct=submission.is_correct,
@@ -89,18 +89,17 @@ class GetActorSubmissionsInteractor:
                     submissions_output_data.append(submission_data)
 
             case TaskType.POLL:
-                submissions, total = await self._submission_gateway.many_with_poll_task_id(
+                poll_submissions, total = await self._submission_gateway.many_with_poll_task_id(
                     task_id=task.id,
                     filters=data.filters,
                     pagination=data.pagination,
                 )
-                submissions: Sequence[PollSubmission]
 
-                for submission in submissions:
+                for poll_submission in poll_submissions:
                     submission_data = SubmissionData(
-                        solution=submission.selected_option.content,
-                        is_correct=submission.is_correct,
-                        created_at=submission.created_at,
+                        solution=poll_submission.selected_option.content,
+                        is_correct=poll_submission.is_correct,
+                        created_at=poll_submission.created_at,
                     )
 
                     submissions_output_data.append(submission_data)
@@ -149,14 +148,13 @@ class GetTaskSubmissionsInteractor:
         submissions_output_data, total = [], 0
         match task.type:
             case TaskType.CODE:
-                submissions, total = await self._submission_gateway.many_with_code_task_id(
+                code_submissions, total = await self._submission_gateway.many_with_code_task_id(
                     task_id=task.id,
                     filters=data.filters,
                     pagination=data.pagination,
                 )
-                submissions: Sequence[CodeSubmission]
 
-                for submission in submissions:
+                for submission in code_submissions:
                     submission_data = SubmissionData(
                         solution=submission.code,
                         is_correct=submission.is_correct,
@@ -165,18 +163,17 @@ class GetTaskSubmissionsInteractor:
                     submissions_output_data.append(submission_data)
 
             case TaskType.POLL:
-                submissions, total = await self._submission_gateway.many_with_poll_task_id(
+                poll_submissions, total = await self._submission_gateway.many_with_poll_task_id(
                     task_id=task.id,
                     filters=data.filters,
                     pagination=data.pagination,
                 )
-                submissions: Sequence[PollSubmission]
 
-                for submission in submissions:
+                for poll_submission in poll_submissions:
                     submission_data = SubmissionData(
-                        solution=submission.selected_option.content,
-                        is_correct=submission.is_correct,
-                        created_at=submission.created_at,
+                        solution=poll_submission.selected_option.content,
+                        is_correct=poll_submission.is_correct,
+                        created_at=poll_submission.created_at,
                     )
 
                     submissions_output_data.append(submission_data)

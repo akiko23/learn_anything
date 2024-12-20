@@ -9,7 +9,7 @@ CourseID = NewType("CourseID", int)
 
 @dataclass
 class Course:
-    id: CourseID | None
+    id: CourseID
     title: str
     description: str
     photo_id: str | None

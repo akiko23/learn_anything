@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass
 
 from learn_anything.course_platform.domain.error import ApplicationError
-from learn_anything.course_platform.domain.entities.user.models import UserRole
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
 
 
 @dataclass

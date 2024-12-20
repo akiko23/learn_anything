@@ -9,9 +9,12 @@ from learn_anything.course_platform.application.ports.data.user_gateway import U
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 from learn_anything.course_platform.domain.entities.course.rules import create_course
 
+UNSPECIFIED_COURSE_ID = CourseID(0)
 
-@dataclass
+
+@dataclass(kw_only=True)
 class CreateCourseInputData:
+    id: CourseID = UNSPECIFIED_COURSE_ID
     title: str
     description: str
     photo_id: str | None
@@ -35,15 +38,15 @@ class CreateCourseInteractor:
 
     async def execute(self, data: CreateCourseInputData) -> CreateCourseOutputData:
         actor_id = await self._id_provider.get_current_user_id()
-        if data.photo:
-            file_path = await self._file_manager.generate_path(
+        if data.photo and data.photo_id:
+            file_path = self._file_manager.generate_path(
                 directories=(COURSES_DEFAULT_DIRECTORY,),
                 filename=data.photo_id,
             )
             await self._file_manager.save(data.photo.read(), file_path=file_path)
 
         course = create_course(
-            id_=None,
+            id_=data.id,
             title=data.title,
             description=data.description,
             creator_id=actor_id,
