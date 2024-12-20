@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from dishka import FromDishka
 
+from learn_anything.course_platform.adapters.playground.unix_playground import logger
 from learn_anything.course_platform.application.interactors.submission.create_submission import \
     CreateCodeTaskSubmissionInteractor, \
     CreateCodeTaskSubmissionInputData
@@ -57,10 +58,11 @@ async def process_code_task_submission(
         if target_task.attempts_limit:
             attempts_left = max(target_task.attempts_limit - target_task.total_actor_submissions, 0)
 
-        if output_data.failed_output and output_data.failed_test_idx:
+        failed_test_data = output_data.failed_test
+        if failed_test_data:
             text = get_on_failed_code_submission_text(
-                failed_test_output=output_data.failed_output,
-                failed_test_idx=output_data.failed_test_idx,
+                failed_test_output=failed_test_data.failed_test_output,
+                failed_test_idx=failed_test_data.failed_test_idx,
                 attempts_left=attempts_left
             )
             if attempts_left == 0:

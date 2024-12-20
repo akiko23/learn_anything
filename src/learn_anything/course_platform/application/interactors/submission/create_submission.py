@@ -4,16 +4,19 @@ from datetime import datetime
 
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.committer import Commiter
-from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, RegistrationForCourseGateway
+from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway, \
+    RegistrationForCourseGateway
 from learn_anything.course_platform.application.ports.data.submission_gateway import SubmissionGateway
 from learn_anything.course_platform.application.ports.data.task_gateway import TaskGateway
 from learn_anything.course_platform.application.ports.playground import PlaygroundFactory
 from learn_anything.course_platform.domain.entities.course.errors import CourseDoesNotExistError
 from learn_anything.course_platform.domain.entities.submission.models import PollSubmission, TextInputSubmission
 from learn_anything.course_platform.domain.entities.submission.rules import create_code_submission
-from learn_anything.course_platform.domain.entities.task.errors import TaskDoesNotExistError, ActorIsNotRegisteredOnCourseError, \
+from learn_anything.course_platform.domain.entities.task.errors import TaskDoesNotExistError, \
+    ActorIsNotRegisteredOnCourseError, \
     AttemptsLimitReachedForTaskError, PollTaskOptionDoesNotExistError
-from learn_anything.course_platform.domain.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, CodeTask, \
+from learn_anything.course_platform.domain.entities.task.models import TaskID, TextInputTaskAnswer, PracticeTask, \
+    CodeTask, \
     CodeTaskTest, PollTaskOptionID
 from learn_anything.course_platform.domain.entities.task.rules import answer_is_correct, find_task_option_by_id
 from learn_anything.course_platform.domain.entities.user.models import UserID
@@ -72,19 +75,17 @@ class CreateCodeTaskSubmissionInputData:
 
 
 @dataclass
+class FailedTestData:
+    failed_test_output: str
+    failed_test_idx: int
+
+
+@dataclass
 class CreateCodeTaskSubmissionOutputData:
-    failed_output: str | None = None
-    failed_test_idx: int | None = None
+    failed_test: FailedTestData | None = None
 
 
 class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
-    def __init__(self, id_provider: IdentityProvider, submission_gateway: SubmissionGateway, task_gateway: TaskGateway,
-                 course_gateway: CourseGateway, playground_factory: PlaygroundFactory, commiter: Commiter,
-                 registration_for_course_gateway: RegistrationForCourseGateway):
-        super().__init__(id_provider, submission_gateway, task_gateway, course_gateway, playground_factory, commiter,
-                         registration_for_course_gateway)
-        # self._event_publisher = event_publisher
-
     async def execute(self, data: CreateCodeTaskSubmissionInputData) -> CreateCodeTaskSubmissionOutputData:
         actor_id = await self._id_provider.get_current_user_id()
         task = await self._task_gateway.get_code_task_with_id(data.task_id)
@@ -120,8 +121,10 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
 
         if not submission.is_correct:
             return CreateCodeTaskSubmissionOutputData(
-                failed_output=result_output,
-                failed_test_idx=failed_test_idx,
+                failed_test=FailedTestData(
+                    failed_test_output=result_output,
+                    failed_test_idx=failed_test_idx,
+                )
             )
         return CreateCodeTaskSubmissionOutputData()
 
