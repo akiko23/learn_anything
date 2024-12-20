@@ -4,9 +4,11 @@
 *$py.class
 
 # configs
-.configs/db.env
-.configs/course_platform.toml
-.configs/api_gateway.toml.toml
+configs/db.env
+configs/course_platform.toml
+configs/api_gateway.toml
+configs/course_platform.docker.toml
+configs/api_gateway.docker.toml
 
 # C extensions
 *.so

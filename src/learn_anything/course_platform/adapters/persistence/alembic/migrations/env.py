@@ -8,13 +8,14 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
+from learn_anything.course_platform.adapters.bootstrap.tg_bot_di import DEFAULT_COURSE_PLATFORM_CONFIG_PATH
 from learn_anything.course_platform.adapters.persistence.config import load_db_config
 from learn_anything.course_platform.adapters.persistence.tables import metadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-db_cfg = load_db_config(os.getenv('COURSE_PLATFORM_CONFIG_PATH', '.configs/course_platform.toml'))
+db_cfg = load_db_config(os.getenv('COURSE_PLATFORM_CONFIG_PATH', DEFAULT_COURSE_PLATFORM_CONFIG_PATH))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
