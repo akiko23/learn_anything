@@ -33,7 +33,7 @@ async def webhook(request: Request, channel: FromDishka[AbstractChannel]) -> JSO
     return ORJSONResponse({"status": "ok"})
 
 
-async def _send_update_to_queue(channel: AbstractChannel, update: dict[str, Any]):
+async def _send_update_to_queue(channel: AbstractChannel, update: dict[str, Any]) -> None:
     queue_name = 'tg_updates'
 
     exchange = await channel.declare_exchange("tg_updates", ExchangeType.TOPIC, durable=True)

@@ -1,7 +1,10 @@
+from typing import Union
+
 from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
-from learn_anything.course_platform.application.interactors.task.get_course_tasks import TaskData
+from learn_anything.course_platform.application.interactors.task.get_course_tasks import TheoryTaskData, \
+    PracticeTaskData
 from learn_anything.course_platform.domain.entities.task.enums import TaskType
 
 
@@ -11,10 +14,10 @@ def get_course_tasks_keyboard(
         back_to: str,
         course_id: str,
         user_has_write_access: bool | None = None,
-        task_data: TaskData | None = None,
+        task_data: Union[TheoryTaskData, PracticeTaskData] | None = None,
         course_is_published: bool | None = None,
         user_is_registered: bool | None = None,
-):
+) -> InlineKeyboardMarkup:
     back_btn_callback_data = f'course-{back_to}-{course_id}'
     if user_has_write_access:
         back_btn_callback_data = f'edit_course-{back_to}-{course_id}'
@@ -51,7 +54,10 @@ def get_course_tasks_keyboard(
             [InlineKeyboardButton(text='Панель управления', callback_data=f'edit_task-{task_data.id}')]
         )
 
-    if task_data.type != TaskType.THEORY and course_is_published and user_is_registered:
+    if (isinstance(task_data, PracticeTaskData) and task_data.type != TaskType.THEORY
+            and course_is_published
+            and user_is_registered
+    ):
         kb.inline_keyboard.insert(0, [
             InlineKeyboardButton(
                 text='Пройти задание',

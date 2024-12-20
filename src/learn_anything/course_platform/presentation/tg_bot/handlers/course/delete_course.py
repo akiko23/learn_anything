@@ -2,7 +2,7 @@ from typing import Any
 
 from aiogram import Bot, Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
 from learn_anything.course_platform.application.interactors.course.delete_course import DeleteCourseInteractor, DeleteCourseInputData
@@ -13,17 +13,21 @@ from learn_anything.course_platform.presentors.tg_bot.keyboards.course.delete_co
 router = Router()
 
 
-@router.callback_query(F.data.startswith('delete_course-'))
+@router.callback_query(
+    F.data.startswith('delete_course-'),
+    F.data.as_('callback_query_data'),
+    F.message.as_('callback_query_message')
+)
 async def pre_deletion_menu(
         callback_query: CallbackQuery,
-        state: FSMContext,
+        callback_query_message: Message,
+        callback_query_data: str,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
+    back_to, course_id = callback_query_data.split('-')[1:]
 
-    back_to, course_id = callback_query.data.split('-')[1:]
-
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     await bot.send_message(
         chat_id=user_id,
@@ -35,19 +39,22 @@ async def pre_deletion_menu(
     )
 
 
-@router.callback_query(F.data.startswith('absolutely_delete_course-'))
+@router.callback_query(
+    F.data.startswith('absolutely_delete_course-'),
+    F.data.as_('callback_query_data'),
+    F.message.as_('callback_query_message')
+)
 async def delete_course(
         callback_query: CallbackQuery,
+        callback_query_data: str,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[DeleteCourseInteractor],
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
-
-    back_to, course_id = callback_query.data.split('-')[1:]
-
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+    back_to, course_id = callback_query_data.split('-')[1:]  # noqa
 
     await interactor.execute(
         data=DeleteCourseInputData(course_id=CourseID(int(course_id)))
@@ -55,13 +62,14 @@ async def delete_course(
 
     pointer = data[f'{back_to}_pointer']
     await state.update_data(
-        **{
+        {
             'registered_courses_pointer': max(0, pointer - 1),
             'created_courses_pointer': max(0, pointer - 1),
             'all_courses_pointer': max(0, pointer - 1)
         }
     )
 
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
     await bot.send_message(
         chat_id=user_id,
         text='Курс успешно удален',

@@ -5,7 +5,7 @@ import aio_pika
 import msgpack
 from aio_pika.abc import AbstractChannel, ExchangeType
 from aiogram import BaseMiddleware
-from aiogram.types import Message, TelegramObject, Update
+from aiogram.types import TelegramObject
 from dishka import AsyncContainer
 
 from learn_anything.api_gateway.adapters.logger import logger, correlation_id_ctx
@@ -18,8 +18,8 @@ class SendToQueueMiddleware(BaseMiddleware):
 
     async def __call__(
             self,
-            handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],
-            event: Update,
+            handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
+            event: TelegramObject,
             data: dict[str, Any],
     ) -> Any:
         async with self._container(context={TelegramObject: event}) as request_container:

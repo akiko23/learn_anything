@@ -41,12 +41,12 @@ class UpdateCourseInteractor:
 
         course = await self._course_gateway.with_id(data.course_id)
         if not course:
-            raise CourseDoesNotExistError
+            raise CourseDoesNotExistError(data.course_id)
 
         share_rules = await self._course_gateway.get_share_rules(course_id=data.course_id)
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
-        if data.photo:
+        if data.photo and data.photo_id:
             if course.photo_id:
                 old_photo_path = self._file_manager.generate_path(
                     directories=(COURSES_DEFAULT_DIRECTORY,),

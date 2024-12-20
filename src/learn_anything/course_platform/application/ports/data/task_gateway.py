@@ -18,7 +18,7 @@ class GetTasksFilters:
 
 
 class TaskGateway(Protocol):
-    async def with_id(self, task_id: TaskID) -> Task:
+    async def with_id(self, task_id: TaskID) -> Task | None:
         raise NotImplementedError
 
     async def get_code_task_with_id(self, task_id: TaskID) -> CodeTask | None:
@@ -30,7 +30,12 @@ class TaskGateway(Protocol):
     async def get_text_input_task_with_id(self, task_id: TaskID) -> TextInputTask:
         raise NotImplementedError
 
-    async def with_course(self, course_id: CourseID, pagination: Pagination, filters: GetTasksFilters | None) -> (Sequence[Task], int):
+    async def with_course(
+            self,
+            course_id: CourseID,
+            pagination: Pagination,
+            filters: GetTasksFilters | None
+    ) -> tuple[Sequence[Task], int]:
         raise NotImplementedError
 
     async def total_with_course(self, course_id: CourseID) -> int:

@@ -1,10 +1,12 @@
 import uuid
 from dataclasses import dataclass
 
+from learn_anything.course_platform.application.errors import UserNotAuthenticatedError
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.data.auth_link_gateway import AuthLinkGateway
-from learn_anything.course_platform.domain.entities.user.errors import AuthLinkCreationForbiddenError, AuthLinkDoesNotExist
-from learn_anything.course_platform.domain.entities.user.models import UserRole
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
+from learn_anything.course_platform.domain.entities.user.errors import AuthLinkCreationForbiddenError, \
+    AuthLinkDoesNotExist
 
 
 @dataclass
@@ -23,6 +25,9 @@ class InvalidateAuthLinkInteractor:
 
     async def execute(self, data: InvalidateAuthLinkInputData) -> None:
         actor_role = await self._id_provider.get_current_user_role()
+        if not actor_role:
+            raise UserNotAuthenticatedError()
+
         if actor_role != UserRole.BOT_OWNER:
             raise AuthLinkCreationForbiddenError(actor_role)
 

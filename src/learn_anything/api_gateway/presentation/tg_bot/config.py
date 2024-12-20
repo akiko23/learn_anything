@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 import toml
 
@@ -6,7 +7,7 @@ import toml
 @dataclass
 class BotConfig:
     token: str
-    bot_webhook_url: str = None
+    bot_webhook_url: Optional[str] = None
 
 
 def load_bot_config(config_path: str) -> BotConfig:

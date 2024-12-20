@@ -5,7 +5,7 @@ from learn_anything.course_platform.application.ports.data.course_gateway import
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 
 
-def get_all_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None):
+def get_all_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Фильтры', callback_data='all_courses-filters')],
@@ -37,7 +37,7 @@ def get_all_courses_keyboard(pointer: int, total: int, current_course_id: Course
     return kb
 
 
-def get_all_courses_filters(current_filters: GetManyCoursesFilters):
+def get_all_courses_filters(current_filters: GetManyCoursesFilters) -> InlineKeyboardMarkup:
     default_filters = GetManyCoursesFilters(sort_by=SortBy.POPULARITY)
 
     kb = InlineKeyboardMarkup(
@@ -85,7 +85,7 @@ def get_all_courses_filters(current_filters: GetManyCoursesFilters):
     return kb
 
 
-def cancel_text_filter_input_kb(back_to: str):
+def cancel_text_filter_input_kb(back_to: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Отмена', callback_data=f'{back_to}_filters-cancel_input')]
@@ -93,7 +93,7 @@ def cancel_text_filter_input_kb(back_to: str):
     )
 
 
-def get_actor_created_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None):
+def get_actor_created_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Фильтры', callback_data='actor_created_courses-filters')],
@@ -125,7 +125,7 @@ def get_actor_created_courses_keyboard(pointer: int, total: int, current_course_
     return kb
 
 
-def get_actor_created_courses_filters_kb(current_filters: GetManyCoursesFilters):
+def get_actor_created_courses_filters_kb(current_filters: GetManyCoursesFilters) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Искать по названию', callback_data='actor_created_courses_filters-title')],
@@ -150,7 +150,7 @@ def get_actor_created_courses_filters_kb(current_filters: GetManyCoursesFilters)
     return kb
 
 
-def get_actor_registered_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None):
+def get_actor_registered_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Фильтры', callback_data='actor_registered_courses-filters')],
@@ -183,7 +183,7 @@ def get_actor_registered_courses_keyboard(pointer: int, total: int, current_cour
     return kb
 
 
-def get_actor_registered_courses_filters_kb(current_filters: GetManyCoursesFilters):
+def get_actor_registered_courses_filters_kb(current_filters: GetManyCoursesFilters) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Искать по названию', callback_data='actor_registered_courses_filters-title')],

@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime
-
 from typing import Literal
 
 from learn_anything.course_platform.application.input_data import UNSET
@@ -11,9 +10,9 @@ from learn_anything.course_platform.application.ports.data.file_manager import F
 from learn_anything.course_platform.application.ports.data.task_gateway import TaskGateway
 from learn_anything.course_platform.application.ports.data.user_gateway import UserGateway
 from learn_anything.course_platform.application.ports.playground import PlaygroundFactory
-from learn_anything.course_platform.domain.entities.course.errors import CourseDoesNotExistError
 from learn_anything.course_platform.domain.entities.course.rules import ensure_actor_has_write_access
-from learn_anything.course_platform.domain.entities.task.errors import CodeTaskTestAlreadyExistsError
+from learn_anything.course_platform.domain.entities.task.errors import CodeTaskTestAlreadyExistsError, \
+    TaskDoesNotExistError
 from learn_anything.course_platform.domain.entities.task.models import TaskID, CodeTaskTest
 from learn_anything.course_platform.domain.entities.task.rules import update_code_task_test, code_task_test_exists
 
@@ -21,9 +20,9 @@ from learn_anything.course_platform.domain.entities.task.rules import update_cod
 @dataclass
 class UpdateCodeTaskInputData:
     task_id: TaskID
-    prepared_code: str | Literal['UNSET'] = None
+    prepared_code: str | Literal['UNSET'] | None = None
     code_duration_timeout: int | None = None
-    attempts_limit: int | Literal['UNSET'] = None
+    attempts_limit: int | Literal['UNSET'] | None = None
 
 
 @dataclass
@@ -55,7 +54,7 @@ class UpdateCodeTaskInteractor:
 
         task = await self._task_gateway.get_code_task_with_id(data.task_id)
         if not task:
-            raise CourseDoesNotExistError
+            raise TaskDoesNotExistError(task_id=data.task_id)
 
         course = await self._course_gateway.with_id(task.course_id)
 
@@ -99,12 +98,6 @@ class UpdateCodeTaskTestInputData:
     code: str | None
 
 
-
-@dataclass
-class UpdateCodeTaskTestOutputData:
-    new_code: str
-
-
 class UpdateCodeTaskTestInteractor:
     def __init__(
             self,
@@ -123,32 +116,30 @@ class UpdateCodeTaskTestInteractor:
         self._playground_factory = playground_factory
         self._file_manager = file_manager
 
-    async def execute(self, data: UpdateCodeTaskTestInputData) -> UpdateCodeTaskTestOutputData:
+    async def execute(self, data: UpdateCodeTaskTestInputData) -> None:
         actor_id = await self._id_provider.get_current_user_id()
 
         task = await self._task_gateway.get_code_task_with_id(data.task_id)
         if not task:
-            raise CourseDoesNotExistError
+            raise TaskDoesNotExistError(task_id=data.task_id)
 
         course = await self._course_gateway.with_id(task.course_id)
 
         share_rules = await self._course_gateway.get_share_rules(course_id=course.id)
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
 
-        if code_task_test_exists(code_task=task, test_code=data.code):
+        if data.code and code_task_test_exists(code_task=task, test_code=data.code):
             raise CodeTaskTestAlreadyExistsError(task_id=task.id, code=data.code)
 
-        task = update_code_task_test(task=task, index_in_task=data.index_in_task, new_code=data.code)
+        updated_task = update_code_task_test(task=task, index_in_task=data.index_in_task, new_code=data.code)
 
-        task.updated_at = datetime.now()
+        updated_task.updated_at = datetime.now()
         course.updated_at = datetime.now()
 
-        await self._task_gateway.save_code_task(task=task)
+        await self._task_gateway.save_code_task(task=updated_task)
         await self._course_gateway.save(course=course)
 
         await self._commiter.commit()
-
-        return UpdateCodeTaskTestOutputData(new_code=data.code)
 
 
 @dataclass
@@ -180,7 +171,7 @@ class AddCodeTaskTestInteractor:
 
         task = await self._task_gateway.get_code_task_with_id(data.task_id)
         if not task:
-            raise CourseDoesNotExistError
+            raise TaskDoesNotExistError(task_id=data.task_id)
 
         course = await self._course_gateway.with_id(task.course_id)
 
@@ -190,6 +181,7 @@ class AddCodeTaskTestInteractor:
         if code_task_test_exists(code_task=task, test_code=data.code):
             raise CodeTaskTestAlreadyExistsError(task_id=task.id, code=data.code)
 
+        task.tests = list(task.tests)
         task.tests += [CodeTaskTest(code=data.code)]
 
         task.updated_at = datetime.now()

@@ -1,52 +1,54 @@
-import logging
+from contextlib import suppress
 from typing import cast, Any
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ErrorEvent, BufferedInputFile, CallbackQuery
+from aiogram.types import Message, ErrorEvent, BufferedInputFile, InputMediaPhoto
 from dishka import FromDishka
 
+from learn_anything.course_platform.adapters.logger import logger
 from learn_anything.course_platform.application.ports.data.file_manager import FileManager
 from learn_anything.course_platform.domain.error import ApplicationError
 from learn_anything.course_platform.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
 
-logger = logging.getLogger(__name__)
-
 
 async def load_media_if_not_exists(
         event: ErrorEvent,
+        msg: Message,
         state: FSMContext,
         bot: Bot,
         file_manager: FromDishka[FileManager],
-):
-    update: Message | CallbackQuery = event.update.message or event.update.callback_query
+) -> None:
     data = await state.get_data()
 
-    user_id: int = update.from_user.id
+    user_id: int = msg.chat.id
     exc: NoMediaOnTelegramServersException = cast(NoMediaOnTelegramServersException, event.exception)
     update_interactor = exc.update_interactor
     input_data = exc.interactor_input_data
 
-    logger.error('Telegram deleted media from its servers. Uploading new..')
+    logger.error('No media found on telegram servers. Uploading new..')
 
-    message_id = update.message.message_id if isinstance(update, CallbackQuery) else update.message_id
-    try:
-        await bot.delete_message(chat_id=user_id, message_id=message_id)
-    except TelegramBadRequest:
-        pass
+    with suppress(TelegramBadRequest):
+        await bot.delete_message(chat_id=user_id, message_id=msg.message_id)
 
     media_buffer = await file_manager.get_by_file_path(file_path=exc.media_path)
-    msg = await bot.send_photo(
+    if media_buffer is None:
+        raise FileNotFoundError(f'No such file path: \'{exc.media_path}\'')
+
+    msg = cast(Message, await bot.edit_message_media(
         chat_id=user_id,
-        photo=BufferedInputFile(media_buffer.read(), 'stub'),
-        caption=exc.text_to_send,
+        message_id=msg.message_id,
+        media=InputMediaPhoto(
+            media=BufferedInputFile(media_buffer.read(), 'stub'),
+            caption=exc.text_to_send,
+        ),
         reply_markup=exc.keyboard,
-    )
+    ))
 
-    new_photo_id = msg.photo[-1].file_id
+    new_photo_id = msg.photo[-1].file_id  # type: ignore[index]
 
-    # if media in default we just need to update its tag in storage
+    # if media in defaults we just need to update its tag in storage
     if 'defaults' in exc.media_path:
         await file_manager.update(
             old_file_path=exc.media_path,
@@ -65,14 +67,14 @@ async def load_media_if_not_exists(
     collection[data[f'{exc.collection_key}_pointer']].photo_id = new_photo_id
 
     await state.update_data(
-        **{exc.collection_key: collection}
+        {exc.collection_key: collection}
     )
 
 
 async def handle_user_error(
         event: ErrorEvent, msg: Message
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     err: ApplicationError = cast(ApplicationError, event.exception)
 
     logger.info('User with id=%d got error: \'%s\'', user_id, err.message)
@@ -81,12 +83,12 @@ async def handle_user_error(
 
 async def exception_handler(
         event: ErrorEvent,
-        state: FSMContext,
-):
-    update: Message | CallbackQuery = event.update.message or event.update.callback_query
+        msg: Message,
+        user_message: str,
 
-    user_id: int = update.from_user.id
-    user_message: str = update.data if isinstance(update, CallbackQuery) else update.text
+        state: FSMContext,
+) -> None:
+    user_id: int = msg.chat.id
     state_data: dict[str, Any] = await state.get_data()
 
     logger.critical("Critical error caused by %s", event.exception, exc_info=True)
@@ -98,4 +100,3 @@ async def exception_handler(
         state_data
     )
     raise event.exception
-

@@ -7,7 +7,7 @@ from learn_anything.course_platform.domain.entities.course.models import CourseI
 from learn_anything.course_platform.domain.entities.task.enums import TaskType
 
 
-def cancel_course_task_creation_kb():
+def cancel_course_task_creation_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Отмена', callback_data='create_course_task_cancel')]
@@ -15,7 +15,7 @@ def cancel_course_task_creation_kb():
     )
 
 
-def get_course_task_topic_kb():
+def get_course_task_topic_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Пропустить', callback_data='create_course_task_skip_topic')],
@@ -24,7 +24,7 @@ def get_course_task_topic_kb():
     )
 
 
-def get_course_task_type_kb():
+def get_course_task_type_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Теория', callback_data=f'create_course_task_type-{TaskType.THEORY}')],
@@ -39,7 +39,7 @@ def get_course_task_type_kb():
     )
 
 
-def get_course_task_attempts_limit_kb():
+def get_course_task_attempts_limit_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Пропустить', callback_data='create_course_task_skip_attempts_limit')],
@@ -48,7 +48,7 @@ def get_course_task_attempts_limit_kb():
     )
 
 
-def get_code_task_prepared_code_kb():
+def get_code_task_prepared_code_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Пропустить', callback_data='create_course_task_skip_prepared_code')],
@@ -57,7 +57,7 @@ def get_code_task_prepared_code_kb():
     )
 
 
-def get_code_duration_timeout_kb():
+def get_code_duration_timeout_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Пропустить', callback_data='create_course_task_skip_code_timeout')],
@@ -66,7 +66,7 @@ def get_code_duration_timeout_kb():
     )
 
 
-def get_code_task_tests_kb(current_tests: Sequence[str]):
+def get_code_task_tests_kb(current_tests: Sequence[str]) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Отмена', callback_data='create_course_task_cancel')]
@@ -84,7 +84,7 @@ def get_code_task_tests_kb(current_tests: Sequence[str]):
 def after_course_task_creation_menu(
         course_id: CourseID,
         back_to: str
-):
+) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Вернуться к курсу', callback_data=f'course-{back_to}-{course_id}')],

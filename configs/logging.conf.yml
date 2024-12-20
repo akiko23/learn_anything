@@ -5,7 +5,7 @@ formatters:
     (): learn_anything.api_gateway.adapters.logger.ConsoleFormatter
     fmt: '[%(levelname)s] %(name)s %(asctime)s: %(message)s'
   console_formatter_consumer:
-    (): learn_anything.course_platform.adapters.consumer.logger.ConsoleFormatter
+    (): learn_anything.course_platform.adapters.logger.ConsoleFormatter
     fmt: '[%(levelname)s] %(name)s %(asctime)s: %(message)s'
 handlers:
   console_handler_backend:

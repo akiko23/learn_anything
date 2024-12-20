@@ -4,5 +4,5 @@ from typing import Protocol
 
 class Commiter(Protocol):
     @abstractmethod
-    def commit(self):
+    async def commit(self) -> None:
         raise NotImplementedError

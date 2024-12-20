@@ -1,23 +1,25 @@
 import logging
 from dataclasses import dataclass
-from uuid import UUID
 
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.auth.token import TokenProcessor
 from learn_anything.course_platform.application.ports.committer import Commiter
 from learn_anything.course_platform.application.ports.data.auth_link_gateway import AuthLinkGateway
 from learn_anything.course_platform.application.ports.data.user_gateway import UserGateway
-from learn_anything.course_platform.domain.entities.user.errors import InvalidAuthLinkError
-from learn_anything.course_platform.domain.entities.user.models import UserRole, UserID
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
+from learn_anything.course_platform.domain.entities.user.errors import InvalidAuthLinkError, AuthLinkDoesNotExist
+from learn_anything.course_platform.domain.entities.user.models import UserID
 from learn_anything.course_platform.domain.entities.user.rules import create_user
 
 logger = logging.getLogger(__name__)
+
+UNSPECIFIED_USER_ID = UserID(0)
 
 
 @dataclass
 class LoginWithAuthLinkInputData:
     user_id: UserID
-    fullname: str | None
+    fullname: str
     username: str | None
     auth_token: str
 
@@ -50,9 +52,11 @@ class LoginWithAuthLinkInteractor:
             is_newbie = True
 
         auth_link_id = self._token_processor.decode(data.auth_token)
-        auth_link_id = UUID(auth_link_id)
 
         auth_link = await self._auth_link_gateway.with_id(auth_link_id)
+        if not auth_link:
+            raise AuthLinkDoesNotExist(link_id=auth_link_id)
+
         if auth_link.is_invalid:
             await self._auth_link_gateway.delete(auth_link_id)
             raise InvalidAuthLinkError
@@ -62,7 +66,7 @@ class LoginWithAuthLinkInteractor:
 
         role = auth_link.for_role
         user = create_user(
-            user_id=data.user_id,
+            id_=data.user_id,
             fullname=data.fullname,
             username=data.username,
             role=role

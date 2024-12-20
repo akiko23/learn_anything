@@ -2,7 +2,7 @@ from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 
-def get_course_pre_delete_menu_kb(course_id: str, back_to: str):
+def get_course_pre_delete_menu_kb(course_id: str, back_to: str) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="Все равно удалить", callback_data=f'absolutely_delete_course-{back_to}-{course_id}')],
@@ -13,7 +13,7 @@ def get_course_pre_delete_menu_kb(course_id: str, back_to: str):
     return kb
 
 
-def get_course_after_deletion_menu_kb():
+def get_course_after_deletion_menu_kb() -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="В главное меню", callback_data='all_courses-to_main_menu')],

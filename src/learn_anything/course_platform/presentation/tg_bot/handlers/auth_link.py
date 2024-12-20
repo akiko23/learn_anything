@@ -10,7 +10,7 @@ from dishka import FromDishka
 
 from learn_anything.course_platform.application.interactors.auth_link.create_auth_link import CreateAuthLinkInteractor, \
     CreateAuthLinkInputData
-from learn_anything.course_platform.domain.entities.user.models import UserRole
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
 from learn_anything.course_platform.presentation.tg_bot.states.auth_link import CreateAuthLinkForm
 from learn_anything.course_platform.presentors.tg_bot.keyboards.create_auth_link import CANCEL_AUTH_LINK_CREATION_KB
 from learn_anything.course_platform.presentors.tg_bot.keyboards.main_menu import get_main_menu_keyboard
@@ -18,15 +18,20 @@ from learn_anything.course_platform.presentors.tg_bot.keyboards.main_menu import
 router = Router()
 
 
-@router.callback_query(F.data == 'main_menu-create_auth_link')
+@router.callback_query(
+    F.data == 'main_menu-create_auth_link',
+    F.message.as_('callback_query_message'),
+    F.data.as_('callback_query_data')
+)
 async def start_auth_link_creation(
         callback_query: CallbackQuery,
         state: FSMContext,
+        callback_query_message: Message,
         bot: Bot
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     await state.set_state(CreateAuthLinkForm.get_role)
 
@@ -46,8 +51,8 @@ async def get_auth_link_role(
         state: FSMContext,
         bot: Bot,
         for_role: UserRole,
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
@@ -74,8 +79,8 @@ async def get_auth_link_usages(
         state: FSMContext,
         bot: Bot,
         usages: int,
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
@@ -96,29 +101,30 @@ async def get_auth_link_usages(
     )
 
 
-@router.message(StateFilter(CreateAuthLinkForm.get_expires_at), F.text)
+@router.message(
+    StateFilter(CreateAuthLinkForm.get_expires_at),
+    F.text.as_('expires_at_text')
+)
 async def get_auth_link_expires_at(
         msg: Message,
+        expires_at_text: str,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[CreateAuthLinkInteractor],
         user_role: UserRole,
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await state.set_state(state=None)
 
-    user_id: int = msg.from_user.id
-    data: dict[str, Any] = await state.get_data()
-
     output_data = await interactor.execute(
         data=CreateAuthLinkInputData(
             for_role=data['for_role'],
             usages=data['usages'],
-            expires_at=datetime.strptime(msg.text, '%d-%m-%Y %H-%M'),
+            expires_at=datetime.strptime(expires_at_text, '%d-%m-%Y %H-%M'),
         )
     )
 
@@ -142,7 +148,7 @@ async def cancel_auth_link_creation(
         state: FSMContext,
         bot: Bot,
         user_role: UserRole,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
     await state.set_state(state=None)

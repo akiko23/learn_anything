@@ -31,7 +31,7 @@ class SubmissionMapper(SubmissionGateway):
             task_id: TaskID,
             filters: GetManySubmissionsFilters,
             pagination: Pagination
-    ) -> (Sequence[CodeSubmission], int):
+    ) -> tuple[Sequence[CodeSubmission], int]:
         stmt = (
             select(CodeSubmission).
             where(
@@ -46,7 +46,7 @@ class SubmissionMapper(SubmissionGateway):
             )
 
         total_res = await self._session.execute(
-            select(func.count()).select_from(stmt)
+            select(func.count()).select_from(stmt.subquery())
         )
 
         if pagination:
@@ -66,9 +66,9 @@ class SubmissionMapper(SubmissionGateway):
             task_id: TaskID,
             filters: GetManySubmissionsFilters,
             pagination: Pagination
-    ) -> (Sequence[PollSubmission], int):
+    ) -> tuple[Sequence[PollSubmission], int]:
         stmt = (
-            select(
+            select(  # type: ignore[var-annotated]
                 Bundle("submission", *submissions_table.c),
                 Bundle(
                     "selected_option",
@@ -91,7 +91,7 @@ class SubmissionMapper(SubmissionGateway):
             )
 
         total_res = await self._session.execute(
-            select(func.count()).select_from(stmt)
+            select(func.count()).select_from(stmt.subquery())
         )
 
         if pagination:

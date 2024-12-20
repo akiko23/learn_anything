@@ -4,7 +4,7 @@ from learn_anything.course_platform.adapters.persistence.tables.task import map_
 from learn_anything.course_platform.adapters.persistence.tables.user import map_users_table
 
 
-def map_tables():
+def map_tables() -> None:
     map_users_table()
     map_courses_table()
     map_tasks_table()

@@ -4,7 +4,7 @@ from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from learn_anything.course_platform.application.interactors.course.get_course import GetFullCourseOutputData
 
 
-def get_course_edit_menu_kb(course: GetFullCourseOutputData, back_to: str):
+def get_course_edit_menu_kb(course: GetFullCourseOutputData, back_to: str) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="Задания", callback_data=f'get_course_tasks-{back_to}-{course.id}')],
@@ -41,7 +41,7 @@ CANCEL_EDITING_KB = InlineKeyboardMarkup(
 def get_course_after_edit_menu_kb(
         back_to: str,
         course_id: str,
-):
+) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Назад', callback_data=f'edit_course-{back_to}-{course_id}')],

@@ -1,19 +1,21 @@
 from collections.abc import Sequence
 from datetime import datetime
 
-from learn_anything.course_platform.domain.entities.course.errors import RegistrationsLimitExceededError, CoursePermissionError
-from learn_anything.course_platform.domain.entities.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
+from learn_anything.course_platform.domain.entities.course.errors import RegistrationsLimitExceededError, \
+    CoursePermissionError
+from learn_anything.course_platform.domain.entities.course.models import Course, CourseID, RegistrationForCourse, \
+    CourseShareRule
 from learn_anything.course_platform.domain.entities.user.models import UserID
 
 
 def create_course(
-        id_: CourseID | None,
+        id_: CourseID,
         title: str,
         creator_id: UserID,
         description: str,
         is_published: bool,
         photo_id: str | None,
-        registrations_limit: str | None,
+        registrations_limit: int | None,
 ) -> Course:
     return Course(
         id=id_,
@@ -46,7 +48,7 @@ def decrement_course_registrations_number(course: Course) -> Course:
     return course
 
 
-def create_registration_for_course(user_id: UserID, course_id: CourseID):
+def create_registration_for_course(user_id: UserID, course_id: CourseID) -> RegistrationForCourse:
     return RegistrationForCourse(
         user_id=user_id,
         course_id=course_id,
@@ -54,7 +56,7 @@ def create_registration_for_course(user_id: UserID, course_id: CourseID):
     )
 
 
-def ensure_actor_has_read_access(actor_id: UserID, course: Course, share_rules: Sequence[CourseShareRule]):
+def ensure_actor_has_read_access(actor_id: UserID, course: Course, share_rules: Sequence[CourseShareRule]) -> None:
     if course.is_published:
         return
 
@@ -68,7 +70,7 @@ def ensure_actor_has_read_access(actor_id: UserID, course: Course, share_rules: 
     raise CoursePermissionError
 
 
-def ensure_actor_has_write_access(actor_id: UserID, course: Course, share_rules: Sequence[CourseShareRule]):
+def ensure_actor_has_write_access(actor_id: UserID, course: Course, share_rules: Sequence[CourseShareRule]) -> None:
     if actor_id == course.creator_id:
         return
 
@@ -79,7 +81,7 @@ def ensure_actor_has_write_access(actor_id: UserID, course: Course, share_rules:
     raise CoursePermissionError
 
 
-def actor_has_write_access(actor_id: UserID, course: Course, share_rules: Sequence[CourseShareRule]):
+def actor_has_write_access(actor_id: UserID, course: Course, share_rules: Sequence[CourseShareRule]) -> bool:
     try:
         ensure_actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
     except CoursePermissionError:

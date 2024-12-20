@@ -26,6 +26,7 @@ SQLAlchemy = '^2.0.34'
 starlette-context = '^0.3.6'
 toml = '^0.10.2'
 uvicorn = '^0.34.0'
+types-pyyaml = "^6.0.12.20240917"
 
 [tool.poetry.group.dev.dependencies]
 mypy = '^1.11.2'
@@ -42,6 +43,41 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 package-dir = { "" = "src" }
 
-
 [tool.poetry.scripts]
 learn-anything = "learn_anything.main.cli:main"
+
+[tool.mypy]
+plugins = [
+    "sqlalchemy.ext.mypy.plugin",
+    "pydantic.mypy",
+]
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+no_implicit_reexport = false
+exclude = [
+    "^conf/",
+    "^tests/",
+    "^utils/",
+    "^.venv/",
+]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = false  # to allow parsing
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
+
+[[tool.mypy.overrides]]
+module = [
+    "asyncpg.*",
+    "prometheus_client.*",
+    "starlette_prometheus.*",
+    "uvicorn.*",
+    "toml.*",
+    "msgpack.*"
+]
+ignore_missing_imports = true

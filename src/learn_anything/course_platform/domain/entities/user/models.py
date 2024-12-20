@@ -12,7 +12,7 @@ UserID = NewType('UserID', int)
 class User:
     id: UserID
     role: UserRole
-    fullname: str | None
+    fullname: str
     username: str | None
 
 
@@ -24,5 +24,5 @@ class AuthLink:
     expires_at: datetime
 
     @property
-    def is_invalid(self):
+    def is_invalid(self) -> bool:
         return self.usages <= 0 or self.expires_at < datetime.now()

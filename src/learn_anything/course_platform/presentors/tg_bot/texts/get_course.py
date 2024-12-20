@@ -2,7 +2,7 @@ from learn_anything.course_platform.application.interactors.course.get_course im
 from learn_anything.course_platform.presentors.tg_bot.texts.formatters import format_time, format_date
 
 
-def get_single_course_text(course_data: GetFullCourseOutputData):
+def get_single_course_text(course_data: GetFullCourseOutputData) -> str:
     registered_text = ''
     if course_data.user_is_registered:
         registered_text = '\n📝Вы записаны\n'

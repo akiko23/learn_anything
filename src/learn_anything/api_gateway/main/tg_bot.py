@@ -8,20 +8,19 @@ import uvicorn
 from aiogram import Dispatcher, Bot
 from dishka.integrations.fastapi import setup_dishka as fastapi_setup_dishka
 from fastapi import FastAPI
-from starlette_context import plugins
 from starlette_context.middleware import RawContextMiddleware
+from starlette_context.plugins import CorrelationIdPlugin  # type: ignore[attr-defined, unused-ignore]
 
-from learn_anything.api_gateway.adapters.bootstrap.tg_bot_di import setup_di
+from learn_anything.api_gateway.adapters.bootstrap.tg_bot_di import setup_di, DEFAULT_API_GATEWAY_CONFIG_PATH
 from learn_anything.api_gateway.adapters.logger import LOGGING_CONFIG, logger
 from learn_anything.api_gateway.presentation.tg_bot.config import BotConfig
-from learn_anything.api_gateway.presentation.web.config import load_web_config
-from learn_anything.api_gateway.presentation.web.fastapi_routers.tech import router as tech_router
-from learn_anything.api_gateway.presentation.web.fastapi_routers.tg import router as tg_router
 from learn_anything.api_gateway.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
 from learn_anything.api_gateway.presentation.tg_bot.middlewares.count_rps import RequestCountMiddleware
 from learn_anything.api_gateway.presentation.tg_bot.middlewares.send_to_queue import SendToQueueMiddleware
+from learn_anything.api_gateway.presentation.web.config import load_web_config
+from learn_anything.api_gateway.presentation.web.fastapi_routers.tech import router as tech_router
+from learn_anything.api_gateway.presentation.web.fastapi_routers.tg import router as tg_router
 
-DEFAULT_API_GATEWAY_CONFIG_PATH = 'configs/api_gateway.toml'
 
 @asynccontextmanager
 async def lifespan(
@@ -79,11 +78,11 @@ def create_app() -> FastAPI:
     container = setup_di()
     fastapi_setup_dishka(container=container, app=app)
 
-    app.add_middleware(RawContextMiddleware, plugins=[plugins.CorrelationIdPlugin()])
+    app.add_middleware(RawContextMiddleware, plugins=[CorrelationIdPlugin()])
     return app
 
 
-async def main():
+async def main() -> None:
     logging.config.dictConfig(LOGGING_CONFIG)
 
     web_cfg = load_web_config(

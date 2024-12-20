@@ -1,13 +1,14 @@
+from contextlib import suppress
 from typing import Any
 
 from aiogram import Bot, Router, F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
-
 from learn_anything.course_platform.application.input_data import Pagination
 from learn_anything.course_platform.application.interactors.task.get_course_tasks import GetCourseTasksInteractor, \
-    GetCourseTasksInputData, TaskData
+    GetCourseTasksInputData, AnyTaskData
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 from learn_anything.course_platform.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
 from learn_anything.course_platform.presentors.tg_bot.texts.get_task import get_task_text
@@ -16,23 +17,28 @@ router = Router()
 
 DEFAULT_LIMIT = 10
 
-@router.callback_query(F.data.startswith('get_course_tasks-'))
+
+@router.callback_query(
+    F.data.startswith('get_course_tasks-'),
+    F.message.as_('callback_query_message'),
+    F.data.as_('callback_query_data'),
+)
 async def get_course_tasks(
         callback_query: CallbackQuery,
         state: FSMContext,
+        callback_query_message: Message,
+        callback_query_data: str,
         bot: Bot,
         interactor: FromDishka[GetCourseTasksInteractor],
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
+    back_to, course_id = callback_query_data.split('-')[1:]
 
-    back_to, course_id = callback_query.data.split('-')[1:]
     await state.update_data(
         back_to=back_to,
         course_id=course_id,
     )
-
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
 
     pointer = data.get(f'course_{course_id}_tasks_pointer', 0)
     offset = data.get(f'course_{course_id}_tasks_offset', 0)
@@ -49,7 +55,7 @@ async def get_course_tasks(
     total = output_data.total
 
     data = await state.update_data(
-        **{
+        {
             f'course_{course_id}_tasks': tasks,
             f'course_{course_id}_tasks_pointer': pointer,
             f'course_{course_id}_tasks_offset': offset,
@@ -57,6 +63,8 @@ async def get_course_tasks(
         },
     )
 
+    with suppress(TelegramBadRequest):
+        await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     current_course = data['target_course']
     if total == 0:
@@ -94,20 +102,25 @@ async def get_course_tasks(
     )
 
 
-@router.callback_query((F.data.startswith('course_tasks-next')) | (F.data.startswith('course_tasks-prev')))
+@router.callback_query(
+    (F.data.startswith('course_tasks-next')) | (F.data.startswith('course_tasks-prev')),
+    F.data.as_('callback_query_data'),
+    F.message.as_('callback_query_message')
+)
 async def watch_course_tasks_prev_or_next(
         callback_query: CallbackQuery,
+        callback_query_data: str,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[GetCourseTasksInteractor],
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
-
-    command, back_to, course_id = callback_query.data.split('-')[1:]
+    command, back_to, course_id = callback_query_data.split('-')[1:]
 
     pointer = data[f'course_{course_id}_tasks_pointer']
-    tasks: list[TaskData] = data[f'course_{course_id}_tasks']
+    tasks: list[AnyTaskData] = data[f'course_{course_id}_tasks']
     offset: int = data[f'course_{course_id}_tasks_offset']
     total = data[f'course_{course_id}_tasks_total']
 
@@ -122,7 +135,7 @@ async def watch_course_tasks_prev_or_next(
 
             tasks.extend(output_data.tasks)
             await state.update_data(
-                **{
+                {
                     f'course_{course_id}_tasks': tasks,
                     f'course_{course_id}_tasks_offset': offset + DEFAULT_LIMIT,
                     f'course_{course_id}_tasks_total': output_data.total,
@@ -138,7 +151,7 @@ async def watch_course_tasks_prev_or_next(
 
     await bot.edit_message_text(
         chat_id=user_id,
-        message_id=callback_query.message.message_id,
+        message_id=callback_query_message.message_id,
         text=get_task_text(current_task),
         reply_markup=get_course_tasks_keyboard(
             pointer=pointer,
@@ -154,8 +167,7 @@ async def watch_course_tasks_prev_or_next(
     )
 
     await state.update_data(
-        **{
+        {
             f'course_{course_id}_tasks_pointer': pointer,
         }
     )
-

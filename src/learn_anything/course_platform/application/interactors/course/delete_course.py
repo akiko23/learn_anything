@@ -4,7 +4,7 @@ from pathlib import Path
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.committer import Commiter
 from learn_anything.course_platform.application.ports.data.course_gateway import CourseGateway
-from learn_anything.course_platform.application.ports.data.file_manager import FileManager
+from learn_anything.course_platform.application.ports.data.file_manager import FileManager, FilePath
 from learn_anything.course_platform.domain.entities.course.errors import CourseDoesNotExistError
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 from learn_anything.course_platform.domain.entities.course.rules import ensure_actor_has_write_access
@@ -40,6 +40,6 @@ class DeleteCourseInteractor:
         await self._course_gateway.delete(course_id=course.id)
 
         if course.photo_id:
-            await self._file_manager.delete(file_path=str(Path('courses') / course.photo_id))
+            await self._file_manager.delete(file_path=FilePath(str(Path('courses') / course.photo_id)))
 
         await self._commiter.commit()

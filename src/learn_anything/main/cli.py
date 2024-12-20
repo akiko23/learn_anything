@@ -9,7 +9,7 @@ import alembic.config
 from learn_anything.course_platform.adapters.persistence.alembic.config import ALEMBIC_CONFIG
 
 from learn_anything.api_gateway.main.tg_bot import main as api_gateway_entry_point
-from learn_anything.course_platform.main.tg_updates_consumer import main as consumer_entry_point
+from learn_anything.course_platform.main.consumer import main as consumer_entry_point
 
 
 handler = StreamHandler()
@@ -21,14 +21,14 @@ logger.addHandler(handler)
 logger.propagate = False
 
 
-def alembic_handler(argv):
+def alembic_handler(argv: list[str]) -> None:
     alembic.config.main(
         prog='learn-anything alembic',
         argv=['-c', ALEMBIC_CONFIG, *argv],
     )
 
 
-def command_start_handler(argv):
+def command_start_handler(argv: list[str]) -> None:
     # starts both: api gateway and consumer
     if argv[0] == 'bot':
         try:
@@ -59,14 +59,14 @@ def command_start_handler(argv):
             logger.info("API gateway was successfully stopped")
 
 
-async def _run_services():
+async def _run_services() -> None:
     await asyncio.gather(
         api_gateway_entry_point(),
         consumer_entry_point(),
     )
 
 
-def main():
+def main() -> None:
     command = sys.argv[1]
     match command:
         case 'alembic':

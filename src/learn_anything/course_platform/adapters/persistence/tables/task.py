@@ -45,6 +45,12 @@ tasks_table = sa.Table(
         server_default=sa.func.now(),
     ),
     sa.Column(
+        "updated_at",
+        sa.DateTime,
+        default=sa.func.now(),
+        server_default=sa.func.now(),
+    ),
+    sa.Column(
         "prepared_code",
         sa.Text,
         nullable=True,

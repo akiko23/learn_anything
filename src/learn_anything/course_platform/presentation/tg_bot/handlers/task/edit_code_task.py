@@ -1,4 +1,5 @@
 from contextlib import suppress
+from datetime import datetime
 from typing import Any
 
 from aiogram import Bot, Router, F
@@ -9,7 +10,8 @@ from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
 from learn_anything.course_platform.application.input_data import UNSET
-from learn_anything.course_platform.application.interactors.task.get_course_tasks import TaskData, CodeTaskTestData
+from learn_anything.course_platform.application.interactors.task.get_course_tasks import CodeTaskTestData, \
+    CodeTaskData
 from learn_anything.course_platform.application.interactors.task.update_code_task import UpdateCodeTaskInputData, \
     UpdateCodeTaskInteractor, UpdateCodeTaskTestInteractor, UpdateCodeTaskTestInputData, AddCodeTaskTestInteractor, \
     AddCodeTaskTestInputData
@@ -23,15 +25,19 @@ from learn_anything.course_platform.presentors.tg_bot.templates import python_co
 router = Router()
 
 
-@router.callback_query(F.data.startswith('edit_task_attempts_limit'))
+@router.callback_query(
+    F.data.startswith('edit_task_attempts_limit'),
+    F.message.as_('callback_query_message')
+)
 async def start_editing_task_attempts_limit(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     await callback_query.answer()
 
@@ -46,7 +52,7 @@ async def start_editing_task_attempts_limit(
 
 @router.message(
     StateFilter(EditCodeTaskForm.get_new_attempts_limit),
-    (F.text.isdigit()) & (F.text.cast(int) > 0) & (F.text.cast(int) <= 1000)
+    F.text & (F.text.isdigit()) & (F.text.cast(int) > 0) & (F.text.cast(int) <= 1000),
 )
 @router.callback_query(StateFilter(EditCodeTaskForm.get_new_attempts_limit), F.data == 'task_attempts_limit_set_null')
 async def edit_task_attempts_limit(
@@ -54,14 +60,14 @@ async def edit_task_attempts_limit(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[UpdateCodeTaskInteractor],
-):
-    user_id: int = update.from_user.id
+) -> None:
+    user_id: int = update.from_user.id if isinstance(update, CallbackQuery) else update.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     course_id, back_to, task_id = data['course_id'], data['back_to'], data['task_id']
-    new_attempts_limit = int(update.text) if isinstance(update, Message) else None
+    new_attempts_limit = int(update.text) if isinstance(update, Message) and update.text else None
 
     await interactor.execute(
         data=UpdateCodeTaskInputData(
@@ -73,9 +79,10 @@ async def edit_task_attempts_limit(
 
     tasks = data[f'course_{course_id}_tasks']
     tasks[data[f'course_{course_id}_tasks_pointer']].attempts_limit = new_attempts_limit
+    tasks[data[f'course_{course_id}_tasks_pointer']].updated_at = datetime.now()
 
     await state.update_data(
-        **{f'course_{course_id}_tasks': tasks}
+        {f'course_{course_id}_tasks': tasks}
     )
 
     await bot.send_message(
@@ -85,19 +92,21 @@ async def edit_task_attempts_limit(
     )
 
 
-@router.callback_query(F.data.startswith('edit_task_timeout'))
+@router.callback_query(
+    F.data.startswith('edit_task_timeout'),
+    F.message.as_('callback_query_message')
+)
 async def start_editing_task_code_duration_timeout(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
-
-    await callback_query.answer()
-
     await state.set_state(state=EditCodeTaskForm.get_new_timeout)
+
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     msg = await bot.send_message(chat_id=user_id, text='Отправьте новый таймаут в секундах (не превышающий 100)',
                                  reply_markup=CANCEL_EDITING_KB)
@@ -108,35 +117,37 @@ async def start_editing_task_code_duration_timeout(
 
 @router.message(
     StateFilter(EditCodeTaskForm.get_new_timeout),
-    (F.text.isdigit()) & (F.text.cast(int) > 0) & (F.text.cast(int) <= 100)
+    (F.text.isdigit()) & (F.text.cast(int) > 0) & (F.text.cast(int) <= 100),
+    F.text.cast(int).as_('code_duration_timeout')
 )
 async def edit_task_code_duration_timeout(
         msg: Message,
         state: FSMContext,
         bot: Bot,
+        code_duration_timeout: int,
         interactor: FromDishka[UpdateCodeTaskInteractor],
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     course_id, back_to, task_id = data['course_id'], data['back_to'], data['task_id']
-    new_timeout = int(msg.text)
 
     await interactor.execute(
         data=UpdateCodeTaskInputData(
             task_id=TaskID(int(task_id)),
-            code_duration_timeout=new_timeout
+            code_duration_timeout=code_duration_timeout
         )
     )
     await state.set_state(state=None)
 
     tasks = data[f'course_{course_id}_tasks']
-    tasks[data[f'course_{course_id}_tasks_pointer']].code_duration_timeout = new_timeout
+    tasks[data[f'course_{course_id}_tasks_pointer']].code_duration_timeout = code_duration_timeout
+    tasks[data[f'course_{course_id}_tasks_pointer']].updated_at = datetime.now()
 
     await state.update_data(
-        **{f'course_{course_id}_tasks': tasks}
+        {f'course_{course_id}_tasks': tasks}
     )
 
     await bot.send_message(
@@ -149,23 +160,27 @@ async def edit_task_code_duration_timeout(
 @router.message(StateFilter(EditCodeTaskForm.get_new_timeout, EditCodeTaskForm.get_new_attempts_limit))
 async def handle_wrong_timeout_or_attempts_limit_entry(
         msg: Message,
-):
+) -> None:
     await msg.answer('❗️Неверный формат данных. Ожидалось целое число от 1 до 100')
 
 
-@router.callback_query(F.data.startswith('edit_task_prepared_code'))
+@router.callback_query(
+    F.data.startswith('edit_task_prepared_code'),
+    F.message.as_('callback_query_message')
+)
 async def start_editing_task_prepared_code(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+    await state.set_state(state=EditCodeTaskForm.get_new_prepared_code)
 
     await callback_query.answer()
 
-    await state.set_state(state=EditCodeTaskForm.get_new_prepared_code)
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
 
     msg = await bot.send_message(chat_id=user_id,
                                  text='Отправьте новый код инициализации задания (null если хотите его удалить)',
@@ -184,15 +199,15 @@ async def edit_task_prepared_code(
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[UpdateCodeTaskInteractor],
-        new_code: str,
-):
-    user_id: int = msg.from_user.id
+        new_code_text: str,
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     course_id, back_to, task_id = data['course_id'], data['back_to'], data['task_id']
-    new_code = None if new_code.lower() == 'null' else new_code
+    new_code = None if new_code_text.lower() == 'null' else new_code_text
 
     output_data = await interactor.execute(
         data=UpdateCodeTaskInputData(
@@ -210,17 +225,19 @@ async def edit_task_prepared_code(
             reply_markup=CANCEL_EDITING_KB,
             parse_mode='HTML'
         )
-        return await state.update_data(
+        await state.update_data(
             msg_on_delete=msg.message_id
         )
+        return
 
     await state.set_state(state=None)
 
     tasks = data[f'course_{course_id}_tasks']
     tasks[data[f'course_{course_id}_tasks_pointer']].prepared_code = new_code
+    tasks[data[f'course_{course_id}_tasks_pointer']].updated_at = datetime.now()
 
     await state.update_data(
-        **{f'course_{course_id}_tasks': tasks}
+        {f'course_{course_id}_tasks': tasks}
     )
 
     await bot.send_message(
@@ -230,26 +247,30 @@ async def edit_task_prepared_code(
     )
 
 
-@router.callback_query(F.data.startswith('get_code_task_tests'))
+@router.callback_query(
+    F.data.startswith('get_code_task_tests'),
+    F.message.as_('callback_query_message')
+)
 async def get_code_task_tests(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    target_task: TaskData = data['target_task']
+    target_task: CodeTaskData = data['target_task']
     pointer = data.get(f'code_task_{target_task.id}_tests_pointer', 0)
 
     await state.update_data(
-        **{f'code_task_{target_task.id}_tests_pointer': pointer}
+        {f'code_task_{target_task.id}_tests_pointer': pointer}
     )
 
     current_test: CodeTaskTestData = target_task.tests[pointer]
     await bot.edit_message_text(
         chat_id=user_id,
-        message_id=callback_query.message.message_id,
+        message_id=callback_query_message.message_id,
         text=f"""
 Тест #{pointer + 1}:
 
@@ -260,17 +281,22 @@ async def get_code_task_tests(
     )
 
 
-@router.callback_query((F.data.startswith('code_task_tests-next')) | (F.data.startswith('code_task_tests-prev')))
+@router.callback_query(
+    (F.data.startswith('code_task_tests-next')) | (F.data.startswith('code_task_tests-prev')),
+    F.data.as_('callback_query_data'),
+    F.message.as_('callback_query_message'),
+)
 async def watch_code_task_tests_prev_or_next(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+        callback_query_data: str
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    command, task_id = callback_query.data.split('-')[1:]
-
+    command, task_id = callback_query_data.split('-')[1:]
     pointer = data[f'code_task_{task_id}_tests_pointer']
 
     if command == 'next':
@@ -283,7 +309,7 @@ async def watch_code_task_tests_prev_or_next(
 
     await bot.edit_message_text(
         chat_id=user_id,
-        message_id=callback_query.message.message_id,
+        message_id=callback_query_message.message_id,
         text=f"""
     Тест #{pointer + 1}:
 
@@ -294,20 +320,24 @@ async def watch_code_task_tests_prev_or_next(
     )
 
     await state.update_data(
-        **{f'code_task_{target_task.id}_tests_pointer': pointer}
+        {f'code_task_{target_task.id}_tests_pointer': pointer}
     )
 
 
-@router.callback_query(F.data.startswith('edit_code_task_test-'))
+@router.callback_query(
+    F.data.startswith('edit_code_task_test-'),
+    F.data.as_('callback_query_data')
+)
 async def start_editing_code_task_test(
         callback_query: CallbackQuery,
+        callback_query_data: str,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    task_id = callback_query.data.split('-')[1]
+    task_id = callback_query_data.split('-')[1]
     pointer = data[f'code_task_{task_id}_tests_pointer']
 
     await callback_query.answer()
@@ -331,17 +361,13 @@ async def edit_code_task_test(
         bot: Bot,
         interactor: FromDishka[UpdateCodeTaskTestInteractor],
         updated_test_code: str,
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
+    course_id, back_to = data['course_id'], data['back_to']
 
-    with suppress(TelegramBadRequest):
-        await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
-
-    course_id, back_to, target_task = data['course_id'], data['back_to'], data['target_task']
+    target_task: CodeTaskData = data['target_task']
     pointer = data[f'code_task_{target_task.id}_tests_pointer']
-
-    target_task: TaskData
 
     await interactor.execute(
         data=UpdateCodeTaskTestInputData(
@@ -350,16 +376,20 @@ async def edit_code_task_test(
             code=updated_test_code,
         )
     )
-    await state.set_state(state=None)
 
     target_task.tests[pointer].code = updated_test_code
     tasks = data[f'course_{course_id}_tasks']
     tasks[data[f'course_{course_id}_tasks_pointer']].tests[pointer].code = updated_test_code
+    tasks[data[f'course_{course_id}_tasks_pointer']].updated_at = datetime.now()
 
+    await state.set_state(state=None)
     await state.update_data(
-        **{f'course_{course_id}_tasks': tasks},
+        {f'course_{course_id}_tasks': tasks},
         target_task=target_task,
     )
+
+    with suppress(TelegramBadRequest):
+        await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await bot.send_message(
         chat_id=user_id,
@@ -368,16 +398,20 @@ async def edit_code_task_test(
     )
 
 
-@router.callback_query(F.data.startswith("add_code_task_test-"))
+@router.callback_query(
+    F.data.startswith("add_code_task_test-"),
+    F.message.as_('callback_query_message')
+)
 async def handle_add_code_task_test_request(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
-        bot: Bot,
-):
-    await state.set_state(state=EditCodeTaskForm.add_new_test)
+) -> None:
     await callback_query.answer()
 
-    msg = await callback_query.message.answer("Введите код для нового теста", reply_markup=CANCEL_EDITING_KB)
+    await state.set_state(state=EditCodeTaskForm.add_new_test)
+
+    msg = await callback_query_message.answer("Введите код для нового теста", reply_markup=CANCEL_EDITING_KB)
     await state.update_data(
         msg_on_delete=msg.message_id
     )
@@ -393,15 +427,12 @@ async def add_code_task_test(
         bot: Bot,
         interactor: FromDishka[AddCodeTaskTestInteractor],
         new_test_code: str,
-):
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
-    with suppress(TelegramBadRequest):
-        await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
-
-    course_id, back_to, target_task = data['course_id'], data['back_to'], data['target_task']
-    target_task: TaskData
+    course_id, back_to = data['course_id'], data['back_to']
+    target_task: CodeTaskData = data['target_task']
 
     await interactor.execute(
         data=AddCodeTaskTestInputData(
@@ -414,11 +445,14 @@ async def add_code_task_test(
     target_task.tests += [CodeTaskTestData(code=new_test_code)]
     tasks = data[f'course_{course_id}_tasks']
     tasks[data[f'course_{course_id}_tasks_pointer']].tests.append(CodeTaskTestData(code=new_test_code))
-
+    tasks[data[f'course_{course_id}_tasks_pointer']].updated_at = datetime.now()
     await state.update_data(
-        **{f'course_{course_id}_tasks': tasks},
+        {f'course_{course_id}_tasks': tasks},
         target_task=target_task,
     )
+
+    with suppress(TelegramBadRequest):
+        await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
 
     await bot.send_message(
         chat_id=user_id,
@@ -427,21 +461,23 @@ async def add_code_task_test(
     )
 
 
-@router.callback_query(F.data.startswith('delete_code_task_test-'))
+@router.callback_query(
+    F.data.startswith('delete_code_task_test-'),
+    F.message.as_('callback_query_message')
+)
 async def delete_code_task_test(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[UpdateCodeTaskTestInteractor],
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    course_id, back_to, target_task = data['course_id'], data['back_to'], data['target_task']
+    course_id, back_to = data['course_id'], data['back_to']
+    target_task: CodeTaskData = data['target_task']
     pointer = data[f'code_task_{target_task.id}_tests_pointer']
-    target_task: TaskData
-
-    await callback_query.message.delete()
 
     await interactor.execute(
         data=UpdateCodeTaskTestInputData(
@@ -451,19 +487,19 @@ async def delete_code_task_test(
         )
     )
 
-
     target_task.tests.pop(pointer)
     tasks = data[f'course_{course_id}_tasks']
     tasks[data[f'course_{course_id}_tasks_pointer']].tests.pop(pointer)
-
+    tasks[data[f'course_{course_id}_tasks_pointer']].updated_at = datetime.now()
     await state.update_data(
-        **{
+        {
             f'course_{course_id}_tasks': tasks,
             f'code_task_{target_task.id}_tests_pointer': max(0, pointer - 1)
         },
         target_task=target_task,
     )
 
+    await callback_query_message.delete()
     await bot.send_message(
         chat_id=user_id,
         text=f'Тест #{pointer + 1} успешно удален',

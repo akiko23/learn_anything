@@ -12,10 +12,11 @@ from dishka import FromDishka
 from learn_anything.course_platform.application.input_data import Pagination
 from learn_anything.course_platform.application.interactors.course.get_many_courses import GetAllCoursesInteractor, \
     GetManyCoursesInputData, CourseData
-from learn_anything.course_platform.application.interactors.course.update_course import UpdateCourseInteractor, UpdateCourseInputData
+from learn_anything.course_platform.application.interactors.course.update_course import UpdateCourseInteractor, \
+    UpdateCourseInputData
 from learn_anything.course_platform.application.ports.data.course_gateway import GetManyCoursesFilters, SortBy
 from learn_anything.course_platform.application.ports.data.file_manager import FileManager
-from learn_anything.course_platform.domain.entities.user.models import UserRole
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
 from learn_anything.course_platform.presentation.tg_bot.exceptions import NoMediaOnTelegramServersException
 from learn_anything.course_platform.presentation.tg_bot.states.course import SearchAllByForm
 from learn_anything.course_platform.presentors.tg_bot.keyboards.course.many_courses import get_all_courses_keyboard, \
@@ -30,15 +31,19 @@ DEFAULT_LIMIT = 10
 DEFAULT_FILTERS = GetManyCoursesFilters(sort_by=SortBy.POPULARITY)
 
 
-@router.callback_query(F.data == 'main_menu-all_courses')
+@router.callback_query(
+    F.data == 'main_menu-all_courses',
+    F.message.as_('callback_query_message')
+)
 async def get_all_courses(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[GetAllCoursesInteractor],
         file_manager: FromDishka[FileManager],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -65,7 +70,6 @@ async def get_all_courses(
         all_courses_filters=filters,
     )
 
-
     if total == 0:
         msg_text = 'Еще ни один курс не был опубликован :('
         if filters != DEFAULT_FILTERS:
@@ -86,14 +90,14 @@ async def get_all_courses(
 
     photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
     _, photo_id = await file_manager.get_props_by_path(path=photo_path)
-    if current_course.photo_id:
+    if current_course.photo_id and current_course.photo_path:
         photo_id = current_course.photo_id
         photo_path = current_course.photo_path
 
     try:
-        return await bot.edit_message_media(
+        await bot.edit_message_media(
             chat_id=user_id,
-            message_id=callback_query.message.message_id,
+            message_id=callback_query_message.message_id,
             media=InputMediaPhoto(
                 media=photo_id,
                 caption=text
@@ -121,12 +125,16 @@ async def get_all_courses(
         )
 
 
-@router.callback_query(F.data == 'all_courses-filters')
+@router.callback_query(
+    F.data == 'all_courses-filters',
+    F.message.as_('callback_query_message')
+)
 async def get_filters(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -137,29 +145,35 @@ async def get_filters(
     current_filters = data['all_courses_filters']
     await bot.edit_message_reply_markup(
         chat_id=user_id,
-        message_id=callback_query.message.message_id,
+        message_id=callback_query_message.message_id,
         reply_markup=get_all_courses_filters(current_filters),
     )
 
 
-@router.callback_query(F.data.in_([
-    'all_courses_filters-popularones',
-    'all_courses_filters-newones',
-    'all_courses_filters-author',
-    'all_courses_filters-title',
-]))
+@router.callback_query(
+    F.data.in_([
+        'all_courses_filters-popularones',
+        'all_courses_filters-newones',
+        'all_courses_filters-author',
+        'all_courses_filters-title',
+    ]),
+    F.data.as_('callback_query_data'),
+    F.message.as_('callback_query_message')
+)
 async def sort_by_filters(
         callback_query: CallbackQuery,
+        callback_query_data: str,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    selected_option = callback_query.data.split('-')[1]
+    selected_option = callback_query_data.split('-')[1]
     if selected_option == 'author':
         await state.set_state(SearchAllByForm.author)
-        await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+        await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
         await bot.send_message(
             chat_id=user_id,
             text='Введите имя автора',
@@ -169,7 +183,7 @@ async def sort_by_filters(
 
     if selected_option == 'title':
         await state.set_state(SearchAllByForm.title)
-        await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+        await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
         await bot.send_message(
             chat_id=user_id,
             text='Введите название курса',
@@ -189,27 +203,30 @@ async def sort_by_filters(
 
     await bot.edit_message_reply_markup(
         chat_id=user_id,
-        message_id=callback_query.message.message_id,
+        message_id=callback_query_message.message_id,
         reply_markup=get_all_courses_filters(
             current_filters=new_filters,
         ),
     )
 
 
-@router.message(StateFilter(SearchAllByForm.author))
+@router.message(
+    StateFilter(SearchAllByForm.author),
+    F.text.as_('author')
+)
 async def process_author_filter(
         msg: Message,
+        author: str,
         state: FSMContext,
         bot: Bot,
-):
-    await state.set_state(state=None)
-
-    author: str = msg.text
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     new_filters = data['all_courses_new_filters']
     new_filters.author_name = author
+
+    await state.set_state(state=None)
     await state.update_data(all_courses_new_filters=new_filters)
 
     await bot.send_message(
@@ -221,20 +238,23 @@ async def process_author_filter(
     )
 
 
-@router.message(StateFilter(SearchAllByForm.title))
+@router.message(
+    StateFilter(SearchAllByForm.title),
+    F.text.as_('title')
+)
 async def process_title_filter(
         msg: Message,
+        title: str,
         state: FSMContext,
         bot: Bot,
-):
-    await state.set_state(state=None)
-
-    title: str = msg.text
-    user_id: int = msg.from_user.id
+) -> None:
+    user_id: int = msg.chat.id
     data: dict[str, Any] = await state.get_data()
 
     new_filters = data['all_courses_new_filters']
     new_filters.title = title
+
+    await state.set_state(state=None)
     await state.update_data(all_courses_new_filters=new_filters)
 
     await bot.send_message(
@@ -246,16 +266,20 @@ async def process_title_filter(
     )
 
 
-@router.callback_query(StateFilter(SearchAllByForm), F.data == 'all_courses_filters-cancel_input')
+@router.callback_query(
+    StateFilter(SearchAllByForm), F.data == 'all_courses_filters-cancel_input',
+    F.message.as_('callback_query_message')
+)
 async def cancel_text_input_filters(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
     await state.set_state(state=None)
     await bot.send_message(
         chat_id=user_id,
@@ -266,12 +290,16 @@ async def cancel_text_input_filters(
     )
 
 
-@router.callback_query(F.data == 'all_courses_filters-reset')
+@router.callback_query(
+    F.data == 'all_courses_filters-reset',
+    F.message.as_('callback_query_message')
+)
 async def reset_filters(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
     data = await state.update_data(
@@ -282,22 +310,26 @@ async def reset_filters(
 
     await bot.edit_message_reply_markup(
         chat_id=user_id,
-        message_id=callback_query.message.message_id,
+        message_id=callback_query_message.message_id,
         reply_markup=get_all_courses_filters(
             current_filters=data['all_courses_new_filters']
         )
     )
 
 
-@router.callback_query(F.data == 'all_courses_filters-apply')
+@router.callback_query(
+    F.data == 'all_courses_filters-apply',
+    F.message.as_('callback_query_message')
+)
 async def apply_filters(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[GetAllCoursesInteractor],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
         file_manager: FromDishka[FileManager]
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
@@ -330,7 +362,7 @@ async def apply_filters(
         if filters != DEFAULT_FILTERS:
             msg_text = "Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
-        return await bot.send_message(
+        await bot.send_message(
             chat_id=user_id,
             text=msg_text,
             reply_markup=get_all_courses_keyboard(
@@ -338,6 +370,7 @@ async def apply_filters(
                 total=0,
             )
         )
+        return
 
     current_course: CourseData = courses[data['all_courses_pointer']]
     text = get_many_courses_text(current_course)
@@ -345,14 +378,14 @@ async def apply_filters(
 
     photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
     _, photo_id = await file_manager.get_props_by_path(path=photo_path)
-    if current_course.photo_id:
+    if current_course.photo_id and current_course.photo_path:
         photo_id = current_course.photo_id
         photo_path = current_course.photo_path
 
     try:
-        return await bot.edit_message_media(
+        await bot.edit_message_media(
             chat_id=user_id,
-            message_id=callback_query.message.message_id,
+            message_id=callback_query_message.message_id,
             media=InputMediaPhoto(
                 media=photo_id,
                 caption=text
@@ -380,14 +413,18 @@ async def apply_filters(
         )
 
 
-@router.callback_query(F.data == 'all_courses_filters-back')
+@router.callback_query(
+    F.data == 'all_courses_filters-back',
+    F.message.as_('callback_query_message')
+)
 async def filters_back(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
         file_manager: FromDishka[FileManager],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
-):
+) -> None:
     await state.update_data(
         all_courses_new_filters=None,
     )
@@ -421,14 +458,14 @@ async def filters_back(
 
     photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
     _, photo_id = await file_manager.get_props_by_path(path=photo_path)
-    if current_course.photo_id:
+    if current_course.photo_id and current_course.photo_path:
         photo_id = current_course.photo_id
         photo_path = current_course.photo_path
 
     try:
-        return await bot.edit_message_media(
+        await bot.edit_message_media(
             chat_id=user_id,
-            message_id=callback_query.message.message_id,
+            message_id=callback_query_message.message_id,
             media=InputMediaPhoto(
                 media=photo_id,
                 caption=text
@@ -456,19 +493,25 @@ async def filters_back(
         )
 
 
-@router.callback_query(F.data.in_(['all_courses-next', 'all_courses-prev']))
+@router.callback_query(
+    F.data.in_(['all_courses-next', 'all_courses-prev']),
+    F.data.as_('callback_query_data'),
+    F.message.as_('callback_query_message')
+)
 async def watch_all_courses_prev_or_next(
         callback_query: CallbackQuery,
+        callback_query_data: str,
+        callback_query_message: Message,
         state: FSMContext,
         bot: Bot,
         interactor: FromDishka[GetAllCoursesInteractor],
         file_manager: FromDishka[FileManager],
         update_course_interactor: FromDishka[UpdateCourseInteractor],
-):
+) -> None:
     user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
-    command = callback_query.data.split('-')[1]
+    command = callback_query_data.split('-')[1]
 
     pointer = data['all_courses_pointer']
     courses: list[CourseData] = data['all_courses']
@@ -505,14 +548,14 @@ async def watch_all_courses_prev_or_next(
 
     photo_path = file_manager.generate_path(('defaults',), 'course_default_img.jpg')
     _, photo_id = await file_manager.get_props_by_path(path=photo_path)
-    if current_course.photo_id:
+    if current_course.photo_id and current_course.photo_path:
         photo_id = current_course.photo_id
         photo_path = current_course.photo_path
 
     try:
-        return await bot.edit_message_media(
+        await bot.edit_message_media(
             chat_id=user_id,
-            message_id=callback_query.message.message_id,
+            message_id=callback_query_message.message_id,
             media=InputMediaPhoto(
                 media=photo_id,
                 caption=text
@@ -540,15 +583,19 @@ async def watch_all_courses_prev_or_next(
         )
 
 
-@router.callback_query(F.data == 'all_courses-to_main_menu')
+@router.callback_query(
+    F.data == 'all_courses-to_main_menu',
+    F.message.as_('callback_query_message')
+)
 async def to_main_menu(
         callback_query: CallbackQuery,
+        callback_query_message: Message,
         bot: Bot,
         user_role: UserRole,
-):
+) -> None:
     user_id: int = callback_query.from_user.id
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query.message.message_id)
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
     await bot.send_message(
         chat_id=user_id,
         text='Вы вернулись в главное меню',

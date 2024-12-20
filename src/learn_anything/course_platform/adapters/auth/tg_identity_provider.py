@@ -1,10 +1,13 @@
+from uuid import UUID
+
 from aiogram.utils.deep_linking import encode_payload, decode_payload
 
 from learn_anything.course_platform.adapters.auth.errors import TokenDecodeError
 from learn_anything.course_platform.application.ports.auth.identity_provider import IdentityProvider
 from learn_anything.course_platform.application.ports.auth.token import TokenProcessor
 from learn_anything.course_platform.application.ports.data.user_gateway import UserGateway
-from learn_anything.course_platform.domain.entities.user.models import UserID, UserRole
+from learn_anything.course_platform.domain.entities.user.enums import UserRole
+from learn_anything.course_platform.domain.entities.user.models import UserID
 
 THE_ONLY_OWNER_ID = 818525681
 
@@ -13,9 +16,9 @@ class TgB64TokenProcessor(TokenProcessor):
     def encode(self, subject: str) -> str:
         return encode_payload(subject)
 
-    def decode(self, token: str) -> str:
+    def decode(self, token: str) -> UUID:
         try:
-            return decode_payload(token)
+            return UUID(decode_payload(token))
         except Exception:
             raise TokenDecodeError
 

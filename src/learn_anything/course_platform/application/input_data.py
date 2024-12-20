@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass(frozen=True)
@@ -8,4 +9,4 @@ class Pagination:
 
 
 # special sentinel object which used in a situation when None might be a useful value
-UNSET: str = 'UNSET'
+UNSET: Literal['UNSET'] = 'UNSET'

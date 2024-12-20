@@ -6,7 +6,6 @@ import toml
 @dataclass
 class BotConfig:
     token: str
-    bot_webhook_url: str = None
 
 
 def load_bot_config(config_path: str) -> BotConfig:

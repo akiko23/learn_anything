@@ -124,5 +124,5 @@ async def test_get_all_courses(rmq_channel: AbstractChannel):
     # giving consumer a time to process and ack message
     await asyncio.sleep(3)
 
-    after_pub_queue = await rmq_channel.declare_queue(name=queue_name, durable=True)
+    after_pub_queue = await rmq_channel.get_queue(name=queue_name)
     assert after_pub_queue.declaration_result.message_count == 0

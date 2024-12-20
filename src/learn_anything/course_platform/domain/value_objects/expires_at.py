@@ -17,6 +17,6 @@ class InvalidExpiresAtError(ApplicationError):
 class ExpiresAt:
     value: datetime
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.value < datetime.now():
             raise InvalidExpiresAtError(self.value)

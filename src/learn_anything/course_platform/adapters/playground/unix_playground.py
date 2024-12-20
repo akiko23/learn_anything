@@ -11,7 +11,7 @@ from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from subprocess import TimeoutExpired
-from typing import Self
+from typing import Self, Any
 
 from learn_anything.course_platform.application.ports.playground import PlaygroundFactory, Playground, StdErr, StdOut, \
     CodeIsInvalidError
@@ -27,13 +27,13 @@ class UnixPlayground(Playground):
             self,
             identifier: str | None,
             code_duration_timeout: int
-    ):
+    ) -> None:
         self._pl_path = self._generate_playground_path(additional_identifier=identifier)
         self._code_duration_timeout = code_duration_timeout
 
         self._apply_playground_user()
 
-    def _apply_playground_user(self):
+    def _apply_playground_user(self) -> None:
         pw_record = pwd.getpwnam(self._playground_user)
         user_home_dir = pw_record.pw_dir
 
@@ -51,7 +51,7 @@ class UnixPlayground(Playground):
         return self
 
     # todo: add MVM
-    async def execute_code(self, code: str, raise_exc_on_err: bool = False) -> (StdOut, StdErr):
+    async def execute_code(self, code: str, raise_exc_on_err: bool = False) -> tuple[StdOut, StdErr]:
         loop = asyncio.get_running_loop()
 
         with ProcessPoolExecutor() as pool:
@@ -65,7 +65,7 @@ class UnixPlayground(Playground):
 
         return out, err
 
-    def _execute_code(self, code: str) -> (StdOut, StdErr):
+    def _execute_code(self, code: str) -> tuple[StdOut, StdErr]:
         process = subprocess.Popen(
             ['python3', '-c', code],
             preexec_fn=_demote,
@@ -87,28 +87,28 @@ class UnixPlayground(Playground):
             logger.warning('Playground user processes were successfully killed')
 
             return (
-                out.decode() + '\n' + err.decode(),
-                f'TimeoutError: \'{code}\' timed out after {self._code_duration_timeout} seconds'
+                StdOut(out.decode() + '\n' + err.decode()),
+                StdErr(f'TimeoutError: \'{code}\' timed out after {self._code_duration_timeout} seconds')
             )
 
         with suppress(ProcessLookupError):
             self._kill_derivatives(process.pid)
 
-        return out.decode().strip(), err.decode().strip()
+        return StdOut(out.decode().strip()), StdErr(err.decode().strip())
 
     @staticmethod
-    def _kill_derivatives(pid):
+    def _kill_derivatives(pid: int) -> None:
         kill_process = subprocess.Popen(
             ['pkill', '-s', str(os.getsid(pid)), '--signal', 'KILL'],
         )
         kill_process.wait()
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: type[Exception], exc_val: Any, exc_tb: str) -> None:
         shutil.rmtree(self._pl_path)
         if exc_type:
             logger.error('An error of type %s with val %s occurred: %s', exc_type, exc_val, exc_tb)
 
-    def _generate_playground_path(self, additional_identifier) -> Path:
+    def _generate_playground_path(self, additional_identifier: str | None) -> Path:
         playground_id = uuid.uuid4()
         if additional_identifier is not None:
             playground_id = uuid.uuid3(uuid.NAMESPACE_OID, f'{additional_identifier}_{datetime.now()}')
@@ -118,7 +118,7 @@ class UnixPlayground(Playground):
 ADDRESS_SPACE_LIMITS = (1024 * 1024 * 500, 1024 * 1024 * 500)
 NPROC_LIMITS = (50, 50)
 
-def _demote():
+def _demote() -> None:
     resource.prlimit(
         os.getpid(),
         resource.RLIMIT_NPROC,
