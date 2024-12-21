@@ -8,7 +8,7 @@ def format_time(total_tasks: int) -> str:
     spent_hours_str = f'{spent_hours} ч' if spent_hours else ''
     spent_minutes_str = f'{spent_minutes} мин' if spent_minutes else ''
 
-    if not (spent_hours_str and spent_minutes_str):
+    if not (spent_hours_str or spent_minutes_str):
         return '0'
     return f'{spent_hours_str} {spent_minutes_str}'
 

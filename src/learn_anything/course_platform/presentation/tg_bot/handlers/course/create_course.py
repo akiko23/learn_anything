@@ -233,6 +233,7 @@ async def process_invalid_registrations_limit(msg: Message) -> None:
     F.message.as_('callback_query_message')
 )
 async def skip_registrations_limit(
+        _: CallbackQuery,
         callback_query_message: Message,
         state: FSMContext,
         user_role: UserRole,
