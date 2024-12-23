@@ -6,7 +6,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from dishka import FromDishka
 
-from learn_anything.course_platform.adapters.playground.unix_playground import logger
 from learn_anything.course_platform.application.interactors.submission.create_submission import \
     CreateCodeTaskSubmissionInteractor, \
     CreateCodeTaskSubmissionInputData

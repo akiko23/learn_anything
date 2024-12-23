@@ -1,4 +1,5 @@
 from functools import partial
+from typing import AsyncGenerator
 
 import aio_pika
 from aio_pika import Connection
@@ -8,9 +9,9 @@ from aio_pika.pool import Pool
 from learn_anything.api_gateway.adapters.rmq.config import RMQConfig
 
 
-async def get_channel(connection_pool: Pool[Connection]) -> AbstractChannel:
+async def get_channel(connection_pool: Pool[Connection]) -> AsyncGenerator[AbstractChannel, None]:
     async with connection_pool.acquire() as connection:
-        return await connection.channel()
+        yield await connection.channel()
 
 
 async def get_connection_pool(rmq_cfg: RMQConfig) -> Pool[Connection]:
