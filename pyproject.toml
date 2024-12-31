@@ -27,6 +27,7 @@ starlette-context = '^0.3.6'
 toml = '^0.10.2'
 uvicorn = '^0.34.0'
 types-pyyaml = "^6.0.12.20240917"
+paramiko = "^3.5.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = '^1.11.2'

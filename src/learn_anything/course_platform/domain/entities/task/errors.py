@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import Union
 
 from learn_anything.course_platform.domain.entities.course.models import CourseID
-from learn_anything.course_platform.domain.error import ApplicationError
 from learn_anything.course_platform.domain.entities.task.models import TaskID, PollTaskOptionID
 from learn_anything.course_platform.domain.entities.user.models import UserID
+from learn_anything.course_platform.domain.error import ApplicationError
 
 
 @dataclass
@@ -86,3 +86,14 @@ class CodeTaskTestAlreadyExistsError(ApplicationError):
     def message(self) -> str:
         return f"Test for task={self.task_id} with code={self.code} already exists"
 
+
+@dataclass
+class CanNotSetAttemptsLimitError(ApplicationError):
+    task_id: TaskID
+
+    @property
+    def message(self) -> str:
+        return (
+            f'Can not specify attempts limit for code task with id={self.task_id}: '
+            f'new attempts limit must be greater than previous'
+        )

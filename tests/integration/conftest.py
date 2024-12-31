@@ -22,8 +22,8 @@ from learn_anything.course_platform.main.consumer import (
 )
 
 TEST_CONFIG_PATH = "configs/test_consumer.toml"
-SETUP_TEST_ENVIRONMENT_SCRIPT_PATH = 'scripts/setup_test_environment.sh'
-RM_TEST_ENVIRONMENT_SCRIPT_PATH = 'scripts/rm_test_environment.sh'
+SETUP_TEST_ENVIRONMENT_SCRIPT_PATH = 'tests/integration/scripts/setup_test_environment.sh'
+RM_TEST_ENVIRONMENT_SCRIPT_PATH = 'tests/integration/scripts/rm_test_environment.sh'
 MIGRATIONS_PATH = "src/greenatom_task/web/migrations"
 
 

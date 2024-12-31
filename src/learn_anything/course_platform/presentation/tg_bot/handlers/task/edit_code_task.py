@@ -21,6 +21,7 @@ from learn_anything.course_platform.presentors.tg_bot.keyboards.task.edit_task i
     get_task_after_edit_menu_kb, get_attempts_limit_kb
 from learn_anything.course_platform.presentors.tg_bot.keyboards.task.edit_task import watch_code_task_tests_kb
 from learn_anything.course_platform.presentors.tg_bot.templates import python_code_tm, pre_tm
+from learn_anything.course_platform.presentors.tg_bot.texts.edit_task import get_edit_code_task_attempts_limit_text
 
 router = Router()
 
@@ -36,14 +37,19 @@ async def start_editing_task_attempts_limit(
         bot: Bot,
 ) -> None:
     user_id: int = callback_query.from_user.id
+    data: dict[str, Any] = await state.get_data()
 
-    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
+    target_task: CodeTaskData = data['target_task']
 
     await callback_query.answer()
 
     await state.set_state(state=EditCodeTaskForm.get_new_attempts_limit)
 
-    msg = await bot.send_message(chat_id=user_id, text='Отправьте новый лимит на количество попыток',
+
+    await bot.delete_message(chat_id=user_id, message_id=callback_query_message.message_id)
+
+    text = get_edit_code_task_attempts_limit_text(current_attempts_limit=target_task.attempts_limit)
+    msg = await bot.send_message(chat_id=user_id, text=text,
                                  reply_markup=get_attempts_limit_kb())
     await state.update_data(
         msg_on_delete=msg.message_id

@@ -17,6 +17,7 @@ from learn_anything.course_platform.adapters.bootstrap.tg_bot_di import setup_di
 from learn_anything.course_platform.adapters.logger import logger, correlation_id_ctx, LOGGING_CONFIG
 from learn_anything.course_platform.adapters.metrics import TOTAL_MESSAGES_CONSUMED
 from learn_anything.course_platform.adapters.persistence.tables.map import map_tables
+from learn_anything.course_platform.presentation.bg_tasks import background_tasks
 from learn_anything.course_platform.presentation.tg_bot.handlers import register_handlers
 from learn_anything.course_platform.presentation.tg_bot.middlewares.auth import AuthMiddleware
 from learn_anything.course_platform.presentation.web.config import load_web_config
@@ -69,7 +70,12 @@ async def start_consumer(container: AsyncContainer) -> None:
 
         logger.info('Starting consumer')
         async for message in queue.iterator():
-            await callback(cast(AbstractIncomingMessage, message), dp, bot)
+            process_update_task = asyncio.create_task(callback(cast(AbstractIncomingMessage, message), dp, bot))
+            process_update_task.add_done_callback(background_tasks.discard)
+
+            background_tasks.add(
+                process_update_task
+            )
 
 
 @asynccontextmanager
@@ -129,3 +135,7 @@ async def main() -> None:
 
     logger.info('Starting server..')
     await server.serve()
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

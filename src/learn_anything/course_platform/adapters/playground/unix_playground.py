@@ -1,62 +1,69 @@
 import asyncio
-import logging
 import os
-import pwd
-import resource
-import shutil
 import subprocess
+import time
 import uuid
 from concurrent.futures.process import ProcessPoolExecutor
-from contextlib import suppress
-from datetime import datetime
+from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
-from subprocess import TimeoutExpired
-from typing import Self, Any
+from signal import Signals
+from typing import Self, Any, Optional
 
+import paramiko
+from paramiko.common import cMSG_CHANNEL_REQUEST
+
+from learn_anything.course_platform.adapters.logger import logger
 from learn_anything.course_platform.application.ports.playground import PlaygroundFactory, Playground, StdErr, StdOut, \
     CodeIsInvalidError
-
-logger = logging.getLogger(__name__)
 
 
 class UnixPlayground(Playground):
     _playground_base_path: Path = Path('/tmp') / 'playground'
-    _playground_user = 'learn_anything'
+    _playground_host = '127.0.0.1'
+    _playground_user = 'sandbox'
+    _playground_password = 'sandbox'
 
     def __init__(
             self,
             identifier: str | None,
             code_duration_timeout: int
     ) -> None:
-        self._pl_path = self._generate_playground_path(additional_identifier=identifier)
+        self._id = identifier
         self._code_duration_timeout = code_duration_timeout
-
-        self._apply_playground_user()
-
-    def _apply_playground_user(self) -> None:
-        pw_record = pwd.getpwnam(self._playground_user)
-        user_home_dir = pw_record.pw_dir
-
-        self._env = os.environ.copy()
-        self._env['HOME'] = user_home_dir
-        self._env['LOGNAME'] = self._playground_user
-        self._env['PWD'] = str(self._playground_base_path)
-        self._env['USER'] = self._playground_user
+        self._vm: VirtualMachineFacade | None = None
+        self._ssh_client = paramiko.SSHClient()
 
     async def __aenter__(self) -> Self:
-        self._pl_path.mkdir(parents=True, mode=0o777)
-        chown_ps = subprocess.Popen(['chown', self._playground_user, self._pl_path])
-        chown_ps.wait()
-
+        await self._create_playground()
         return self
 
-    # todo: add MVM
+    async def _create_playground(self):
+        loop = asyncio.get_running_loop()
+        with ProcessPoolExecutor() as ps_pool:
+            self._vm = await loop.run_in_executor(
+                ps_pool,
+                VirtualMachineFacade(id_=self._id).create,
+            )
+
+        self._ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        with ThreadPoolExecutor(max_workers=4) as th_pool:
+            await loop.run_in_executor(
+                th_pool,
+                self._ssh_client.connect,
+                self._playground_host,
+                self._vm.exposed_ssh_port,
+                self._playground_user,
+                self._playground_password,
+            )
+        logger.info('Successfully connected to vm %s via ssh', self._id)
+
     async def execute_code(self, code: str, raise_exc_on_err: bool = False) -> tuple[StdOut, StdErr]:
         loop = asyncio.get_running_loop()
 
-        with ProcessPoolExecutor() as pool:
+        with ThreadPoolExecutor() as th_pool:
             out, err = await loop.run_in_executor(
-                pool,
+                th_pool,
                 self._execute_code,
                 code
             )
@@ -66,69 +73,131 @@ class UnixPlayground(Playground):
         return out, err
 
     def _execute_code(self, code: str) -> tuple[StdOut, StdErr]:
-        process = subprocess.Popen(
-            ['python3', '-c', code],
-            preexec_fn=_demote,
-            cwd=str(self._pl_path),
-            env=self._env,
-            user=self._playground_user,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            start_new_session=True,
-        )
-
+        out, err = b'', b''
         try:
-            out, err = process.communicate(timeout=self._code_duration_timeout)
-        except TimeoutExpired:
-            self._kill_derivatives(process.pid)
-
-            out, err = process.communicate()
-
-            logger.warning('Playground user processes were successfully killed')
-
-            return (
-                StdOut(out.decode() + '\n' + err.decode()),
-                StdErr(f'TimeoutError: \'{code}\' timed out after {self._code_duration_timeout} seconds')
+            logger.info('Sending command..')
+            stdin, stdout, stderr = self._ssh_client.exec_command(
+                f'echo -e "{code}" | python3',
             )
 
-        with suppress(ProcessLookupError):
-            self._kill_derivatives(process.pid)
+            start = time.time()
+            while time.time() - start < self._code_duration_timeout + 1:
+                if stdin.channel.exit_status_ready():
+                    out_data = stdout.read().decode().strip()
+                    err_data = stderr.read().decode().strip()
 
-        return StdOut(out.decode().strip()), StdErr(err.decode().strip())
+                    logger.warning('Data: stdout - %s, stderr - %s', out_data, err_data)
+                    return (
+                        StdOut(out_data),
+                        StdErr(err_data)
+                    )
+                time.sleep(0.5)
 
-    @staticmethod
-    def _kill_derivatives(pid: int) -> None:
-        kill_process = subprocess.Popen(
-            ['pkill', '-s', str(os.getsid(pid)), '--signal', 'KILL'],
-        )
-        kill_process.wait()
+            message = paramiko.Message()
+            message.add_byte(cMSG_CHANNEL_REQUEST)
+            message.add_int(stdin.channel.remote_chanid)
+            message.add_string("signal")
+            message.add_boolean(False)
+            message.add_string(Signals.SIGINT.name[3:])
+            stdin.channel.transport._send_user_message(message)
+
+            logger.info('Sent SIGINT to stdin channel')
+
+            out = stdout.read()
+            err = stderr.read()
+            raise TimeoutError
+        except TimeoutError:
+            return (
+                StdOut(out.decode() + '\n' + err.decode()),
+                StdErr(f'TimeoutError: your code timed out after {self._code_duration_timeout} seconds')
+            )
+        except Exception as e:
+            logger.error('Error during code execution: %s', str(e))
 
     async def __aexit__(self, exc_type: type[Exception], exc_val: Any, exc_tb: str) -> None:
-        shutil.rmtree(self._pl_path)
+        loop = asyncio.get_running_loop()
+
+        with ThreadPoolExecutor(max_workers=3) as th_pool:
+            th_pool.submit(self._ssh_client.close)
+
+        with ProcessPoolExecutor(max_workers=2) as ps_pool:
+            ps_pool.submit(self._vm.delete)
+
         if exc_type:
             logger.error('An error of type %s with val %s occurred: %s', exc_type, exc_val, exc_tb)
 
-    def _generate_playground_path(self, additional_identifier: str | None) -> Path:
-        playground_id = uuid.uuid4()
-        if additional_identifier is not None:
-            playground_id = uuid.uuid3(uuid.NAMESPACE_OID, f'{additional_identifier}_{datetime.now()}')
-        return self._playground_base_path / Path(str(playground_id))
 
+class VirtualMachineFacade:
+    image_storage_base_path = os.path.join('/etc', 'learn_anything', 'qemu_disk_images')
+    base_disk_image_path = os.path.join(image_storage_base_path, 'debian12-2_python_base.qcow2')
+    create_vm_script_path = os.path.join('/etc', 'learn_anything', 'scripts', 'create_qemu_vm.sh')
+    get_free_port_script_path = os.path.join('/etc', 'learn_anything', 'scripts', 'get_available_port.sh')
 
-ADDRESS_SPACE_LIMITS = (1024 * 1024 * 500, 1024 * 1024 * 500)
-NPROC_LIMITS = (50, 50)
+    def __init__(self, id_: Optional[str] = None, disk_image_path: Optional[str] = None, port: Optional[int] = None):
+        self._id = id_ or str(uuid.uuid4())
+        self._vm_pid = None
+        self._disk_image_path = disk_image_path
+        self._port = port
 
-def _demote() -> None:
-    resource.prlimit(
-        os.getpid(),
-        resource.RLIMIT_NPROC,
-        NPROC_LIMITS
-    )
+    def create(self) -> Self:
+        if self._disk_image_path is None:
+            self._disk_image_path = self._init_disk_image()
 
-    resource.setrlimit(
-        resource.RLIMIT_AS,
-        ADDRESS_SPACE_LIMITS
-    )
+        if self._port is None:
+            self._port = self._get_free_port()
+
+        logger.info('Creating vm..')
+        create_vm_ps = subprocess.Popen(
+            [self.create_vm_script_path, str(self._port), self._disk_image_path],
+            start_new_session=True,
+        )
+
+        logger.info('Now waiting for its init..')
+        time.sleep(2)
+        logger.info('Created vm..')
+
+        self._vm_pid = create_vm_ps.pid
+        return self
+
+    @property
+    def exposed_ssh_port(self):
+        return self._port
+
+    def _init_disk_image(self) -> str:
+        disk_image_copies_path = os.path.join(
+            self.image_storage_base_path,
+            f'debian12_python_{self._id}.qcow2',
+        )
+
+        image_path = disk_image_copies_path.format()
+        create_img_ps = subprocess.Popen(
+            ['qemu-img', 'create', '-f', 'qcow2', '-b', self.base_disk_image_path, '-F', 'qcow2', image_path]
+        )
+        create_img_ps.wait()
+
+        return image_path
+
+    def delete(self):
+        if not self._vm_pid:
+            raise Exception('There is nothing to delete')
+
+        kill_vm_ps = subprocess.Popen(
+            ['pkill', '-s', str(os.getsid(self._vm_pid)), '--signal', 'KILL'],
+        )
+        kill_vm_ps.wait()
+
+        os.system(f'rm -f {self._disk_image_path}')
+
+    def _get_free_port(self) -> int:
+        ps = subprocess.Popen(
+            self.get_free_port_script_path,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+            shell=True,
+        )
+        out, _ = ps.communicate()
+        return int(out.decode().strip())
 
 
 class UnixPlaygroundFactory(PlaygroundFactory):

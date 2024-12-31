@@ -14,7 +14,8 @@ from learn_anything.course_platform.domain.entities.course.rules import ensure_a
 from learn_anything.course_platform.domain.entities.task.errors import CodeTaskTestAlreadyExistsError, \
     TaskDoesNotExistError
 from learn_anything.course_platform.domain.entities.task.models import TaskID, CodeTaskTest
-from learn_anything.course_platform.domain.entities.task.rules import update_code_task_test, code_task_test_exists
+from learn_anything.course_platform.domain.entities.task.rules import update_code_task_test, code_task_test_exists, \
+    update_code_task_attempts_limit
 
 
 @dataclass
@@ -75,7 +76,8 @@ class UpdateCodeTaskInteractor:
                 task.prepared_code = None
 
         if data.attempts_limit:
-            task.attempts_limit = None if data.attempts_limit == UNSET else data.attempts_limit
+            new_attempts_limit = None if data.attempts_limit == UNSET else int(data.attempts_limit)
+            task = update_code_task_attempts_limit(task, new_attempts_limit)
 
         if data.code_duration_timeout:
             task.code_duration_timeout = data.code_duration_timeout

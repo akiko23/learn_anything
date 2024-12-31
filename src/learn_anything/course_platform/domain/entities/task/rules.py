@@ -5,6 +5,7 @@ from typing import Sequence
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 from learn_anything.course_platform.domain.entities.submission.models import Submission
 from learn_anything.course_platform.domain.entities.task.enums import TaskType
+from learn_anything.course_platform.domain.entities.task.errors import CanNotSetAttemptsLimitError
 from learn_anything.course_platform.domain.entities.task.models import PollTask, PollTaskOptionID, TextInputTask, \
     TextInputTaskAnswer, \
     CodeTask, CodeTaskTest, TaskID, Task, PollTaskOption
@@ -110,6 +111,18 @@ def code_task_test_exists(code_task: CodeTask, test_code: str) -> bool:
         if code_task_test.code == test_code:
             return True
     return False
+
+
+def update_code_task_attempts_limit(task: CodeTask, new_attempts_limit: int | None) -> CodeTask:
+    if not new_attempts_limit:
+        task.attempts_limit = None
+        return task
+
+    if not task.attempts_limit or new_attempts_limit > task.attempts_limit:
+        raise CanNotSetAttemptsLimitError(task_id=task.id)
+
+    task.attempts_limit = new_attempts_limit
+    return task
 
 
 def update_code_task_test(task: CodeTask, index_in_task: int, new_code: str | None) -> CodeTask:
