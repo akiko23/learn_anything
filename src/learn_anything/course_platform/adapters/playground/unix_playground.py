@@ -119,8 +119,6 @@ class UnixPlayground(Playground):
             logger.error('Error during code execution: %s', str(e))
 
     async def __aexit__(self, exc_type: type[Exception], exc_val: Any, exc_tb: str) -> None:
-        loop = asyncio.get_running_loop()
-
         with ThreadPoolExecutor(max_workers=3) as th_pool:
             th_pool.submit(self._ssh_client.close)
 

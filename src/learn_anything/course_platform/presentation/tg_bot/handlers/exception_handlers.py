@@ -27,7 +27,7 @@ async def load_media_if_not_exists(
     update_interactor = exc.update_interactor
     input_data = exc.interactor_input_data
 
-    logger.error('No media found on telegram servers. Uploading new..')
+    logger.warning('No media found on telegram servers. Uploading new with path %s', exc.media_path)
 
     with suppress(TelegramBadRequest):
         await bot.delete_message(chat_id=user_id, message_id=msg.message_id)
@@ -36,15 +36,25 @@ async def load_media_if_not_exists(
     if media_buffer is None:
         raise FileNotFoundError(f'No such file path: \'{exc.media_path}\'')
 
-    msg = cast(Message, await bot.edit_message_media(
-        chat_id=user_id,
-        message_id=msg.message_id,
-        media=InputMediaPhoto(
-            media=BufferedInputFile(media_buffer.read(), 'stub'),
+    media_content = media_buffer.read()
+    try:
+        msg = cast(Message, await bot.edit_message_media(
+            chat_id=user_id,
+            message_id=msg.message_id,
+            media=InputMediaPhoto(
+                media=BufferedInputFile(media_content, 'stub'),
+                caption=exc.text_to_send,
+            ),
+            reply_markup=exc.keyboard,
+        ))
+    except TelegramBadRequest:
+        logger.info(media_content)
+        msg = cast(Message, await bot.send_photo(
+            chat_id=user_id,
+            photo=BufferedInputFile(media_content, 'stub'),
             caption=exc.text_to_send,
-        ),
-        reply_markup=exc.keyboard,
-    ))
+            reply_markup=exc.keyboard,
+        ))
 
     new_photo_id = msg.photo[-1].file_id  # type: ignore[index]
 

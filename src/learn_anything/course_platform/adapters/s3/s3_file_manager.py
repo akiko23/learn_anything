@@ -4,6 +4,7 @@ from io import BytesIO
 from pathlib import Path
 
 from minio import Minio, S3Error
+from minio.commonconfig import Tags
 from urllib3.response import BaseHTTPResponse
 
 from learn_anything.course_platform.adapters.s3.config import S3Config
@@ -39,12 +40,18 @@ class S3FileManager(FileManager):
         except S3Error:
             path = str(Path(bucket_name) / file_name)
             with open(path, 'rb') as file_obj:
-                self._client.put_object(
-                    bucket_name,
-                    file_name,
-                    file_obj,
-                    len(file_obj.read()),
-                )
+                file_content = file_obj.read()
+
+                tags = Tags.new_object_tags()
+                tags['id'] = 'null'
+                with BytesIO(file_content) as buffer:
+                    self._client.put_object(
+                        bucket_name,
+                        file_name,
+                        buffer,
+                        len(file_content),
+                        tags=tags
+                    )
 
     def _create_bucket(self, name: str) -> None:
         self._client.make_bucket(name)
