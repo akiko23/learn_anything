@@ -34,7 +34,8 @@ async def callback(msg: AbstractIncomingMessage, dp: Dispatcher, bot: Bot) -> No
     try:
         await dp.feed_update(bot=bot, update=update)
         await msg.ack()
-    except Exception as e:  # noqa
+    except Exception as e:
+        logger.exception(e)
         await asyncio.sleep(1)  # no spamming
         await msg.reject(requeue=True)
     finally:

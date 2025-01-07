@@ -39,11 +39,11 @@ def get_task_edit_menu_kb(
                 InlineKeyboardButton(text="Изменить код инициализации",
                                      callback_data=f'edit_task_prepared_code-{task.id}'),
             )
-
-        builder.row(
-            InlineKeyboardButton(text="Изменить количество попыток",
-                                 callback_data=f'edit_task_attempts_limit-{task.id}'),
-        )
+        if not (task.attempts_limit is None and task.is_published):
+            builder.row(
+                InlineKeyboardButton(text="Изменить количество попыток",
+                                     callback_data=f'edit_task_attempts_limit-{task.id}'),
+            )
 
     builder.row(InlineKeyboardButton(text="Удалить", callback_data=f'delete_task-{task.id}'))
     builder.row(InlineKeyboardButton(text="Назад", callback_data=f'get_course_tasks-{back_to}-{course_id}'))

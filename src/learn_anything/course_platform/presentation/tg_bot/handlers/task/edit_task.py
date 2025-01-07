@@ -16,7 +16,7 @@ from learn_anything.course_platform.presentation.tg_bot.states.task import EditT
 from learn_anything.course_platform.presentors.tg_bot.keyboards.task.edit_task import get_task_edit_menu_kb, \
     CANCEL_EDITING_KB, \
     get_task_after_edit_menu_kb
-from learn_anything.course_platform.presentors.tg_bot.texts.get_task import get_task_text
+from learn_anything.course_platform.presentors.tg_bot.texts.get_task import get_task_text_on_edit
 
 router = Router()
 
@@ -39,8 +39,7 @@ async def get_task_edit_menu(
     tasks = data[f'course_{course_id}_tasks']
     target_task = tasks[data[f'course_{course_id}_tasks_pointer']]
 
-    text = get_task_text(target_task)
-
+    text = get_task_text_on_edit(target_task)
     if callback_query_message.text:
         await bot.edit_message_text(
             chat_id=user_id,

@@ -42,12 +42,17 @@ async def process_code_task_submission(
     current_course = data['target_course']
 
     target_task: CodeTaskData = tasks[pointer]
-    output_data = await interactor.execute(
-        data=CreateCodeTaskSubmissionInputData(
-            task_id=target_task.id,
-            submission=submission
+
+    process_submission_msg = await bot.send_message(chat_id=user_id, text='Решение обрабатывается. Пожалуйста, подождите..')
+    try:
+        output_data = await interactor.execute(
+            data=CreateCodeTaskSubmissionInputData(
+                task_id=target_task.id,
+                submission=submission
+            )
         )
-    )
+    finally:
+        await bot.delete_message(chat_id=user_id, message_id=process_submission_msg.message_id)
 
     try:
         target_task.total_submissions += 1

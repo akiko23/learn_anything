@@ -32,6 +32,7 @@ class BaseTaskData:
     topic: str | None
     type: TaskType
     # creator: str
+    is_published: bool
     created_at: datetime
     updated_at: datetime
     actor_has_write_access: bool
@@ -114,6 +115,7 @@ class GetCourseTasksInteractor:
                 type=task.type,
                 created_at=task.created_at,
                 # creator=creator.fullname,
+                is_published=course.is_published,
                 updated_at=task.updated_at,
                 actor_has_write_access=actor_has_write_access(actor_id=actor_id, course=course, share_rules=share_rules)
             )
@@ -128,6 +130,7 @@ class GetCourseTasksInteractor:
                     type=base_task_data.type,
                     created_at=base_task_data.created_at,
                     # creator=base_task_data.creator,
+                    is_published=course.is_published,
                     updated_at=base_task_data.updated_at,
                     actor_has_write_access=base_task_data.actor_has_write_access,
                 )
@@ -163,6 +166,7 @@ class GetCourseTasksInteractor:
                     solved_by_actor=is_task_solved_by_actor(actor_submissions=user_submissions),
                     code_duration_timeout=code_task.code_duration_timeout,
                     prepared_code=code_task.prepared_code,
+                    is_published=course.is_published,
                     tests=[
                         CodeTaskTestData(
                             code=test.code
@@ -181,6 +185,8 @@ class GetCourseTasksInteractor:
                     # creator=base_task_data.creator,
                     updated_at=base_task_data.updated_at,
                     actor_has_write_access=base_task_data.actor_has_write_access,
+                    is_published=course.is_published,
+
                 )
 
             tasks_output_data.append(task_data)

@@ -5,6 +5,7 @@ import time
 import uuid
 from concurrent.futures.process import ProcessPoolExecutor
 from concurrent.futures.thread import ThreadPoolExecutor
+from functools import partial
 from pathlib import Path
 from signal import Signals
 from typing import Self, Any, Optional
@@ -50,11 +51,14 @@ class UnixPlayground(Playground):
         with ThreadPoolExecutor(max_workers=4) as th_pool:
             await loop.run_in_executor(
                 th_pool,
-                self._ssh_client.connect,
-                self._playground_host,
-                self._vm.exposed_ssh_port,
-                self._playground_user,
-                self._playground_password,
+                partial(
+                    self._ssh_client.connect,
+                    hostname=self._playground_host,
+                    port=self._vm.exposed_ssh_port,
+                    username=self._playground_user,
+                    password=self._playground_password,
+                    banner_timeout=200,
+                )
             )
         logger.info('Successfully connected to vm %s via ssh', self._id)
 

@@ -86,3 +86,11 @@ def get_task_text(task_data: TheoryTaskData | CodeTaskData) -> str:
         )
 
     return text
+
+
+def get_task_text_on_edit(task_data: TheoryTaskData | CodeTaskData) -> str:
+    text = get_task_text(task_data=task_data)
+    text += '\n\nВыберите, что хотите изменить.'
+    if not task_data.is_published and isinstance(task_data, CodeTaskData):
+        text += '\nУчтите, лимит на количество попыток можно выставлять лишь до публикации задания'
+    return text
