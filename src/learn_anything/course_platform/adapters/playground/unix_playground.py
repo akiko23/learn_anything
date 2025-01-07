@@ -46,6 +46,8 @@ class UnixPlayground(Playground):
                 VirtualMachineFacade(id_=self._id).create,
             )
 
+        await asyncio.sleep(4)
+
         self._ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         with ThreadPoolExecutor(max_workers=4) as th_pool:
@@ -80,8 +82,12 @@ class UnixPlayground(Playground):
         out, err = b'', b''
         try:
             logger.info('Sending command..')
+
+            double_quote = "\""
+            escaped_double_quote = '\\' + double_quote
+
             stdin, stdout, stderr = self._ssh_client.exec_command(
-                f'echo -e "{code}" | python3',
+                f'echo -e "{code.replace(double_quote, escaped_double_quote)}" > main.py && python3 main.py',
             )
 
             start = time.time()
