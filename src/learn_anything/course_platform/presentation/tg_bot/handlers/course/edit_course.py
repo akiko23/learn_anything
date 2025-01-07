@@ -203,11 +203,11 @@ async def edit_course_description(
 
 @router.callback_query(StateFilter(EditCourseForm), F.data == 'cancel_course_editing')
 async def cancel_course_editing(
-        msg: Message,
+        callback_query: CallbackQuery,
         state: FSMContext,
         bot: Bot,
 ) -> None:
-    user_id: int = msg.chat.id
+    user_id: int = callback_query.from_user.id
     data: dict[str, Any] = await state.get_data()
 
     await bot.delete_message(chat_id=user_id, message_id=data['msg_on_delete'])
