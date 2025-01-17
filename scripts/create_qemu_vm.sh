@@ -22,4 +22,5 @@ sudo qemu-system-x86_64 \
   -boot c \
   -enable-kvm -netdev user,id=mynet0,hostfwd=tcp::$fwd_port-:22 \
   -device e1000,netdev=mynet0 \
-  -cpu host -m 256
+  -cpu host -m 256 \
+  -nographic
