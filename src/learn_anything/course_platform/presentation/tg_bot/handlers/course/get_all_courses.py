@@ -75,8 +75,9 @@ async def get_all_courses(
         if filters != DEFAULT_FILTERS:
             msg_text = "Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
-        await bot.send_message(
+        await bot.edit_message_text(
             chat_id=user_id,
+            message_id=callback_query_message.message_id,
             text=msg_text,
             reply_markup=get_all_courses_keyboard(
                 pointer=0,
@@ -445,6 +446,7 @@ async def filters_back(
 
         await bot.edit_message_text(
             chat_id=user_id,
+            message_id=callback_query_message.message_id,
             text=msg_text,
             reply_markup=get_all_courses_keyboard(
                 pointer=0,
