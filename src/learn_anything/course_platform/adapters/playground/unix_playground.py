@@ -158,6 +158,9 @@ class VirtualMachineFacade:
         create_vm_ps = subprocess.Popen(
             [self.create_vm_script_path, str(self._port), self._disk_image_path],
             start_new_session=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
         )
 
         logger.info('Now waiting for its init..')
