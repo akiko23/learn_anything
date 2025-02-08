@@ -38,7 +38,7 @@ class UnixPlayground(Playground):
         await self._create_playground()
         return self
 
-    async def _create_playground(self):
+    async def _create_playground(self) -> None:
         loop = asyncio.get_running_loop()
         with ProcessPoolExecutor() as ps_pool:
             self._vm = await loop.run_in_executor(
@@ -109,7 +109,7 @@ class UnixPlayground(Playground):
             message.add_string("signal")
             message.add_boolean(False)
             message.add_string(Signals.SIGINT.name[3:])
-            stdin.channel.transport._send_user_message(message)
+            stdin.channel.transport._send_user_message(message)  # type: ignore[union-attr]
 
             logger.info('Sent SIGINT to stdin channel')
 
@@ -124,12 +124,17 @@ class UnixPlayground(Playground):
         except Exception as e:
             logger.error('Error during code execution: %s', str(e))
 
+        return (
+            StdOut(out.decode()),
+            StdErr(err.decode())
+        )
+
     async def __aexit__(self, exc_type: type[Exception], exc_val: Any, exc_tb: str) -> None:
         with ThreadPoolExecutor(max_workers=3) as th_pool:
             th_pool.submit(self._ssh_client.close)
 
         with ProcessPoolExecutor(max_workers=2) as ps_pool:
-            ps_pool.submit(self._vm.delete)
+            ps_pool.submit(self._vm.delete)  # type: ignore[union-attr]
 
         if exc_type:
             logger.error('An error of type %s with val %s occurred: %s', exc_type, exc_val, exc_tb)
@@ -143,7 +148,7 @@ class VirtualMachineFacade:
 
     def __init__(self, id_: Optional[str] = None, disk_image_path: Optional[str] = None, port: Optional[int] = None):
         self._id = id_ or str(uuid.uuid4())
-        self._vm_pid = None
+        self._vm_pid: int | None = None
         self._disk_image_path = disk_image_path
         self._port = port
 
@@ -171,7 +176,9 @@ class VirtualMachineFacade:
         return self
 
     @property
-    def exposed_ssh_port(self):
+    def exposed_ssh_port(self) -> int:
+        if not self._port:
+            return -1
         return self._port
 
     def _init_disk_image(self) -> str:
@@ -188,7 +195,7 @@ class VirtualMachineFacade:
 
         return image_path
 
-    def delete(self):
+    def delete(self) -> None:
         if not self._vm_pid:
             raise Exception('There is nothing to delete')
 

@@ -146,11 +146,11 @@ def downgrade() -> None:
     # ### end Alembic commands ###
 
 
-def data_upgrades():
+def data_upgrades() -> None:
     """Add bot owner"""
     op.execute(
         "insert into users (id, username, fullname, role) values (818525681, 'Mutual_exclusion', 'Dmitriy', 'BOT_OWNER'::userrole)")
 
 
-def data_downgrades():
+def data_downgrades() -> None:
     op.execute("delete from users where id=818525681")

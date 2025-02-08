@@ -81,7 +81,8 @@ async def get_actor_registered_courses(
             text=msg_text,
             reply_markup=get_actor_registered_courses_keyboard(
                 pointer=0,
-                total=total,
+                total=0,
+                hide_filters=(filters == DEFAULT_FILTERS)
             )
         )
         return
@@ -308,6 +309,7 @@ async def apply_courses_actor_registered_filters(
             reply_markup=get_actor_registered_courses_keyboard(
                 pointer=0,
                 total=0,
+                hide_filters=(filters == DEFAULT_FILTERS)
             )
         )
         return
@@ -389,6 +391,7 @@ async def actor_registered_courses_filters_back(
             reply_markup=get_actor_registered_courses_keyboard(
                 pointer=0,
                 total=0,
+                hide_filters=(filters == DEFAULT_FILTERS)
             )
         )
         return

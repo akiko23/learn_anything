@@ -49,12 +49,12 @@ async def load_media_if_not_exists(
         ))
     except TelegramBadRequest:
         logger.info(media_content)
-        msg = cast(Message, await bot.send_photo(
+        msg = await bot.send_photo(
             chat_id=user_id,
             photo=BufferedInputFile(media_content, 'stub'),
             caption=exc.text_to_send,
             reply_markup=exc.keyboard,
-        ))
+        )
 
     new_photo_id = msg.photo[-1].file_id  # type: ignore[index]
 

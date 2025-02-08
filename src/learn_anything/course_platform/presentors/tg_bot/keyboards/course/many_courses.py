@@ -5,13 +5,23 @@ from learn_anything.course_platform.application.ports.data.course_gateway import
 from learn_anything.course_platform.domain.entities.course.models import CourseID
 
 
-def get_all_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None) -> InlineKeyboardMarkup:
+def get_all_courses_keyboard(
+        pointer: int,
+        total: int,
+        current_course_id: CourseID | None = None,
+        hide_filters: bool = False,
+) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Фильтры', callback_data='all_courses-filters')],
             [InlineKeyboardButton(text='В главное меню', callback_data='all_courses-to_main_menu')],
         ]
     )
+    if not hide_filters:
+        kb.inline_keyboard.insert(
+            0,
+            [InlineKeyboardButton(text='Фильтры', callback_data='all_courses-filters')]
+        )
+
 
     if 0 < pointer < (total - 1):
         kb.inline_keyboard.insert(0, [
@@ -93,13 +103,22 @@ def cancel_text_filter_input_kb(back_to: str) -> InlineKeyboardMarkup:
     )
 
 
-def get_actor_created_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None) -> InlineKeyboardMarkup:
+def get_actor_created_courses_keyboard(
+        pointer: int,
+        total: int,
+        current_course_id: CourseID | None = None,
+        hide_filters: bool = False,
+) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Фильтры', callback_data='actor_created_courses-filters')],
             [InlineKeyboardButton(text='В главное меню', callback_data='all_courses-to_main_menu')],
         ]
     )
+    if not hide_filters:
+        kb.inline_keyboard.insert(
+            0,
+            [InlineKeyboardButton(text='Фильтры', callback_data='actor_created_courses-filters')],
+        )
 
     if 0 < pointer < (total - 1):
         kb.inline_keyboard.insert(0, [
@@ -150,13 +169,22 @@ def get_actor_created_courses_filters_kb(current_filters: GetManyCoursesFilters)
     return kb
 
 
-def get_actor_registered_courses_keyboard(pointer: int, total: int, current_course_id: CourseID | None = None) -> InlineKeyboardMarkup:
+def get_actor_registered_courses_keyboard(
+        pointer: int,
+        total: int,
+        current_course_id: CourseID | None = None,
+        hide_filters: bool = False,
+) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Фильтры', callback_data='actor_registered_courses-filters')],
             [InlineKeyboardButton(text='В главное меню', callback_data='all_courses-to_main_menu')],
         ]
     )
+    if not hide_filters:
+        kb.inline_keyboard.insert(
+            0,
+            [InlineKeyboardButton(text='Фильтры', callback_data='actor_registered_courses-filters')],
+        )
 
     if 0 < pointer < (total - 1):
         kb.inline_keyboard.insert(0, [

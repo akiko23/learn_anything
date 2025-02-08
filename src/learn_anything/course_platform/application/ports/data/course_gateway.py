@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from typing import Protocol, Sequence
+from typing import Protocol, Sequence, Any
 
 from learn_anything.course_platform.application.input_data import Pagination
 from learn_anything.course_platform.domain.entities.course.models import Course, CourseID, RegistrationForCourse, CourseShareRule
@@ -27,6 +27,12 @@ class GetManyCoursesFilters:
 
     # if you want to get only courses which actor has created
     with_creator_id: UserID | None = None
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, GetManyCoursesFilters):
+            raise NotImplementedError
+        return self.author_name == other.author_name and self.title == other.title
+
 
 
 @dataclass

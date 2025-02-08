@@ -82,6 +82,7 @@ async def get_all_courses(
             reply_markup=get_all_courses_keyboard(
                 pointer=0,
                 total=total,
+                hide_filters=(filters == DEFAULT_FILTERS)
             )
         )
         return
@@ -363,12 +364,14 @@ async def apply_filters(
         if filters != DEFAULT_FILTERS:
             msg_text = "Ни одного курса не найдено. Попробуйте сбросить фильтры"
 
-        await bot.send_message(
+        await bot.edit_message_text(
             chat_id=user_id,
+            message_id=callback_query_message.message_id,
             text=msg_text,
             reply_markup=get_all_courses_keyboard(
                 pointer=0,
                 total=0,
+                hide_filters=(filters == DEFAULT_FILTERS)
             )
         )
         return
@@ -451,6 +454,7 @@ async def filters_back(
             reply_markup=get_all_courses_keyboard(
                 pointer=0,
                 total=0,
+                hide_filters=(filters == DEFAULT_FILTERS)
             )
         )
         return

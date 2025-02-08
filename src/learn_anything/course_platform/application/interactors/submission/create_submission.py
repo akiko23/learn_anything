@@ -162,6 +162,10 @@ class CreateCodeTaskSubmissionInteractor(CreateTaskSubmissionBaseInteractor):
             user_submission_output: str,
             user_submission_stderr: str,
     ) -> tuple[str, bool]:
+        # escaping potential quotes
+        user_submission_output = user_submission_output.replace('\'', '\\\'')
+        user_submission_stderr = user_submission_stderr.replace('\'', '\\\'')
+
         # you can use 'stdout' variable to retrieve an output from the user's code
         # and 'stderr' variable to retrieve a stderr from the user's code
         test_code = (

@@ -26,7 +26,7 @@ def get_task_edit_menu_kb(
     )
     builder = InlineKeyboardBuilder(base_kb.inline_keyboard)
 
-    if task.type != TaskType.THEORY:
+    if not isinstance(task, TheoryTaskData):
         if task.type == TaskType.CODE:
             builder.row(
                 InlineKeyboardButton(text="Тесты", callback_data=f'get_code_task_tests-{task.id}'),
