@@ -23,6 +23,8 @@ from learn_anything.course_platform.presentation.tg_bot.middlewares.auth import 
 from learn_anything.course_platform.presentation.web.config import load_web_config
 from learn_anything.course_platform.presentation.web.fastapi_routers.tech import router
 
+RETRIES_NUMBER = 5
+
 
 async def callback(msg: AbstractIncomingMessage, dp: Dispatcher, bot: Bot) -> None:
     if msg.correlation_id:
@@ -31,15 +33,19 @@ async def callback(msg: AbstractIncomingMessage, dp: Dispatcher, bot: Bot) -> No
     update_dct = msgpack.unpackb(msg.body)
     logger.info('Processing update..')
     update = Update.model_validate(update_dct)
-    try:
-        await dp.feed_update(bot=bot, update=update)
-        await msg.ack()
-    except Exception as e:
-        logger.exception(e)
-        await asyncio.sleep(1)  # no spamming
-        await msg.reject(requeue=True)
-    finally:
-        TOTAL_MESSAGES_CONSUMED.inc()
+
+    for _ in range(RETRIES_NUMBER):
+        try:
+            await dp.feed_update(bot=bot, update=update)
+            await msg.ack()
+            return
+        except Exception as e:
+            logger.exception(e)
+            await asyncio.sleep(1.5)  # no spamming
+        finally:
+            TOTAL_MESSAGES_CONSUMED.inc()
+
+    await msg.reject()
 
 
 async def start_consumer(container: AsyncContainer) -> None:
