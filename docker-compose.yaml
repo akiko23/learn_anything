@@ -1,7 +1,7 @@
 services:
   s3:
     image: minio/minio:latest
-    container_name: learn_anything-minio
+    container_name: "learn_anything-minio"
     restart: on-failure
     env_file:
       - configs/minio.env
@@ -19,7 +19,7 @@ services:
 
   db:
     image: postgres:16.0-alpine3.18
-    container_name: learn_anything-db
+    container_name: "learn_anything-db"
     env_file:
       - configs/db.env
     ports:
@@ -30,7 +30,7 @@ services:
 
   redis:
     image: redis:7.2.4-alpine
-    container_name: "redis"
+    container_name: "learn_anything-redis"
     ports:
       - "127.0.0.1:6379:6379"
     restart: "unless-stopped"
@@ -41,39 +41,9 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.13.7-management
+    container_name: "learn_anything-rabbitmq"
     ports:
       - "127.0.0.1:5672:5672"
       - "127.0.0.1:15672:15672"
     volumes:
       - "/opt/learn_anything/rmq/data"
-
-  db_migration:
-    image: learn_anything
-    container_name: db_migration
-    restart: "on-failure"
-    depends_on:
-      - db
-    environment:
-      COURSE_PLATFORM_CONFIG_PATH: "/opt/learn_anything/configs/course_platform.docker.toml"
-    volumes:
-      - ./configs/:/opt/learn_anything/configs
-    command: sh -c "learn-anything alembic upgrade head"
-
-  learn_anything:
-    image: learn_anything
-    container_name: learn_anything_service
-    environment:
-        COURSE_PLATFORM_CONFIG_PATH: "/opt/learn_anything/configs/course_platform.docker.toml"
-        API_GATEWAY_CONFIG_PATH: "/opt/learn_anything/configs/api_gateway.docker.toml"
-    command: learn-anything start bot
-    volumes:
-      - ./configs/:/opt/learn_anything/configs
-    ports:
-      - "8001:8001"
-      - "8000:8000"
-    depends_on:
-      - s3
-      - db
-      - db_migration
-      - redis
-      - rabbitmq
