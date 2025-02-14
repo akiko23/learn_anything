@@ -87,7 +87,7 @@ async def handle_user_error(
     user_id: int = msg.chat.id
     err: ApplicationError = cast(ApplicationError, event.exception)
 
-    logger.info('User with id=%d got error: \'%s\'', user_id, err.message)
+    logger.debug('User with id=%d got error: \'%s\'', user_id, err.message)
     await msg.answer(err.message)
 
 
@@ -102,7 +102,7 @@ async def exception_handler(
     state_data: dict[str, Any] = await state.get_data()
 
     logger.critical("Critical error caused by %s", event.exception, exc_info=True)
-    logger.critical(
+    logger.debug(
         '{ "user": %s, message: "%s", "state": { "context" : %s, data: %s }',
         user_id,
         user_message,

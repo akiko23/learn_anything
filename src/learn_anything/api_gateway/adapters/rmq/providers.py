@@ -7,6 +7,7 @@ from aio_pika.abc import AbstractRobustConnection, AbstractChannel
 from aio_pika.pool import Pool
 
 from learn_anything.api_gateway.adapters.rmq.config import RMQConfig
+from learn_anything.api_gateway.adapters.logger import logger
 
 
 async def get_channel(connection_pool: Pool[Connection]) -> AsyncGenerator[AbstractChannel, None]:
@@ -19,4 +20,8 @@ async def get_connection_pool(rmq_cfg: RMQConfig) -> Pool[Connection]:
 
 
 async def _get_connection(rmq_cfg: RMQConfig) -> AbstractRobustConnection:
-    return await aio_pika.connect_robust(rmq_cfg.uri)
+    try:
+        return await aio_pika.connect_robust(rmq_cfg.uri)
+    except Exception as e:
+        logger.exception(e)
+        exit(1)

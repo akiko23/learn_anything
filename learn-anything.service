@@ -1,0 +1,15 @@
+[Unit]
+Description=Bot for learning Python programming language
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/root/learn_anything/
+ExecStart=poetry run learn-anything start bot
+KillMode=process
+Restart=always
+RestartSec=20
+
+[Install]
+WantedBy=multi-user.target

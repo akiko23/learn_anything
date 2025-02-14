@@ -6,6 +6,7 @@ from aio_pika import Connection
 from aio_pika.abc import AbstractRobustConnection, AbstractChannel
 from aio_pika.pool import Pool
 
+from learn_anything.course_platform.adapters.logger import logger
 from learn_anything.course_platform.adapters.rmq.config import RMQConfig
 
 
@@ -19,4 +20,8 @@ async def get_connection_pool(rmq_cfg: RMQConfig) -> Pool[Connection]:
 
 
 async def _get_connection(rmq_cfg: RMQConfig) -> AbstractRobustConnection:
-    return await aio_pika.connect_robust(rmq_cfg.uri)
+    try:
+        return await aio_pika.connect_robust(rmq_cfg.uri)
+    except Exception as e:
+        logger.exception(e)
+        exit(1)
