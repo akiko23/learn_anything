@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "learn_anything", from="src"}]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 aiogram = '^3.13.0'
 aio-pika = '^9.5.3'
 alembic = '^1.13.2'

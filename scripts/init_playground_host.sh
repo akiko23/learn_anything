@@ -3,6 +3,10 @@
 VM_IMAGES_BASE_PATH=/etc/learn_anything/qemu_disk_images
 VM_IMAGES_ARCHIVE_LINK=https://drive.google.com/uc?id=1h8X-hCrKKBgAKEvuPgjLcOW1-gpwo17R
 
+# installing emulator requirements
+apt install qemu-utils qemu-system-x86
+
+# installing base disk image
 poetry run gdown $VM_IMAGES_ARCHIVE_LINK
 
 mkdir -p $VM_IMAGES_BASE_PATH
