@@ -16,7 +16,6 @@ port = 5432
 
 [bot]
 token = "your bot token here"
-#bot_webhook_url = "your webhook url here"
 
 
 [s3]

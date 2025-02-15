@@ -16,20 +16,22 @@ class LoggingMiddleware(BaseMiddleware):
             event: Message | CallbackQuery,  # type: ignore[override]
             data: dict[str, Any],
     ) -> Any:
-        if isinstance(event, CallbackQuery):
-            user_id = event.from_user.id
-            user_message = event.data
-        else:
-            user_id = event.chat.id
-            user_message = event.text
-
+        user_id: int = event.from_user.id if isinstance(event, CallbackQuery) else event.chat.id
+        user_input = f'callback_data: {event.data}' if isinstance(event, CallbackQuery) else f'msg_text: {event.text}'
         state: FSMContext = data['state']
 
         logger.info(
-            '{ "user": %s, message: "%s", "state": { "context" : %s }',
+            'Request from user with id=%s; input={ %s }',
             user_id,
-            user_message,
+            user_input,
             await state.get_state(),
+        )
+        logger.debug(
+            '{ "user": %s, input: { %s }, "state": { "context" : %s, data: %s }',
+            user_id,
+            user_input,
+            await state.get_state(),
+            await state.get_data()
         )
 
         await handler(event, data)
