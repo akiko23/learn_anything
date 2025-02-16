@@ -5,8 +5,7 @@ from aiogram import BaseMiddleware
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+logger = logging.getLogger('api_gateway_logger')
 
 
 class LoggingMiddleware(BaseMiddleware):
@@ -21,7 +20,7 @@ class LoggingMiddleware(BaseMiddleware):
         state: FSMContext = data['state']
 
         logger.info(
-            'Request from user with id=%s; input={ %s }',
+            'Request from user with id=%s; input={ %s }; state=%s',
             user_id,
             user_input,
             await state.get_state(),

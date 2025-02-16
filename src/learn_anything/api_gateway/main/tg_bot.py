@@ -14,7 +14,6 @@ from starlette_context.plugins import CorrelationIdPlugin  # type: ignore[attr-d
 from learn_anything.api_gateway.adapters.bootstrap.tg_bot_di import setup_di, DEFAULT_API_GATEWAY_CONFIG_PATH
 from learn_anything.api_gateway.adapters.logger import LOGGING_CONFIG, logger
 from learn_anything.api_gateway.presentation.tg_bot.config import BotConfig
-from learn_anything.api_gateway.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
 from learn_anything.api_gateway.presentation.tg_bot.middlewares.count_rps import RequestCountMiddleware
 from learn_anything.api_gateway.presentation.tg_bot.middlewares.send_to_queue import SendToQueueMiddleware
 from learn_anything.api_gateway.presentation.web.config import load_web_config
@@ -33,8 +32,6 @@ async def lifespan(
     bot = await container.get(Bot)
 
     dp: Dispatcher = await container.get(Dispatcher)
-    dp.message.outer_middleware.register(LoggingMiddleware())
-    dp.callback_query.outer_middleware.register(LoggingMiddleware())
 
     polling_task: asyncio.Task[None] | None = None
     if bot_cfg.bot_webhook_url:

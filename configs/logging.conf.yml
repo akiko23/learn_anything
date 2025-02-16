@@ -19,7 +19,7 @@ root:
   handlers: [console_handler_backend]
 loggers:
   'api_gateway_logger':
-    level: INFO
+    level: DEBUG
     propagate: no
     handlers: [console_handler_backend]
   'course_platform_logger':

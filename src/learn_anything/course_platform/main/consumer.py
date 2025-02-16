@@ -19,6 +19,7 @@ from learn_anything.course_platform.adapters.metrics import TOTAL_MESSAGES_CONSU
 from learn_anything.course_platform.adapters.persistence.tables.map import map_tables
 from learn_anything.course_platform.presentation.bg_tasks import background_tasks
 from learn_anything.course_platform.presentation.tg_bot.handlers import register_handlers
+from learn_anything.course_platform.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
 from learn_anything.course_platform.presentation.tg_bot.middlewares.auth import AuthMiddleware
 from learn_anything.course_platform.presentation.web.config import load_web_config
 from learn_anything.course_platform.presentation.web.fastapi_routers.tech import router
@@ -54,6 +55,9 @@ async def start_consumer(container: AsyncContainer) -> None:
     dp = await container.get(Dispatcher)
     dp.message.middleware.register(AuthMiddleware(container))
     dp.callback_query.outer_middleware.register(AuthMiddleware(container))
+
+    dp.message.outer_middleware(LoggingMiddleware())
+    dp.callback_query.outer_middleware(LoggingMiddleware())
 
     setup_dishka(container=container, router=dp, auto_inject=True)
 
