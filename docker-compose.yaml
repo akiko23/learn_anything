@@ -63,3 +63,36 @@ services:
       - "127.0.0.1:15672:15672"
     volumes:
       - "/opt/learn_anything/rmq/data"
+
+  api_gateway:
+    build: .
+    container_name: "learn_anything-api_gateway"
+    command: ["learn-anything", "start", "api_gateway"]
+    environment:
+      API_GATEWAY_CONFIG_PATH: configs/api_gateway.docker.example.toml
+    volumes:
+      - ./configs:/code/configs:ro
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  consumer:
+    build: .
+    container_name: "learn_anything-consumer"
+    command: ["learn-anything", "start", "consumer"]
+    environment:
+      COURSE_PLATFORM_CONFIG_PATH: configs/course_platform.docker.example.toml
+    volumes:
+      - ./configs:/code/configs:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      s3:
+        condition: service_healthy
+    restart: unless-stopped

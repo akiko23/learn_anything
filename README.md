@@ -99,7 +99,7 @@ cd learn_anything
 3. Запустите скрипт scripts/init_playground_host.sh, который создаст пространство для хранения образов виртуальных машин, в которых будет запускаться код, отправляемый пользователями
 
    ```bash
-   sudo chmod +x scripts/init_playground_space.sh && ./scripts/init_playground_host.sh
+   sudo chmod +x scripts/init_playground_host.sh && ./scripts/init_playground_host.sh
    ```
 
 4. Запустите проект (от root пользователя)

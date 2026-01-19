@@ -4,7 +4,7 @@ WORKDIR code
 
 COPY . .
 
-RUN chmod -R 777 scripts && sh -c "$(cat scripts/init_playground_space.sh)"
+RUN chmod -R 777 scripts && sh -c "$(cat scripts/init_playground_host.sh)"
 
 RUN pip3 install --upgrade  poetry==1.8.3
 
