@@ -51,7 +51,7 @@ services:
       - "127.0.0.1:6379:6379"
     restart: "unless-stopped"
     volumes:
-      - "/opt/learn_anything/redis/config:/usr/local/etc/redis"
+      - "./configs:/usr/local/etc/redis"
       - "/opt/learn_anything/redis/data:/data"
     command: "redis-server /usr/local/etc/redis/redis.conf"
 
