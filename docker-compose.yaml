@@ -27,6 +27,22 @@ services:
     volumes:
       - "/opt/learn_anything/pgdata:/var/lib/postgresql/data"
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build: .
+    container_name: "learn_anything-migrate"
+    command: ["learn-anything", "alembic", "upgrade", "head"]
+    environment:
+      COURSE_PLATFORM_CONFIG_PATH: configs/course_platform.docker.example.toml
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
 
   redis:
     image: redis:7.2.4-alpine

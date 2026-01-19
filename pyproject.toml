@@ -36,6 +36,7 @@ ruff = '^0.6.5'
 isort = '^5.13.2'
 pytest = "^8.3.4"
 pytest-asyncio = "^0.25.0"
+pytest-cov = "^6.0.0"
 
 
 [build-system]
@@ -83,3 +84,33 @@ module = [
     "msgpack.*"
 ]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: integration tests (Docker, Postgres, Redis, RabbitMQ required)",
+]
+
+[tool.coverage.run]
+source = ["src/learn_anything"]
+# Исключаем: handlers, presentors (приоритет — домен и application), api_gateway (отдельный сервис)
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/alembic/versions/*",
+    "**/presentation/tg_bot/handlers/**",
+    "**/presentors/**",
+    "**/api_gateway/**",
+]
+branch = true
+
+[tool.coverage.report]
+fail_under = 30
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]

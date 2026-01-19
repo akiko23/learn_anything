@@ -101,6 +101,7 @@ async def _prepare_db(db_session: AsyncSession):
     await db_session.commit()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.usefixtures('_prepare_db', '_init_consumer')
 async def test_get_all_courses(rmq_channel: AbstractChannel):
