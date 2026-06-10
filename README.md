@@ -104,13 +104,13 @@ cd learn_anything
 
 4. Запустите проект (от root пользователя)
    ```
-   learn-anything start bot
+   poetry run learn-anything start bot
    ```
    Либо
    ```
    # В одной консоли
-   learn-anything start api_gateway
+   poetry run learn-anything start api_gateway
    
    # В другой консоли
-   learn-anything start consumer
+   poetry run learn-anything start consumer
    ```

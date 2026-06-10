@@ -41,14 +41,22 @@ class CreateTheoryTaskOutputData:
 
 
 class CreateTaskInteractor:
-    def __init__(self, id_provider: IdentityProvider, task_gateway: TaskGateway, course_gateway: CourseGateway,
-                 commiter: Commiter) -> None:
+    def __init__(
+            self,
+             id_provider: IdentityProvider,
+             task_gateway: TaskGateway,
+             course_gateway: CourseGateway,
+             commiter: Commiter
+    ) -> None:
         self._id_provider = id_provider
         self._task_gateway = task_gateway
         self._course_gateway = course_gateway
         self._commiter = commiter
 
-    async def execute(self, data: CreateTheoryTaskInputData) -> CreateTheoryTaskOutputData:
+    async def execute(
+            self,
+            data: CreateTheoryTaskInputData
+    ) -> CreateTheoryTaskOutputData:
         actor_id = await self._id_provider.get_current_user_id()
 
         course = await self._course_gateway.with_id(data.course_id)

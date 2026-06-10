@@ -8,7 +8,10 @@ from aiogram.types import CallbackQuery, Message
 from learn_anything.course_platform.application.interactors.course.get_course import GetFullCourseOutputData
 from learn_anything.course_platform.domain.entities.task.enums import TaskType
 from learn_anything.course_platform.presentors.tg_bot.texts.get_task import get_task_text
-from learn_anything.course_platform.presentors.tg_bot.keyboards.task.do_course_task import get_do_task_kb
+from learn_anything.course_platform.presentors.tg_bot.keyboards.task.do_course_task import (
+    get_do_task_kb,
+    get_do_code_task_kb,
+)
 from learn_anything.course_platform.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
 from learn_anything.course_platform.presentation.tg_bot.states.submission import SubmissionForm
 
@@ -40,7 +43,11 @@ async def do_course_task(
 
     if target_task.type == TaskType.CODE:
         await state.set_state(state=SubmissionForm.get_for_code)
-        await bot.send_message(chat_id=user_id, text='Отправьте решение', reply_markup=get_do_task_kb())
+        await bot.send_message(
+            chat_id=user_id,
+            text='Выберите способ отправки решения:',
+            reply_markup=get_do_code_task_kb(task_id=target_task.id),
+        )
 
 @router.callback_query(StateFilter(SubmissionForm), F.data == 'stop_doing_task')
 async def cancel_doing_task(

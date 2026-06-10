@@ -1,6 +1,7 @@
 import json
 import os
 from functools import partial
+from typing import AsyncGenerator
 
 from aio_pika import Connection
 from aio_pika.abc import AbstractChannel
@@ -30,7 +31,7 @@ from learn_anything.course_platform.adapters.persistence.mappers.task import Tas
 from learn_anything.course_platform.adapters.persistence.mappers.user import UserMapper, AuthLinkMapper
 from learn_anything.course_platform.adapters.persistence.providers import get_async_sessionmaker, get_engine, \
     get_async_session
-from learn_anything.course_platform.adapters.playground.unix_playground import UnixPlaygroundFactory
+from learn_anything.course_platform.adapters.playground.unix_playground import UnixPlaygroundFactory, VirtualMachinePool
 from learn_anything.course_platform.adapters.redis.config import load_redis_config, RedisConfig
 from learn_anything.course_platform.adapters.rmq.config import load_rmq_config, RMQConfig
 from learn_anything.course_platform.adapters.rmq.providers import get_channel, get_connection_pool
@@ -106,8 +107,15 @@ def infrastructure_provider() -> Provider:
 
     provider.provide(TgB64TokenProcessor, scope=Scope.REQUEST, provides=TokenProcessor)
     provider.provide(S3FileManager, scope=Scope.REQUEST, provides=FileManager)
-    provider.provide(UnixPlaygroundFactory, scope=Scope.REQUEST, provides=PlaygroundFactory)
     provider.provide(TelegramAuthManager, scope=Scope.REQUEST, provides=AuthManager)
+    async def get_vm_pool() -> AsyncGenerator[VirtualMachinePool, None]:
+        pool = VirtualMachinePool(size=3)
+        await pool.initialize()
+        yield pool
+        await pool.close()
+
+    provider.provide(get_vm_pool, scope=Scope.APP)
+    provider.provide(UnixPlaygroundFactory, scope=Scope.REQUEST, provides=PlaygroundFactory)
 
     return provider
 

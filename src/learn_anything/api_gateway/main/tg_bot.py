@@ -11,7 +11,10 @@ from fastapi import FastAPI
 from starlette_context.middleware import RawContextMiddleware
 from starlette_context.plugins import CorrelationIdPlugin  # type: ignore[attr-defined, unused-ignore]
 
-from learn_anything.api_gateway.adapters.bootstrap.tg_bot_di import setup_di, DEFAULT_API_GATEWAY_CONFIG_PATH
+from learn_anything.api_gateway.adapters.bootstrap.tg_bot_di import (
+    setup_di,
+    DEFAULT_API_GATEWAY_CONFIG_PATH,
+)
 from learn_anything.api_gateway.adapters.logger import LOGGING_CONFIG, logger
 from learn_anything.api_gateway.presentation.tg_bot.config import BotConfig
 from learn_anything.api_gateway.presentation.tg_bot.middlewares.count_rps import RequestCountMiddleware
@@ -19,6 +22,7 @@ from learn_anything.api_gateway.presentation.tg_bot.middlewares.send_to_queue im
 from learn_anything.api_gateway.presentation.web.config import load_web_config
 from learn_anything.api_gateway.presentation.web.fastapi_routers.tech import router as tech_router
 from learn_anything.api_gateway.presentation.web.fastapi_routers.tg import router as tg_router
+from learn_anything.api_gateway.presentation.web.fastapi_routers.ide import router as ide_router
 
 
 @asynccontextmanager
@@ -57,22 +61,23 @@ async def lifespan(
 
 
 def create_app() -> FastAPI:
-    web_cfg = load_web_config(
-        config_path=os.getenv('API_GATEWAY_CONFIG_PATH') or DEFAULT_API_GATEWAY_CONFIG_PATH
-    )
+    cfg_path = os.getenv('API_GATEWAY_CONFIG_PATH') or DEFAULT_API_GATEWAY_CONFIG_PATH
+    web_cfg = load_web_config(config_path=cfg_path)
+
     app = FastAPI(
         title=web_cfg.title,
         description=web_cfg.description,
         docs_url='/docs',
-        lifespan=lifespan
+        lifespan=lifespan,
     )
 
     app.include_router(tg_router, prefix='/tg', tags=['tg'])
     app.include_router(tech_router, prefix='/tech', tags=['tech'])
+    app.include_router(ide_router, prefix='/ide', tags=['ide'])
 
     app.middleware("http")(RequestCountMiddleware())
 
-    container = setup_di()
+    container = setup_di(cfg_path)
     fastapi_setup_dishka(container=container, app=app)
 
     app.add_middleware(RawContextMiddleware, plugins=[CorrelationIdPlugin()])

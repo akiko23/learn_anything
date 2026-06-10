@@ -18,7 +18,7 @@ def get_main_menu_keyboard(user_role: UserRole) -> InlineKeyboardMarkup:
         ]
     ])
 
-    if user_role in (UserRole.MODERATOR, UserRole.BOT_OWNER):
+    if user_role == UserRole.BOT_OWNER:
         kb.inline_keyboard.append([
             InlineKeyboardButton(text='Создать ссылку для входа', callback_data='main_menu-create_auth_link'),
             InlineKeyboardButton(text='Инвалидировать ссылку', callback_data='main_menu-invalidate_auth_link')

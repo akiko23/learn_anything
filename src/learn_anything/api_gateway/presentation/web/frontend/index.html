@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Python IDE — Learn Anything</title>
+  <meta name="description" content="Интерактивный Python редактор для выполнения заданий на Learn Anything" />
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent-glow: rgba(88, 166, 255, 0.18);
+      --accent-hover: #79b8ff;
+      --green: #3fb950;
+      --green-glow: rgba(63, 185, 80, 0.2);
+      --red: #f85149;
+      --red-glow: rgba(248, 81, 73, 0.2);
+      --yellow: #d29922;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --text-dim: #6e7681;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --transition: 0.18s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* ── Layout ───────────────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* ── Header ───────────────────────────────────────── */
+    #header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      min-height: 52px;
+    }
+
+    #header-logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    #task-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #task-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    /* ── Main area ────────────────────────────────────── */
+    #main {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ── Task description panel ───────────────────────── */
+    #task-panel {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      flex-shrink: 0;
+      max-height: 120px;
+      overflow-y: auto;
+      transition: max-height var(--transition);
+    }
+
+    #task-panel.collapsed { max-height: 0; padding: 0 16px; }
+
+    #task-body {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    #task-panel-toggle {
+      cursor: pointer;
+      font-size: 11px;
+      color: var(--accent);
+      user-select: none;
+      margin-left: auto;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background var(--transition);
+    }
+    #task-panel-toggle:hover { background: var(--accent-glow); }
+
+    /* ── Editor area ──────────────────────────────────── */
+    #editor-container {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #editor-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .lang-badge {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--accent);
+      background: var(--accent-glow);
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    #clear-btn {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 2px 8px;
+      border-radius: 4px;
+      transition: all var(--transition);
+      border: none;
+      background: none;
+      font-family: var(--font-ui);
+    }
+    #clear-btn:hover { color: var(--red); background: var(--red-glow); }
+
+    #editor-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      font-size: 13px;
+    }
+
+    /* CodeMirror overrides */
+    .cm-editor {
+      height: 100%;
+      background: var(--bg) !important;
+    }
+    .cm-editor.cm-focused { outline: none; }
+    .cm-scroller {
+      font-family: var(--font-mono) !important;
+      font-size: 13px !important;
+      line-height: 1.65 !important;
+    }
+    .cm-gutters {
+      background: var(--bg) !important;
+      border-right: 1px solid var(--border) !important;
+      color: var(--text-dim) !important;
+    }
+    .cm-activeLineGutter, .cm-activeLine {
+      background: rgba(255,255,255,0.03) !important;
+    }
+    .cm-cursor { border-left-color: var(--accent) !important; }
+    .cm-selectionBackground { background: rgba(88,166,255,0.2) !important; }
+    .cm-tooltip { background: var(--surface2) !important; border: 1px solid var(--border) !important; border-radius: var(--radius) !important; }
+    .cm-tooltip-autocomplete ul { padding: 4px 0 !important; }
+    .cm-tooltip-autocomplete li { padding: 3px 10px !important; }
+    .cm-tooltip-autocomplete li[aria-selected] { background: var(--accent-glow) !important; color: var(--accent) !important; }
+
+    /* ── Output panel ─────────────────────────────────── */
+    #output-panel {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      max-height: 200px;
+      transition: max-height 0.25s ease;
+    }
+
+    #output-panel.hidden { max-height: 0; overflow: hidden; }
+
+    #output-header {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    #output-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+
+    #output-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .status-ok { color: var(--green); background: var(--green-glow); }
+    .status-error, .status-failed { color: var(--red); background: var(--red-glow); }
+    .status-pending { color: var(--yellow); background: rgba(210,153,34,0.15); }
+
+    #close-output {
+      margin-left: auto;
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 14px;
+      line-height: 1;
+      border: none;
+      background: none;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color var(--transition);
+    }
+    #close-output:hover { color: var(--text); }
+
+    #output-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    #output-content.ok { color: var(--green); }
+    #output-content.error, #output-content.failed { color: var(--red); }
+
+    /* ── Action bar ───────────────────────────────────── */
+    #action-bar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    #run-btn {
+      flex: 1;
+      padding: 11px 0;
+      background: linear-gradient(135deg, #238636, #2ea043);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: all var(--transition);
+      box-shadow: 0 2px 8px rgba(46,160,67,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: var(--font-ui);
+    }
+    #run-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #2ea043, #3fb950);
+      box-shadow: 0 4px 16px rgba(46,160,67,0.45);
+      transform: translateY(-1px);
+    }
+    #run-btn:active:not(:disabled) { transform: translateY(0); }
+    #run-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+
+    /* ── Loading overlay ──────────────────────────────── */
+    #loading {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 999;
+      transition: opacity 0.3s;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    #loading-logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      box-shadow: 0 8px 32px rgba(88,166,255,0.3);
+    }
+    #loading-text { color: var(--text-muted); font-size: 13px; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    #loading-text { animation: pulse 1.5s ease infinite; }
+
+    /* ── Error state ──────────────────────────────────── */
+    #error-overlay {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 998;
+      display: none;
+    }
+    #error-overlay.visible { display: flex; }
+    #error-icon { font-size: 40px; }
+    #error-msg { color: var(--red); font-size: 13px; text-align: center; max-width: 280px; }
+
+    /* ── Scrollbar ────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+    /* ── Mobile tweaks ────────────────────────────────── */
+    @media (max-width: 420px) {
+      #task-panel { max-height: 90px; }
+      #output-panel { max-height: 160px; }
+    }
+  </style>
+
+  <!-- Google Fonts (JetBrains Mono + Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+  <!-- Loading overlay -->
+  <div id="loading">
+    <div id="loading-logo">🐍</div>
+    <div id="loading-text">Загрузка задания…</div>
+  </div>
+
+  <!-- Error overlay -->
+  <div id="error-overlay">
+    <div id="error-icon">⚠️</div>
+    <div id="error-msg">Не удалось загрузить задание</div>
+  </div>
+
+  <div id="app" style="display:none">
+    <!-- Header -->
+    <div id="header">
+      <div id="header-logo">🐍</div>
+      <div id="task-title">Загрузка…</div>
+      <div id="task-meta"></div>
+      <span id="task-panel-toggle">▲ Задание</span>
+    </div>
+
+    <!-- Main -->
+    <div id="main">
+      <!-- Task description -->
+      <div id="task-panel">
+        <div id="task-body"></div>
+      </div>
+
+      <!-- Editor -->
+      <div id="editor-container">
+        <div id="editor-toolbar">
+          <span class="lang-badge">Python 3</span>
+          <button id="clear-btn" title="Очистить редактор">✕ Очистить</button>
+        </div>
+        <div id="editor-wrap"></div>
+      </div>
+
+      <!-- Output -->
+      <div id="output-panel" class="hidden">
+        <div id="output-header">
+          <span id="output-label">Вывод</span>
+          <span id="output-status"></span>
+          <button id="close-output" title="Закрыть">✕</button>
+        </div>
+        <div id="output-content"></div>
+      </div>
+    </div>
+
+    <!-- Action bar -->
+    <div id="action-bar">
+      <button id="run-btn" id="run-btn">
+        <span id="run-btn-icon">▶</span>
+        <span id="run-btn-text">Отправить решение</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CodeMirror 6 via ESM (no build step needed) -->
+  <script type="module">
+    // ─────────────────────── imports ───────────────────────────────────────────
+    import { EditorState } from 'https://esm.sh/@codemirror/state@6';
+    import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection } from 'https://esm.sh/@codemirror/view@6';
+    import { defaultKeymap, history, historyKeymap } from 'https://esm.sh/@codemirror/commands@6';
+    import { python } from 'https://esm.sh/@codemirror/lang-python@6';
+    import { autocompletion, completionKeymap, closeBracketsKeymap, closeBrackets } from 'https://esm.sh/@codemirror/autocomplete@6';
+    import { oneDark } from 'https://esm.sh/@codemirror/theme-one-dark@6';
+    import { foldGutter, indentOnInput, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from 'https://esm.sh/@codemirror/language@6';
+    import { lintKeymap } from 'https://esm.sh/@codemirror/lint@6';
+    import { indentWithTab } from 'https://esm.sh/@codemirror/commands@6';
+
+    // ─────────────────────── Telegram WebApp init ──────────────────────────────
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    // ─────────────────────── URL params ────────────────────────────────────────
+    const params = new URLSearchParams(location.search);
+    const taskId = parseInt(params.get('task_id') || '0', 10);
+    const initData = tg?.initData || params.get('tg_init_data') || '';
+
+    // ─────────────────────── DOM refs ──────────────────────────────────────────
+    const loadingEl    = document.getElementById('loading');
+    const errorEl      = document.getElementById('error-overlay');
+    const errorMsgEl   = document.getElementById('error-msg');
+    const appEl        = document.getElementById('app');
+    const titleEl      = document.getElementById('task-title');
+    const metaEl       = document.getElementById('task-meta');
+    const bodyEl       = document.getElementById('task-body');
+    const editorWrap   = document.getElementById('editor-wrap');
+    const runBtn       = document.getElementById('run-btn');
+    const runIcon      = document.getElementById('run-btn-icon');
+    const runText      = document.getElementById('run-btn-text');
+    const outputPanel  = document.getElementById('output-panel');
+    const outputStatus = document.getElementById('output-status');
+    const outputContent= document.getElementById('output-content');
+    const clearBtn     = document.getElementById('clear-btn');
+    const toggleBtn    = document.getElementById('task-panel-toggle');
+    const taskPanel    = document.getElementById('task-panel');
+    const closeOutput  = document.getElementById('close-output');
+
+    // ─────────────────────── State ─────────────────────────────────────────────
+    let taskData = null;
+    let isSubmitting = false;
+    let pollingTimer = null;
+
+    // ─────────────────────── CodeMirror setup ──────────────────────────────────
+    const editorState = EditorState.create({
+      doc: '# Введите ваш код здесь\n\n',
+      extensions: [
+        lineNumbers(),
+        highlightActiveLine(),
+        highlightActiveLineGutter(),
+        history(),
+        drawSelection(),
+        indentOnInput(),
+        bracketMatching(),
+        closeBrackets(),
+        autocompletion(),
+        foldGutter(),
+        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        python(),
+        oneDark,
+        keymap.of([
+          ...defaultKeymap,
+          ...historyKeymap,
+          ...completionKeymap,
+          ...closeBracketsKeymap,
+          ...lintKeymap,
+          indentWithTab,
+        ]),
+        EditorView.lineWrapping,
+        EditorView.theme({
+          '&': { height: '100%', fontSize: '13px' },
+          '.cm-scroller': { overflow: 'auto', fontFamily: "'JetBrains Mono', monospace" },
+        }),
+      ],
+    });
+
+    const view = new EditorView({
+      state: editorState,
+      parent: editorWrap,
+    });
+
+    // Make editor fill container
+    editorWrap.style.height = '100%';
+
+    // ─────────────────────── Load task ─────────────────────────────────────────
+    async function loadTask() {
+      if (!taskId) {
+        showError('Не указан task_id в URL. Откройте IDE через Telegram бота.');
+        return;
+      }
+      try {
+        const resp = await fetch(`/ide/task/${taskId}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        taskData = await resp.json();
+
+        titleEl.textContent = taskData.title;
+        metaEl.textContent = `${taskData.tests_count} тест${pluralize(taskData.tests_count, '', 'а', 'ов')} · ${taskData.code_duration_timeout}с`;
+        bodyEl.textContent = taskData.body;
+
+        // Pre-fill prepared_code if exists
+        if (taskData.prepared_code) {
+          const initCode = `${taskData.prepared_code}\n# Ваш код ниже:\n\n`;
+          view.dispatch({
+            changes: { from: 0, to: view.state.doc.length, insert: initCode }
+          });
+        }
+
+        hideLoading();
+      } catch (e) {
+        showError(`Ошибка загрузки задания: ${e.message}`);
+      }
+    }
+
+    function pluralize(n, one, few, many) {
+      const abs = Math.abs(n) % 100;
+      const rem = abs % 10;
+      if (abs > 10 && abs < 20) return many;
+      if (rem === 1) return one;
+      if (rem >= 2 && rem <= 4) return few;
+      return many;
+    }
+
+    // ─────────────────────── Submit & poll ─────────────────────────────────────
+    async function handleSubmit() {
+      if (isSubmitting || !taskData) return;
+
+      const code = view.state.doc.toString().trim();
+      if (!code || code === '# Введите ваш код здесь') {
+        shakeBtn();
+        return;
+      }
+
+      setSubmitting(true);
+      hideOutput();
+
+      try {
+        const resp = await fetch('/ide/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task_id: taskData.id,
+            code,
+            tg_init_data: initData || null,
+          }),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+          throw new Error(err.detail || resp.statusText);
+        }
+
+        const { submission_id } = await resp.json();
+        pollResult(submission_id);
+      } catch (e) {
+        setSubmitting(false);
+        showOutput('error', `Ошибка отправки:\n${e.message}`);
+      }
+    }
+
+    function pollResult(submissionId, attempt = 0) {
+      if (attempt > 60) {  // max 2 minutes
+        setSubmitting(false);
+        showOutput('error', 'Превышено время ожидания результата');
+        return;
+      }
+
+      pollingTimer = setTimeout(async () => {
+        try {
+          const resp = await fetch(`/ide/result/${submissionId}`);
+          const data = await resp.json();
+
+          if (resp.status === 202 || data.status === 'pending') {
+            pollResult(submissionId, attempt + 1);
+            return;
+          }
+
+          setSubmitting(false);
+          renderResult(data);
+        } catch (e) {
+          setSubmitting(false);
+          showOutput('error', `Ошибка получения результата: ${e.message}`);
+        }
+      }, 2000);
+    }
+
+    function renderResult(data) {
+      const { status, output, error, failed_test } = data;
+
+      if (status === 'ok') {
+        let msg = '✅ Все тесты пройдены!';
+        if (output) msg += `\n\nВывод:\n${output}`;
+        showOutput('ok', msg);
+        if (tg) tg.HapticFeedback?.notificationOccurred('success');
+      } else if (status === 'failed') {
+        const testNum = failed_test ? `Тест #${failed_test.index + 1} не прошёл` : 'Тест не прошёл';
+        let msg = `❌ ${testNum}`;
+        if (failed_test?.output) msg += `\n\n${failed_test.output}`;
+        if (output) msg += `\n\nВаш вывод:\n${output}`;
+        showOutput('failed', msg);
+        if (tg) tg.HapticFeedback?.notificationOccurred('error');
+      } else {
+        let msg = `⚠️ Ошибка выполнения`;
+        if (error) msg += `\n\n${error}`;
+        if (output) msg += `\n\nВывод:\n${output}`;
+        showOutput('error', msg);
+        if (tg) tg.HapticFeedback?.notificationOccurred('error');
+      }
+    }
+
+    // ─────────────────────── UI helpers ────────────────────────────────────────
+    function setSubmitting(val) {
+      isSubmitting = val;
+      runBtn.disabled = val;
+      if (val) {
+        runIcon.innerHTML = '<span class="spinner"></span>';
+        runText.textContent = 'Выполнение…';
+      } else {
+        runIcon.textContent = '▶';
+        runText.textContent = 'Отправить решение';
+      }
+    }
+
+    function showOutput(status, text) {
+      outputStatus.textContent = {
+        ok: '✓ Успешно', error: '✗ Ошибка', failed: '✗ Провалено', pending: '⏳ Ожидание'
+      }[status] || status;
+      outputStatus.className = `status-${status}`;
+      outputContent.textContent = text;
+      outputContent.className = status;
+      outputPanel.classList.remove('hidden');
+    }
+
+    function hideOutput() {
+      outputPanel.classList.add('hidden');
+    }
+
+    function hideLoading() {
+      loadingEl.classList.add('hidden');
+      appEl.style.display = 'flex';
+    }
+
+    function showError(msg) {
+      loadingEl.classList.add('hidden');
+      errorMsgEl.textContent = msg;
+      errorEl.classList.add('visible');
+    }
+
+    function shakeBtn() {
+      runBtn.style.animation = 'shake 0.3s';
+      setTimeout(() => runBtn.style.animation = '', 300);
+    }
+
+    // ─────────────────────── Event listeners ────────────────────────────────────
+    runBtn.addEventListener('click', handleSubmit);
+
+    clearBtn.addEventListener('click', () => {
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: '' } });
+      view.focus();
+    });
+
+    let panelCollapsed = false;
+    toggleBtn.addEventListener('click', () => {
+      panelCollapsed = !panelCollapsed;
+      taskPanel.classList.toggle('collapsed', panelCollapsed);
+      toggleBtn.textContent = panelCollapsed ? '▼ Задание' : '▲ Задание';
+    });
+
+    closeOutput.addEventListener('click', hideOutput);
+
+    // Keyboard shortcut: Ctrl+Enter / Cmd+Enter to submit
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit();
+      }
+    });
+
+    // ─────────────────────── Shake animation ────────────────────────────────────
+    const shakeStyle = document.createElement('style');
+    shakeStyle.textContent = `
+      @keyframes shake {
+        0%,100%{transform:translateX(0)}
+        20%,60%{transform:translateX(-4px)}
+        40%,80%{transform:translateX(4px)}
+      }
+    `;
+    document.head.appendChild(shakeStyle);
+
+    // ─────────────────────── Boot ───────────────────────────────────────────────
+    loadTask();
+  </script>
+</body>
+</html>

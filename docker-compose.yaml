@@ -70,12 +70,16 @@ services:
     command: ["learn-anything", "start", "api_gateway"]
     environment:
       API_GATEWAY_CONFIG_PATH: configs/api_gateway.docker.example.toml
+      COURSE_PLATFORM_CONFIG_PATH: configs/course_platform.docker.example.toml
+      IDE_URL: https://learn-anything.ru/ide
     volumes:
       - ./configs:/code/configs:ro
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
       - rabbitmq
+      - db
+      - redis
     restart: unless-stopped
 
   consumer:
