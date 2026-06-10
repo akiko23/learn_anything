@@ -27,10 +27,12 @@ class UnixPlayground(Playground):
     def __init__(
             self,
             identifier: str | None,
-            code_duration_timeout: int
+            code_duration_timeout: int,
+            vm_pool: 'VirtualMachinePool',
     ) -> None:
         self._id = identifier
         self._code_duration_timeout = code_duration_timeout
+        self._vm_pool = vm_pool
         self._vm: VirtualMachineFacade | None = None
         self._ssh_client = paramiko.SSHClient()
 
@@ -40,13 +42,8 @@ class UnixPlayground(Playground):
 
     async def _create_playground(self) -> None:
         loop = asyncio.get_running_loop()
-        with ProcessPoolExecutor() as ps_pool:
-            self._vm = await loop.run_in_executor(
-                ps_pool,
-                VirtualMachineFacade(id_=self._id).create,
-            )
-
-        await asyncio.sleep(4)
+        
+        self._vm = await self._vm_pool.acquire()
 
         self._ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -133,8 +130,8 @@ class UnixPlayground(Playground):
         with ThreadPoolExecutor(max_workers=3) as th_pool:
             th_pool.submit(self._ssh_client.close)
 
-        with ProcessPoolExecutor(max_workers=2) as ps_pool:
-            ps_pool.submit(self._vm.delete)  # type: ignore[union-attr]
+        if self._vm:
+            await self._vm_pool.release(self._vm)
 
         if exc_type:
             logger.error('An error of type %s with val %s occurred: %s', exc_type, exc_val, exc_tb)
@@ -218,7 +215,53 @@ class VirtualMachineFacade:
         return int(out.decode().strip())
 
 
+class VirtualMachinePool:
+    def __init__(self, size: int = 3):
+        self._size = size
+        self._queue: asyncio.Queue[VirtualMachineFacade] = asyncio.Queue(maxsize=size)
+        self._loop = asyncio.get_running_loop()
+
+    async def initialize(self) -> None:
+        logger.info(f"Initializing VM pool with {self._size} VMs...")
+        tasks = [self._create_and_put() for _ in range(self._size)]
+        await asyncio.gather(*tasks)
+        logger.info("VM pool initialized.")
+
+    async def _create_and_put(self) -> None:
+        with ProcessPoolExecutor() as ps_pool:
+            vm = await self._loop.run_in_executor(ps_pool, VirtualMachineFacade().create)
+            await asyncio.sleep(4)
+            await self._queue.put(vm)
+
+    async def acquire(self) -> VirtualMachineFacade:
+        return await self._queue.get()
+
+    async def release(self, vm: VirtualMachineFacade) -> None:
+        asyncio.create_task(self._recreate_vm(vm))
+
+    async def _recreate_vm(self, vm: VirtualMachineFacade) -> None:
+        try:
+            with ProcessPoolExecutor() as ps_pool:
+                await self._loop.run_in_executor(ps_pool, vm.delete)
+            await self._create_and_put()
+        except Exception as e:
+            logger.error(f"Error recreating VM for pool: {e}")
+
+    async def close(self) -> None:
+        logger.info("Closing VM pool, destroying VMs...")
+        while not self._queue.empty():
+            vm = self._queue.get_nowait()
+            try:
+                with ProcessPoolExecutor() as ps_pool:
+                    await self._loop.run_in_executor(ps_pool, vm.delete)
+            except Exception as e:
+                logger.error(f"Error deleting VM during pool close: {e}")
+
+
 class UnixPlaygroundFactory(PlaygroundFactory):
+    def __init__(self, vm_pool: VirtualMachinePool) -> None:
+        self._vm_pool = vm_pool
+
     def create(
             self,
             code_duration_timeout: int,
@@ -227,4 +270,5 @@ class UnixPlaygroundFactory(PlaygroundFactory):
         return UnixPlayground(
             identifier=identifier,
             code_duration_timeout=code_duration_timeout,
+            vm_pool=self._vm_pool,
         )

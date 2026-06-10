@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, cast
 
 import msgpack
+import redis.asyncio as aioredis
 import uvicorn
 from aio_pika.abc import AbstractChannel, AbstractIncomingMessage, ExchangeType
 from aiogram import Dispatcher, Bot
@@ -17,12 +18,15 @@ from learn_anything.course_platform.adapters.bootstrap.tg_bot_di import setup_di
 from learn_anything.course_platform.adapters.logger import logger, correlation_id_ctx, LOGGING_CONFIG
 from learn_anything.course_platform.adapters.metrics import TOTAL_MESSAGES_CONSUMED
 from learn_anything.course_platform.adapters.persistence.tables.map import map_tables
+from learn_anything.course_platform.adapters.redis.config import load_redis_config
+from learn_anything.course_platform.adapters.rmq.ide_consumer import start_ide_consumer
 from learn_anything.course_platform.presentation.bg_tasks import background_tasks
 from learn_anything.course_platform.presentation.tg_bot.handlers import register_handlers
 from learn_anything.course_platform.presentation.tg_bot.middlewares.__logging import LoggingMiddleware
 from learn_anything.course_platform.presentation.tg_bot.middlewares.auth import AuthMiddleware
 from learn_anything.course_platform.presentation.web.config import load_web_config
 from learn_anything.course_platform.presentation.web.fastapi_routers.tech import router
+from learn_anything.course_platform.adapters.playground.unix_playground import VirtualMachinePool
 
 RETRIES_NUMBER = 5
 
@@ -96,19 +100,34 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info('Setup ioc')
     container = setup_di()
 
-    task = asyncio.create_task(start_consumer(container))
+    logger.info('Pre-warming VM Pool')
+    vm_pool = await container.get(VirtualMachinePool)
+
+    tg_task = asyncio.create_task(start_consumer(container))
+
+    # Start IDE submissions consumer (separate channel + redis)
+    cfg_path = os.getenv('COURSE_PLATFORM_CONFIG_PATH') or DEFAULT_COURSE_PLATFORM_CONFIG_PATH
+    redis_cfg = load_redis_config(cfg_path)
+    redis_client: aioredis.Redis = aioredis.from_url(redis_cfg.dsn)  # type: ignore[type-arg]
+    async with container() as request_container:
+        ide_channel = await request_container.get(AbstractChannel)
+
+    ide_task = asyncio.create_task(
+        start_ide_consumer(channel=ide_channel, redis_client=redis_client, vm_pool=vm_pool)
+    )
 
     logger.info('Started successfully')
     yield
 
-    if task is not None:
-        logger.info("Stopping polling...")
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            logger.info("Polling stopped")
+    for task in (tg_task, ide_task):
+        if task is not None:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
+    await redis_client.aclose()
     logger.info('Ending lifespan')
 
 

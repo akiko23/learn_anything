@@ -16,7 +16,6 @@ class Task:
     title: str
     body: str
     course_id: CourseID
-    # creator_id: UserID
     index_in_course: int
     created_at: datetime
     updated_at: datetime
