@@ -7,8 +7,6 @@ Endpoints:
   POST /ide/submit                — accept code, verify Telegram initData, enqueue to RMQ
   GET  /ide/result/{submission_id} — polling: return result from Redis
 """
-from __future__ import annotations
-
 import hashlib
 import hmac
 from typing import Any
