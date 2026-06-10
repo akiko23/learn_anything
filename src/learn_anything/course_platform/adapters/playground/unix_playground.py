@@ -245,6 +245,7 @@ class VirtualMachinePool:
         self._size = size
         self._queue: asyncio.Queue[VirtualMachineFacade] = asyncio.Queue(maxsize=size)
         self._loop = asyncio.get_running_loop()
+        self._lock = asyncio.Lock()
 
     async def initialize(self) -> None:
         logger.info(f"Initializing VM pool with {self._size} VMs...")
@@ -253,10 +254,11 @@ class VirtualMachinePool:
         logger.info("VM pool initialized.")
 
     async def _create_and_put(self) -> None:
-        with ProcessPoolExecutor() as ps_pool:
-            vm = await self._loop.run_in_executor(ps_pool, VirtualMachineFacade().create)
+        async with self._lock:
+            with ProcessPoolExecutor() as ps_pool:
+                vm = await self._loop.run_in_executor(ps_pool, VirtualMachineFacade().create)
             await asyncio.sleep(4)
-            await self._queue.put(vm)
+        await self._queue.put(vm)
 
     async def acquire(self) -> VirtualMachineFacade:
         return await self._queue.get()
