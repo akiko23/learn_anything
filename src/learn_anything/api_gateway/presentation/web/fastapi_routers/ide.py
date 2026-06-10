@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+from typing import Any
 import json
 import logging
 import os
@@ -115,7 +116,7 @@ class TaskResponse(BaseModel):
 async def get_task(
     task_id: int = Path(..., ge=1),
     session: FromDishka[AsyncSession] = ...,  # type: ignore[assignment]
-) -> ORJSONResponse:
+) -> Any:
     """Return task metadata for the IDE."""
     stmt = select(CodeTask).where(tasks_table.c.id == task_id)
     result = await session.execute(stmt)
@@ -156,7 +157,7 @@ async def submit_code(
     body: SubmitRequest,
     session: FromDishka[AsyncSession] = ...,  # type: ignore[assignment]
     channel: FromDishka[AbstractChannel] = ...,  # type: ignore[assignment]
-) -> ORJSONResponse:
+) -> Any:
     """
     Accept code submission, optionally verify Telegram initData,
     enqueue to RMQ, return submission_id for polling.
@@ -207,7 +208,7 @@ async def submit_code(
 async def get_result(
     submission_id: str = Path(..., min_length=1),
     redis_cfg: FromDishka[RedisConfig] = ...,  # type: ignore[assignment]
-) -> ORJSONResponse:
+) -> Any:
     """Poll for IDE submission result. Returns 202 while pending, 200 when ready."""
     redis_client = aioredis.from_url(redis_cfg.dsn, decode_responses=True)
     try:
