@@ -156,7 +156,7 @@ class VirtualMachineFacade:
         if self._port is None:
             self._port = self._get_free_port()
 
-        logger.info('Creating vm..')
+        logger.info('Creating vm with port %s and disk %s..', self._port, self._disk_image_path)
         create_vm_ps = subprocess.Popen(
             [self.create_vm_script_path, str(self._port), self._disk_image_path],
             start_new_session=True,
@@ -167,8 +167,18 @@ class VirtualMachineFacade:
 
         logger.info('Now waiting for its init..')
         time.sleep(2)
-        logger.info('Created vm..')
 
+        exit_code = create_vm_ps.poll()
+        if exit_code is not None:
+            stdout_data = create_vm_ps.stdout.read().decode() if create_vm_ps.stdout else ""
+            stderr_data = create_vm_ps.stderr.read().decode() if create_vm_ps.stderr else ""
+            logger.error(
+                'VM process exited immediately with code %s. stdout: %r, stderr: %r',
+                exit_code, stdout_data, stderr_data
+            )
+            raise RuntimeError(f"VM process exited immediately with code {exit_code}. stderr: {stderr_data}")
+
+        logger.info('Created vm..')
         self._vm_pid = create_vm_ps.pid
         return self
 
@@ -179,16 +189,31 @@ class VirtualMachineFacade:
         return self._port
 
     def _init_disk_image(self) -> str:
+        if not os.path.exists(self.base_disk_image_path):
+            logger.error('Base disk image not found at %s', self.base_disk_image_path)
+            raise FileNotFoundError(f"Base disk image not found at {self.base_disk_image_path}")
+
         disk_image_copies_path = os.path.join(
             self.image_storage_base_path,
             f'debian12_python_{self._id}.qcow2',
         )
 
         image_path = disk_image_copies_path.format()
+        logger.info('Creating disk image %s using backing file %s', image_path, self.base_disk_image_path)
         create_img_ps = subprocess.Popen(
-            ['qemu-img', 'create', '-f', 'qcow2', '-b', self.base_disk_image_path, '-F', 'qcow2', image_path]
+            ['qemu-img', 'create', '-f', 'qcow2', '-b', self.base_disk_image_path, '-F', 'qcow2', image_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
-        create_img_ps.wait()
+        stdout_data, stderr_data = create_img_ps.communicate()
+        exit_code = create_img_ps.returncode
+
+        if exit_code != 0:
+            logger.error(
+                'qemu-img create failed with code %s. stdout: %r, stderr: %r',
+                exit_code, stdout_data.decode(), stderr_data.decode()
+            )
+            raise RuntimeError(f"qemu-img create failed with code {exit_code}: {stderr_data.decode()}")
 
         return image_path
 
