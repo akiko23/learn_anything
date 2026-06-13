@@ -11,8 +11,11 @@ from learn_anything.course_platform.application.interactors.submission.create_su
     CreateCodeTaskSubmissionInputData
 from learn_anything.course_platform.application.interactors.task.get_course_tasks import CodeTaskData
 from learn_anything.course_platform.presentation.tg_bot.states.submission import SubmissionForm
-from learn_anything.course_platform.presentors.tg_bot.keyboards.task.do_course_task import get_do_task_kb, \
-    no_attempts_left_kb
+from learn_anything.course_platform.presentors.tg_bot.keyboards.task.do_course_task import (
+    get_do_task_kb,
+    get_do_code_task_kb,
+    no_attempts_left_kb,
+)
 from learn_anything.course_platform.presentors.tg_bot.keyboards.task.get_course_tasks import get_course_tasks_keyboard
 from learn_anything.course_platform.presentors.tg_bot.texts.get_task import get_task_text
 from learn_anything.course_platform.presentors.tg_bot.texts.submission import get_on_failed_code_submission_text
@@ -81,9 +84,10 @@ async def process_code_task_submission(
                 )
                 return
 
+            await state.set_state(state=None)
             await msg.answer(
                 text=text,
-                reply_markup=get_do_task_kb(),
+                reply_markup=get_do_code_task_kb(task_id=target_task.id),
                 parse_mode='HTML'
             )
             return

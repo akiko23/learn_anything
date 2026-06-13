@@ -26,7 +26,7 @@ def get_do_code_task_kb(task_id: int) -> InlineKeyboardMarkup:
                     web_app=WebAppInfo(url=ide_url),
                 )
             ],
-            [InlineKeyboardButton(text='✏️ Отправить текстом', callback_data='stop_doing_task')],
+            [InlineKeyboardButton(text='✏️ Отправить текстом', callback_data='solve_code_via_text')],
             [InlineKeyboardButton(text='✕ Отмена', callback_data='stop_doing_task')],
         ]
     )

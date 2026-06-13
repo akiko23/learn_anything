@@ -42,14 +42,30 @@ async def do_course_task(
     )
 
     if target_task.type == TaskType.CODE:
-        await state.set_state(state=SubmissionForm.get_for_code)
         await bot.send_message(
             chat_id=user_id,
             text='Выберите способ отправки решения:',
             reply_markup=get_do_code_task_kb(task_id=target_task.id),
         )
 
-@router.callback_query(StateFilter(SubmissionForm), F.data == 'stop_doing_task')
+
+@router.callback_query(F.data == 'solve_code_via_text')
+async def solve_code_via_text(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        bot: Bot,
+) -> None:
+    user_id: int = callback_query.from_user.id
+    await state.set_state(state=SubmissionForm.get_for_code)
+    await callback_query.answer()
+    await bot.send_message(
+        chat_id=user_id,
+        text='Отправьте решение:',
+        reply_markup=get_do_task_kb(),
+    )
+
+
+@router.callback_query(F.data == 'stop_doing_task')
 async def cancel_doing_task(
         callback_query: CallbackQuery,
         state: FSMContext,

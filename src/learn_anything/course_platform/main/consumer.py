@@ -113,7 +113,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         ide_channel = await request_container.get(AbstractChannel)
 
     ide_task = asyncio.create_task(
-        start_ide_consumer(channel=ide_channel, redis_client=redis_client, vm_pool=vm_pool)
+        start_ide_consumer(channel=ide_channel, redis_client=redis_client, container=container)
     )
 
     logger.info('Started successfully')

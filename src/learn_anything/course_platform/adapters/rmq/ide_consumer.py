@@ -1,6 +1,6 @@
 """
 Consumer for IDE submissions queue.
-Reads code submission from RMQ, runs it through the playground, writes result to Redis.
+Reads code submission from RMQ, runs it through the interactor, writes result to Redis.
 """
 from __future__ import annotations
 
@@ -12,10 +12,9 @@ from typing import cast
 import msgpack
 import redis.asyncio as aioredis
 from aio_pika.abc import AbstractIncomingMessage
+from dishka import AsyncContainer
 
-from learn_anything.course_platform.adapters.playground.unix_playground import VirtualMachinePool, UnixPlayground
 from learn_anything.course_platform.adapters.rmq.ide_submissions import IDE_SUBMISSIONS_QUEUE, IDE_RESULT_TTL
-from learn_anything.course_platform.application.ports.playground import StdErr, StdOut
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ def _result_key(submission_id: str) -> str:
 async def process_ide_submission(
     msg: AbstractIncomingMessage,
     redis_client: aioredis.Redis,  # type: ignore[type-arg]
-    vm_pool: VirtualMachinePool,
+    container: AsyncContainer,
 ) -> None:
     """Process a single IDE submission message."""
     payload = msgpack.unpackb(msg.body)
@@ -37,9 +36,6 @@ async def process_ide_submission(
     task_id: int = payload["task_id"]
     user_id: int = payload["user_id"]
     code: str = payload["code"]
-    prepared_code: str | None = payload.get("prepared_code")
-    tests: list[dict[str, str]] = payload.get("tests", [])
-    code_duration_timeout: int = payload.get("code_duration_timeout", 10)
 
     logger.info(
         "Processing IDE submission %s for task=%s user=%s",
@@ -48,58 +44,44 @@ async def process_ide_submission(
 
     result: dict[str, object]
     try:
-        full_code = code
-        if prepared_code:
-            full_code = prepared_code + "\n" + code
+        from learn_anything.course_platform.application.interactors.submission.create_submission import (
+            CreateCodeTaskSubmissionInteractor,
+            CreateCodeTaskSubmissionInputData,
+        )
 
-        async with UnixPlayground(
-            identifier=f"ide_{user_id}_{task_id}",
-            code_duration_timeout=code_duration_timeout,
-            vm_pool=vm_pool,
-        ) as pl:
-            out, err = await pl.execute_code(code=full_code)
+        async with container() as request_container:
+            interactor = await request_container.get(CreateCodeTaskSubmissionInteractor)
+            output_data = await interactor.execute(
+                data=CreateCodeTaskSubmissionInputData(
+                    task_id=task_id,
+                    submission=code,
+                )
+            )
 
-            if err:
-                result = {
-                    "status": "error",
-                    "output": str(out),
-                    "error": str(err),
-                    "failed_test": None,
-                }
-            else:
-                user_output = str(out)
-                failed_test: dict[str, object] | None = None
-
-                for idx, test in enumerate(tests):
-                    test_code = (
-                        f"{full_code}\n"
-                        f"stdout = '''{user_output}'''\n"
-                        f"stderr = ''\n"
-                        + test["code"]
-                    )
-                    test_out, test_err = await pl.execute_code(code=test_code)
-                    if test_err:
-                        failed_test = {
-                            "index": idx,
-                            "output": str(test_err).strip(),
-                        }
-                        break
-
-                if failed_test:
-                    result = {
-                        "status": "failed",
-                        "output": user_output,
-                        "error": None,
-                        "failed_test": failed_test,
-                    }
-                else:
-                    result = {
-                        "status": "ok",
-                        "output": user_output,
-                        "error": None,
-                        "failed_test": None,
-                    }
-
+        if output_data.failed_test is None:
+            result = {
+                "status": "ok",
+                "output": "",
+                "error": None,
+                "failed_test": None,
+            }
+        elif output_data.failed_test.failed_test_idx == -1:
+            result = {
+                "status": "error",
+                "output": "",
+                "error": output_data.failed_test.failed_test_output,
+                "failed_test": None,
+            }
+        else:
+            result = {
+                "status": "failed",
+                "output": "",
+                "error": None,
+                "failed_test": {
+                    "index": output_data.failed_test.failed_test_idx,
+                    "output": output_data.failed_test.failed_test_output,
+                },
+            }
     except Exception as exc:
         logger.exception("Error processing IDE submission %s: %s", submission_id, exc)
         result = {
@@ -120,7 +102,7 @@ async def process_ide_submission(
 async def start_ide_consumer(
     channel: object,
     redis_client: aioredis.Redis,  # type: ignore[type-arg]
-    vm_pool: VirtualMachinePool,
+    container: AsyncContainer,
 ) -> None:
     """Start consuming ide_submissions queue. Runs indefinitely."""
     from aio_pika.abc import AbstractChannel, ExchangeType  # local import to avoid circular
@@ -137,6 +119,6 @@ async def start_ide_consumer(
             process_ide_submission(
                 cast(AbstractIncomingMessage, message),
                 redis_client,
-                vm_pool,
+                container,
             )
         )
