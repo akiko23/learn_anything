@@ -44,12 +44,19 @@ async def process_ide_submission(
 
     result: dict[str, object]
     try:
+        from aiogram.types import TelegramObject, CallbackQuery, User
         from learn_anything.course_platform.application.interactors.submission.create_submission import (
             CreateCodeTaskSubmissionInteractor,
             CreateCodeTaskSubmissionInputData,
         )
 
-        async with container() as request_container:
+        dummy_tg_object = CallbackQuery(
+            id="1",
+            from_user=User(id=user_id, is_bot=False, first_name="User"),
+            chat_instance="1",
+        )
+
+        async with container(context={TelegramObject: dummy_tg_object}) as request_container:
             interactor = await request_container.get(CreateCodeTaskSubmissionInteractor)
             output_data = await interactor.execute(
                 data=CreateCodeTaskSubmissionInputData(
