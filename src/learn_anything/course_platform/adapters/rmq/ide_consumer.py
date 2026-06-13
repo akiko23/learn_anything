@@ -44,11 +44,13 @@ async def process_ide_submission(
 
     result: dict[str, object]
     try:
+        from aiogram import Bot
         from aiogram.types import TelegramObject, CallbackQuery, User
         from learn_anything.course_platform.application.interactors.submission.create_submission import (
             CreateCodeTaskSubmissionInteractor,
             CreateCodeTaskSubmissionInputData,
         )
+        from learn_anything.course_platform.application.ports.data.task_gateway import TaskGateway
 
         dummy_tg_object = CallbackQuery(
             id="1",
@@ -58,6 +60,10 @@ async def process_ide_submission(
 
         async with container(context={TelegramObject: dummy_tg_object}) as request_container:
             interactor = await request_container.get(CreateCodeTaskSubmissionInteractor)
+            task_gateway = await request_container.get(TaskGateway)
+
+            task = await task_gateway.get_code_task_with_id(task_id)
+
             output_data = await interactor.execute(
                 data=CreateCodeTaskSubmissionInputData(
                     task_id=task_id,
@@ -72,6 +78,17 @@ async def process_ide_submission(
                 "error": None,
                 "failed_test": None,
             }
+
+            # Send congratulatory message to Telegram
+            try:
+                bot = await request_container.get(Bot)
+                if task:
+                    await bot.send_message(
+                        chat_id=user_id,
+                        text=f"Поздравляем! Задача '{task.title}' решена"
+                    )
+            except Exception as bot_exc:
+                logger.error("Failed to send congratulatory message to user=%s: %s", user_id, bot_exc)
         elif output_data.failed_test.failed_test_idx == -1:
             result = {
                 "status": "error",
